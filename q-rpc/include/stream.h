@@ -3,7 +3,7 @@
 #define stream_h__
 
 
-#include <Object.h>
+#include <object.h>
 
 namespace rpc {
 

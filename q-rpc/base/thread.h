@@ -8,7 +8,7 @@
 #define Thread_h__
 
 #include "../base/builder_config.h"
-#include "TypeDefs.h"
+#include "type_defs.h"
 
 # ifndef OS_WIN
 #	include <pthread.h>

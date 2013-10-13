@@ -8,6 +8,11 @@
 #include <sstream>
 #include <assert.h>
 
+#include <boost/asio.hpp>
+#include <boost/bind.hpp>
+#include <boost/format.hpp>
+
+
 // common libraries
 //#include <reference/IReference.h>
 //#include <phstream/NetLibDef.h>
@@ -15,9 +20,15 @@
 //#include <memalloc/mallocins.h>
 #include <object.h>
 #include <locker.h>
+#include <thread.h>
+
 
 #include "rpcexception.h"
 #include "rpcprotocol.h"
+#include "event.h"
+#include "message_handler.h"
+#include "stream.h"
+#include "stream_boost_impl.h"
 #include "dispatch.h"
 #include "connection_point.h"
 #include "services.h"
@@ -82,7 +93,7 @@ private:
   boost::asio::io_service::work work_; 
 };  // io_thread
 
-class caller {
+class caller : public rpc::message_handler {
 public:
   caller(rpc::base_stream& s) : stream_(s) {
 
@@ -94,33 +105,33 @@ public:
 
   }
 
+// interface rpc::message_handler
 public:
-  void onstart() {};
-  void onread() {}
-  void onwrite() {}
-  void onstop() {};
-
-
+  virtual void on_read_completed(const std::string&) {}
+  virtual void on_write_completed(const std::string&) {}
+  virtual void on_connect() {}
+  virtual void on_disconnect() {}
 
 private:
-  rpc::stream& stream_;
+  rpc::base_stream& stream_;
 
 };
 
-class callee {
+class callee : public rpc::message_handler {
 public:
   callee(rpc::base_stream& s) : stream_(s) {
 
   }
 
+// interface rpc::message_handler
 public:
-  void onstart() {};
-  void onread() {}
-  void onwrite() {}
-  void onstop() {};
+  virtual void on_read_completed(const std::string&) {}
+  virtual void on_write_completed(const std::string&) {}
+  virtual void on_connect() {}
+  virtual void on_disconnect() {}
 
 private:
-  rpc::stream& stream_;
+  rpc::base_stream& stream_;
 };
 
 
@@ -134,7 +145,7 @@ public:
     // Start an accept operation for a new connection.
   }
   
-  virtual ~server_base() {
+  virtual ~acceptor() {
     stop();
   }
 
@@ -143,9 +154,9 @@ public:
     if(NULL == io_acceptor_) 
       io_acceptor_ = new boost::asio::ip::tcp::acceptor(io_service_, boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), port));
 
-    RefPtr<rpc::stream_boost_impl> new_connection(new rpc::stream_boost_impl(acceptor_->get_io_service()));
+    RefPtr<rpc::stream_boost_impl> new_connection(new rpc::stream_boost_impl(io_acceptor_->get_io_service()));
     io_acceptor_->async_accept(new_connection->socket(),
-        boost::bind(&server_base::handle_accept, this,
+        boost::bind(&acceptor<T>::handle_accept, this,
         boost::asio::placeholders::error, new_connection));
        
     io_thread_ = new rpc::io_thread(io_service_);
@@ -158,7 +169,9 @@ public:
   void handle_accept(const boost::system::error_code& e, RefPtr<rpc::stream_boost_impl> conn)
   {
     if (!e) {
+      
       try {  
+        // create handler
         if (conn != NULL) {  
           boost::format fmt("%1%:%2%");  
           fmt % conn->socket().remote_endpoint().address().to_string();  
@@ -167,14 +180,14 @@ public:
           OnAccept(conn);	
         }  
       } catch(std::exception& e) {  
-        LOG4CXX_ERROR(Wayixia_Logger, "with exception:[" << e.what() << "]");  
+        std::cerr << "with exception:[" << e.what() << "]" << std::endl;  
       } catch(...)  {  
-        LOG4CXX_ERROR(Wayixia_Logger, "unknown exception.");  
+        std::cerr <<  "unknown exception." << std::endl;  
       }  
     }   
 
     // Start an accept operation for a new connection.
-    RefPtr<rpc::stream_boost_impl> new_conn(new rpc::stream_boost_impl(acceptor_->get_io_service()));
+    RefPtr<rpc::stream_boost_impl> new_conn(new rpc::stream_boost_impl(io_acceptor_->get_io_service()));
     io_acceptor_->async_accept(new_conn->socket(),
  	    boost::bind(&acceptor<T>::handle_accept, this,
 	    boost::asio::placeholders::error, new_conn));
@@ -182,7 +195,7 @@ public:
 
 
   void stop() {
-    if(acceptor_)
+    if(io_acceptor_)
       delete io_acceptor_;
     
     io_acceptor_ = 0;
@@ -195,7 +208,10 @@ public:
   }
 
   virtual bool OnAccept(RefPtr<rpc::base_stream> conn) {
+    T* handler = new T(*conn);
+    conn->handler(handler);
     conn->handler()->on_connect();
+
     return true;
   }
 
@@ -212,7 +228,13 @@ template<class T>
 class connector : public q::Object 
 {
 public:
-  connector(); 
+  connector() 
+  : io_service_()
+  , io_thread_(io_service_)
+  {
+
+  };
+ 
   virtual ~connector() {}
 
 public:
@@ -234,8 +256,8 @@ public:
 
     // save
     stream_ = p;
-	hanlder_ = new T(*p);
-    stream_->handler(handler_);
+    T* handler = new T(*p);
+    stream_->handler(handler);
 
     std::cerr << "client_base::connect" << std::endl;
     if(!io_thread_.running())
@@ -271,10 +293,6 @@ protected:
   io_thread io_thread_;
   RefPtr<rpc::base_stream> stream_;
   event_handle event_connect_ok_;
-}; // class connector
-
-
-
 }; //class connector
 
 } // namespace rpc
@@ -283,39 +301,39 @@ protected:
 int main(int argc, char *argv[])
 {
   // run as callee called by caller
-  rpc::acceptor< rpc::callee > acceptor_;
-  rpc::connector< rpc::caller > connector_;
+  //rpc::acceptor< rpc::callee > acceptor_;
+  //rpc::connector< rpc::caller > connector_;
 
   // run as caller which call the callee
-  rpc::acceptor<rpc::caller> acceptor2_;
-  rpc::connector<rpc::callee> connector2_;
+  //rpc::acceptor<rpc::caller> acceptor2_;
+  //rpc::connector<rpc::callee> connector2_;
 
 
   try
   {
     if(argc > 1) {
-      //rpc::server_default> server;
-      //if(!server.start("127.0.0.1", 55555)) {
+      rpc::acceptor<rpc::callee> server;
+      if(!server.listen(5555)) {
         std::cerr << "start server error" << std::endl;
-      //} else {
-      //  std::cerr << "start server ok" << std::endl;
-	   // register service
-	//    server.register_service(new rpc::services::test_service);
+      } else {
+        std::cerr << "start server ok" << std::endl;
+        // register service
+	// server.register_service(new rpc::services::test_service);
         std::string action;
         while(std::getline(std::cin, action)) {
           if(action == "exit") break;
 	}
-      //}
+      }
     } else {
       // client
-      rpc::client rpc_client;
+      rpc::connector<rpc::caller> rpc_client;
       //rpc_client.initialize("127.0.0.1", 10000);      
       //rpc_client.connect("127.0.0.1", 55555);
-      rpc::client::iservice_proxy* test_service = rpc_client.get_service("test_service");
+      //rpc::client::iservice_proxy* test_service = rpc_client.get_service("test_service");
 
-      rpc::cookie_t cookie;
+      //rpc::cookie_t cookie;
       //rpc_client.addListener(test_service, new CReference_T<test_event>, cookie);
-      std::cerr << "get cookie : " << cookie << std::endl;	
+      //std::cerr << "get cookie : " << cookie << std::endl;	
 	
       // call test_service add method
       // 
@@ -332,7 +350,7 @@ int main(int argc, char *argv[])
           break;
         }
 
-        rpc_client.call(test_service, action, params, res);
+        //rpc_client.call(test_service, action, params, res);
         res.dump();
       }
     }
