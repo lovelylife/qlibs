@@ -95,26 +95,54 @@ private:
 
 class caller : public rpc::message_handler {
 public:
-  caller(rpc::base_stream& s) : stream_(s) {
-
-  }
-
-
-public:
-  void on_call_request() {
-
+  caller(rpc::base_stream& s) 
+  : stream_(s) 
+  , init_rpc_interface_(false) 
+  , read_ok_(0)
+  , write_ok_(0)
+  {
+      read_ok_ = event_create(false, false);
+      write_ok_ = event_create(false, false);
   }
 
 // interface rpc::message_handler
 public:
-  virtual void on_read_completed(const std::string&) {}
-  virtual void on_write_completed(const std::string&) {}
-  virtual void on_connect() {}
-  virtual void on_disconnect() {}
+  virtual void on_connect() {
+      std::cerr << "callee_handler connected" << std::endl;
+      this_->stream()->async_read();
+  }
+
+  // Á´½Ó¶Ï¿ª
+  virtual void on_disconnect() { 
+    std::cerr << "callee_handler disconnected not impliement" << std::endl;
+  }
+
+  virtual void on_read_completed(const std::string& buffer) {
+    std::cerr << "callee_handler read_completed." << std::endl;
+    
+    if(!init_rpc_interface_) {
+      // intialize interface
+      init_rpc_interface_ = true;
+      this_->handler_services_proxy(buffer);        
+    } else {
+      text_iarchiver ar(buffer);
+      ar >> message_;
+      event_set(read_ok_);
+    }
+  }
+
+  virtual void on_write_completed(const std::string& buffer) {  
+    std::cerr << "callee_handler write_completed." << std::endl;  
+    event_set(write_ok_);
+  }
+
 
 private:
   rpc::base_stream& stream_;
-
+  bool init_rpc_interface_;
+  event_handle read_ok_;
+  event_handle write_ok_;
+  rpc::protocol::message message_;
 };
 
 class callee : public rpc::message_handler {
@@ -125,10 +153,36 @@ public:
 
 // interface rpc::message_handler
 public:
-  virtual void on_read_completed(const std::string&) {}
-  virtual void on_write_completed(const std::string&) {}
-  virtual void on_connect() {}
-  virtual void on_disconnect() {}
+  void on_connect() {
+    std::cerr << "callee_server:: callee_handler::on_connect()" << std::endl;
+    std::string s;
+    this_->dump_services_info(s);
+    stream_->async_write(s);
+  }
+    
+  void on_disconnect() {
+    std::cerr << "callee_server:: callee_handler::on_disconnect()" << std::endl;
+  }
+
+  void on_read_completed(const std::string& buf) {
+    std::cerr << "callee_server:: callee_handler::on_read_completed()" << std::endl;
+    rpc::protocol::message msg;
+    text_iarchiver ar(buf);
+    // std::cerr << buf << std::endl;
+    ar >> msg;
+    rpc::protocol::message res;
+    this_->handle_message(msg, res, this);
+
+    std::string o;
+    text_oarchiver oar(o);
+    oar << res;
+    stream_.async_write(o);
+  }
+
+  void on_write_completed(const std::string& buf) {
+    std::cerr << "callee_server:: callee_handler::on_write_completed()" << std::endl;
+    stream_.async_read();
+  }
 
 private:
   rpc::base_stream& stream_;
