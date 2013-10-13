@@ -109,7 +109,7 @@ public:
 public:
   virtual void on_connect() {
       std::cerr << "callee_handler connected" << std::endl;
-      this_->stream()->async_read();
+      stream_.async_read();
   }
 
   // Á´½Ó¶Ï¿ª
@@ -123,7 +123,8 @@ public:
     if(!init_rpc_interface_) {
       // intialize interface
       init_rpc_interface_ = true;
-      this_->handler_services_proxy(buffer);        
+      //@todo
+      //this_->handler_services_proxy(buffer);        
     } else {
       text_iarchiver ar(buffer);
       ar >> message_;
@@ -156,8 +157,9 @@ public:
   void on_connect() {
     std::cerr << "callee_server:: callee_handler::on_connect()" << std::endl;
     std::string s;
-    this_->dump_services_info(s);
-    stream_->async_write(s);
+    //@todo
+    //this_->dump_services_info(s);
+    stream_.async_write(s);
   }
     
   void on_disconnect() {
@@ -171,7 +173,8 @@ public:
     // std::cerr << buf << std::endl;
     ar >> msg;
     rpc::protocol::message res;
-    this_->handle_message(msg, res, this);
+    //@todo
+    //this_->handle_message(msg, res, this);
 
     std::string o;
     text_oarchiver oar(o);
