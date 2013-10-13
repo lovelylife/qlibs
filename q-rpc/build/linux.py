@@ -20,7 +20,9 @@ libs_ = ['pthread','rt']
 
 #sources
 sources = Glob('../src/*.cpp')
-#sources.append(common_dir+'/memalloc/mallocins.cpp')
+sources.append(jsoncpp_dir+'/src/json/json_value.cpp')
+sources.append(jsoncpp_dir+'/src/json/json_reader.cpp')
+sources.append(jsoncpp_dir+'/src/json/json_writer.cpp')
 
 
 

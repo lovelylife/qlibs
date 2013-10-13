@@ -14,7 +14,7 @@
 
 #include <stdarg.h>
 #include <string>
-#include <tchar.h>
+//#include <tchar.h>
 #include "../base/builder_config.h"
 
 #ifdef _DEBUG

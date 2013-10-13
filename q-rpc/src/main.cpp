@@ -13,8 +13,8 @@
 //#include <phstream/NetLibDef.h>
 //#include <phstream/StreamDecorator.h>
 //#include <memalloc/mallocins.h>
-#include <Object.h>
-#include <Locker.h>
+#include <object.h>
+#include <locker.h>
 
 #include "rpcexception.h"
 #include "rpcprotocol.h"
@@ -58,39 +58,86 @@ public:
   } 
 };
 
+namespace rpc {
+
+class caller {
+public:
+  rpc::stream stream_;
+
+public:
+  void on_call_request() {
+
+  }
+
+public:
+  void onstart() {};
+  void onread() {}
+  void onwrite() {}
+  void onstop() {};
+};
+
+class callee {
+  void onstart() {};
+  void onread() {}
+  void onwrite() {}
+  void onstop() {};
+
+};
+
+template<class T>
+class transport : public q::Object
+{
+public:
+  transport() : object_(new T) {
+
+  }
+
+public:
+  void onconnect() {
+    object_->onstart();
+  };
+  void ondisconnect() {
+    object_->onstop();
+  };
+  void onread() {
+    object_->onread();
+  }
+  void onwrite() {
+    object_->onwrite();
+  }
+
+private:
+  RefPtr<T> object_;
+};
+
+
+template<class T>
+class acceptor
+{
+
+}; // class acceptor
+
+template<class T>
+
+
+
+
+}; //class connector
+
+} // namespace rpc
+
+
 int main(int argc, char *argv[])
 {
-  
-  std::string s = "abcde";
-  s.append(1, '\0');
-  std::cout << s.size() << std::endl;   
-  
+  // run as callee called by caller
+  rpc::acceptor< rpc::transport <rpc::callee> > acceptor_;
+  rpc::connector< rpc::transport <rpc::caller> > connector_;
 
-  struct test_struct t;
-  t.a = 3;
-  t.b = 5;
-  t.s = "agcdefg";
-
-  std::string o;
-  text_oarchiver oar(o);
-  oar << t;
-
-  struct test_struct t2;
-  text_iarchiver iar(o);
-  iar >> t2;
-
-  std::cout << "t2.a=" << t2.a
-	    << "\nt2.b=" << t2.b
-	    << "\nt2.s=" << t2.s << std::endl;
+  // run as caller which call the callee
+  rpc::acceptor<rpc::caller> acceptor2_;
+  rpc::connector<rpc::callee> connector2_;
 
 
-  
-  //int a;
-  //void* ptr = (void*)&a;
-  //std::stringstream strm;
-  //strm << ptr;
-  //std::string str = strm.str(); 
-  //std::cout << "ptr string: " << str << std::endl;
   try
   {
     if(argc > 1) {
