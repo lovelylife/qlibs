@@ -60,9 +60,34 @@ public:
 
 namespace rpc {
 
+
+class io_thread : public q::Thread {
+public:
+  io_thread(boost::asio::io_service& io) 
+  : io_service_(io) 
+  , work_(io)
+  {
+
+  }
+
+protected:
+  bool loop() 
+  {
+    io_service_.run();
+    return false;
+  }
+
+private:
+  boost::asio::io_service& io_service_;
+  boost::asio::io_service::work work_; 
+};  // io_thread
+
 class caller {
 public:
-  rpc::stream stream_;
+  caller(rpc::base_stream& s) : stream_(s) {
+
+  }
+
 
 public:
   void on_call_request() {
@@ -74,51 +99,179 @@ public:
   void onread() {}
   void onwrite() {}
   void onstop() {};
+
+
+
+private:
+  rpc::stream& stream_;
+
 };
 
 class callee {
+public:
+  callee(rpc::base_stream& s) : stream_(s) {
+
+  }
+
+public:
   void onstart() {};
   void onread() {}
   void onwrite() {}
   void onstop() {};
 
+private:
+  rpc::stream& stream_;
 };
 
+
 template<class T>
-class transport : public q::Object
-{
+class acceptor {
 public:
-  transport() : object_(new T) {
-
+  acceptor()
+  : io_acceptor_(0)
+  , io_thread_(0)
+  {
+    // Start an accept operation for a new connection.
+  }
+  
+  virtual ~server_base() {
+    stop();
   }
 
-public:
-  void onconnect() {
-    object_->onstart();
-  };
-  void ondisconnect() {
-    object_->onstop();
-  };
-  void onread() {
-    object_->onread();
+  bool listen(unsigned short port) {
+    assert(NULL == io_acceptor_);
+    if(NULL == io_acceptor_) 
+      io_acceptor_ = new boost::asio::ip::tcp::acceptor(io_service_, boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), port));
+
+    RefPtr<rpc::stream_boost_impl> new_connection(new rpc::stream_boost_impl(acceptor_->get_io_service()));
+    io_acceptor_->async_accept(new_connection->socket(),
+        boost::bind(&server_base::handle_accept, this,
+        boost::asio::placeholders::error, new_connection));
+       
+    io_thread_ = new rpc::io_thread(io_service_);
+    io_thread_->start(); 
+    
+    return true;
   }
-  void onwrite() {
-    object_->onwrite();
+
+  /// Handle completion of a accept operation.
+  void handle_accept(const boost::system::error_code& e, RefPtr<rpc::stream_boost_impl> conn)
+  {
+    if (!e) {
+      try {  
+        if (conn != NULL) {  
+          boost::format fmt("%1%:%2%");  
+          fmt % conn->socket().remote_endpoint().address().to_string();  
+          fmt % conn->socket().remote_endpoint().port();  
+          //conn->set_remote_addr(fmt.str());  
+          OnAccept(conn);	
+        }  
+      } catch(std::exception& e) {  
+        LOG4CXX_ERROR(Wayixia_Logger, "with exception:[" << e.what() << "]");  
+      } catch(...)  {  
+        LOG4CXX_ERROR(Wayixia_Logger, "unknown exception.");  
+      }  
+    }   
+
+    // Start an accept operation for a new connection.
+    RefPtr<rpc::stream_boost_impl> new_conn(new rpc::stream_boost_impl(acceptor_->get_io_service()));
+    io_acceptor_->async_accept(new_conn->socket(),
+ 	    boost::bind(&acceptor<T>::handle_accept, this,
+	    boost::asio::placeholders::error, new_conn));
+  }
+
+
+  void stop() {
+    if(acceptor_)
+      delete io_acceptor_;
+    
+    io_acceptor_ = 0;
+
+    if(io_thread_ &&io_thread_->running()) 
+      io_thread_->stop();
+    
+    delete io_thread_;   
+    io_thread_ = 0;
+  }
+
+  virtual bool OnAccept(RefPtr<rpc::base_stream> conn) {
+    conn->handler()->on_connect();
+    return true;
   }
 
 private:
-  RefPtr<T> object_;
-};
-
-
-template<class T>
-class acceptor
-{
-
+  boost::asio::io_service io_service_;
+  boost::asio::ip::tcp::acceptor* io_acceptor_;
+  io_thread* io_thread_;	
 }; // class acceptor
 
-template<class T>
 
+
+
+template<class T>
+class connector : public q::Object 
+{
+public:
+  connector(); 
+  virtual ~connector() {}
+
+public:
+  void connect(const std::string& host,  const std::string& service, int timeout = -1) {
+    rpc::stream_boost_impl* p = new rpc::stream_boost_impl(io_service_);
+
+    // Resolve the host name into an IP address.
+    boost::asio::ip::tcp::resolver resolver(io_service_);
+    boost::asio::ip::tcp::resolver::query query(host, service);
+    boost::asio::ip::tcp::resolver::iterator endpoint_iterator = resolver.resolve(query);
+
+    // Start an asynchronous connect operation.
+    boost::asio::async_connect(
+	  p->socket(), 
+	  endpoint_iterator,
+      boost::bind(&connector<T>::handle_connect, this,
+      boost::asio::placeholders::error)
+	);
+
+    // save
+    stream_ = p;
+	hanlder_ = new T(*p);
+    stream_->handler(handler_);
+
+    std::cerr << "client_base::connect" << std::endl;
+    if(!io_thread_.running())
+      io_thread_.start();
+
+    std::cerr << "client_base::connect 1" << std::endl;
+  
+    // wait for connect
+    int r = event_timedwait(event_connect_ok_, timeout);
+    if(r != 0) {
+      throw r;
+    }
+    std::cerr << "client_base::connect 2" << std::endl;
+  }
+  
+public:
+  RefPtr<rpc::base_stream> stream() { return stream_; }
+
+private:
+  /// Handle completion of a connect operation.
+  void handle_connect(const boost::system::error_code& e){
+    if (!e) {
+      stream_->handler()->on_connect();
+    } else {
+      std::cerr << e.message() << std::endl;
+      stream_->handler()->on_disconnect();
+    }
+    event_set(event_connect_ok_);
+  }
+
+protected:
+  boost::asio::io_service io_service_;
+  io_thread io_thread_;
+  RefPtr<rpc::base_stream> stream_;
+  event_handle event_connect_ok_;
+}; // class connector
 
 
 
@@ -130,8 +283,8 @@ template<class T>
 int main(int argc, char *argv[])
 {
   // run as callee called by caller
-  rpc::acceptor< rpc::transport <rpc::callee> > acceptor_;
-  rpc::connector< rpc::transport <rpc::caller> > connector_;
+  rpc::acceptor< rpc::callee > acceptor_;
+  rpc::connector< rpc::caller > connector_;
 
   // run as caller which call the callee
   rpc::acceptor<rpc::caller> acceptor2_;
