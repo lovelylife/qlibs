@@ -1,0 +1,14 @@
+
+import platform
+
+#decide platform
+sys = platform.system()
+
+print('platform: ' + sys + ' building...')
+
+if(sys =="Windows"):
+  SConscript('windows.py')
+elif(sys == "Linux"):
+  SConscript('linux.py')
+else:
+  exit ("unkonw System('"+sys+"') tasks")
