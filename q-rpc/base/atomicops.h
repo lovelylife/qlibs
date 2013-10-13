@@ -29,7 +29,7 @@
 #define BASE_ATOMICOPS_H_
 #pragma once
 
-#include "typedefs.h"
+#include "type_defs.h"
 
 namespace base {
 namespace subtle {

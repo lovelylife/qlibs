@@ -7,7 +7,7 @@
 	#include <sys/types.h>
 	#include <errno.h>
 	#if defined( __GNUC__ ) && ( defined( __i386__ ) || defined( __x86_64__ ) )
-		#include "InterLock.h"
+		#include "interlock.h"
 	#endif
 #else
 	#define WIN32_LEAN_AND_MEAN
