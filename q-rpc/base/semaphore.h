@@ -12,12 +12,12 @@
 #endif
 
 class Semaphore {
-// ¹¹ÔìÎö¹¹
+// æ„é€ ææ„
 public:
 	Semaphore();
 	~Semaphore();
 
-// ²Ù×÷
+// æ“ä½œ
 public:
 	void wait();
 	void release();

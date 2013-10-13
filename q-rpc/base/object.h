@@ -1,4 +1,4 @@
-﻿
+
 #ifndef object_h__
 #define object_h__
 

@@ -21,7 +21,7 @@ public:
 	typedef enum {	OK = 0,	TIMEOUT=1,	FAILED = -1, } ResultCode;
 	typedef typename std::list<T> QUEUE;
 
-// ¹¹ÔìÎö¹¹
+// æ„é€ ææ„
 public:
 	SemaphoreQueue():m_bOpen(false),m_nSize(0) {
 		//open();
@@ -31,7 +31,7 @@ public:
 		close(); 
 	}
 
-// ·½·¨
+// æ–¹æ³•
 public:
 
 	bool push(const T&t,bool push_back = true) {
