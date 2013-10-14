@@ -93,7 +93,7 @@ private:
   boost::asio::io_service::work work_; 
 };  // io_thread
 
-class caller : public rpc::message_handler {
+class caller : public rpc::message_handler, rpc::client  {
 public:
   caller(rpc::base_stream& s) 
   : stream_(s) 
@@ -122,9 +122,8 @@ public:
     
     if(!init_rpc_interface_) {
       // intialize interface
-      init_rpc_interface_ = true;
-      //@todo
-      //this_->handler_services_proxy(buffer);        
+      init_rpc_interface_ = true;      
+      handler_services_proxy(buffer);        
     } else {
       text_iarchiver ar(buffer);
       ar >> message_;
@@ -137,8 +136,19 @@ public:
     event_set(write_ok_);
   }
 
+// rpc::client interface
+public:
+  virtual void send_request(rpc::protocol::message& msg, int timeout=-1) 
+  {
+    //connection_.write();
+  }
 
-private:
+  virtual void recv_response(rpc::protocol::message& msg, int timeout=-1) 
+  {
+    //connection_.read();
+  }
+
+privat:
   rpc::base_stream& stream_;
   bool init_rpc_interface_;
   event_handle read_ok_;
@@ -159,7 +169,7 @@ public:
     std::string s;
     //@todo
     //this_->dump_services_info(s);
-    stream_.async_write(s);
+    //stream_.async_write(s);
   }
     
   void on_disconnect() {
@@ -289,7 +299,7 @@ public:
   : io_service_()
   , io_thread_(io_service_)
   {
-
+    event_connect_ok_ = event_create(false, false);
   };
  
   virtual ~connector() {}
@@ -385,7 +395,7 @@ int main(int argc, char *argv[])
       // client
       rpc::connector<rpc::caller> rpc_client;
       //rpc_client.initialize("127.0.0.1", 10000);      
-      //rpc_client.connect("127.0.0.1", 55555);
+      rpc_client.connect("127.0.0.1", "5555");
       //rpc::client::iservice_proxy* test_service = rpc_client.get_service("test_service");
 
       //rpc::cookie_t cookie;
