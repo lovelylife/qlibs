@@ -78,7 +78,7 @@ private:
   boost::asio::io_service::work work_; 
 };  // io_thread
 
-class caller : public rpc::message_handler, rpc::client  {
+class caller : public rpc::message_handler, public rpc::client  {
 public:
   caller(rpc::base_stream& s) 
   : stream_(s) 
@@ -130,7 +130,7 @@ public:
     text_oarchiver archive(o);
     archive << msg;
 
-    this_->stream()->async_write(o);
+    stream_.async_write(o);
     int result = event_timedwait(write_ok_, timeout);
     if(result)
       throw rpc::exception("write timeout");
@@ -139,7 +139,7 @@ public:
   virtual void recv_response(rpc::protocol::message& msg, int timeout=-1) 
   {
     event_reset(read_ok_);
-    this_->stream()->async_read();
+    stream_.async_read();
     int result = event_timedwait(read_ok_, timeout);
     if(result)
       throw rpc::exception("read timeout");
@@ -147,7 +147,7 @@ public:
     msg = message_;
   }
 
-privat:
+private:
   rpc::base_stream& stream_;
   bool init_rpc_interface_;
   event_handle read_ok_;
@@ -157,7 +157,9 @@ privat:
 
 class callee : public rpc::message_handler {
 public:
-  callee(rpc::base_stream& s) : stream_(s) {
+  callee(rpc::base_stream& s) 
+  : stream_(s) 
+  {
 
   }
 
@@ -167,8 +169,8 @@ public:
     std::cerr << "callee_server:: callee_handler::on_connect()" << std::endl;
     std::string s;
     //@todo
-    //this_->dump_services_info(s);
-    //stream_.async_write(s);
+    rpcserver_.dump_services_info(s);
+    stream_.async_write(s);
   }
     
   void on_disconnect() {
@@ -183,7 +185,7 @@ public:
     ar >> msg;
     rpc::protocol::message res;
     //@todo
-    //this_->handle_message(msg, res, this);
+    rpcserver_.handle_message(msg, res, this);
 
     std::string o;
     text_oarchiver oar(o);
@@ -198,6 +200,7 @@ public:
 
 private:
   rpc::base_stream& stream_;
+  static rpc::server rpcserver_;
 };
 
 
@@ -338,6 +341,26 @@ public:
     }
     std::cerr << "client_base::connect 2" << std::endl;
   }
+
+// rpc methods
+public:
+  rpc::client::iservice_proxy* get_service(const std::string& service_name) 
+  {
+    rpc::client* client = static_cast<T*>(stream_->handler());
+    if(client)
+       return client->get_service(service_name);
+
+    return 0;
+  }
+
+  void call(rpc::client::iservice_proxy* s, const std::string& func, const rpc::parameters& params,
+    rpc::protocol::response& res) 
+  {
+    rpc::client* client = static_cast<T*>(stream_->handler());
+    if(!client)
+      throw rpc::exception("rpc is not initialized");
+    client->call(s, func, params, res);
+  }
   
 public:
   RefPtr<rpc::base_stream> stream() { return stream_; }
@@ -395,7 +418,7 @@ int main(int argc, char *argv[])
       rpc::connector<rpc::caller> rpc_client;
       //rpc_client.initialize("127.0.0.1", 10000);      
       rpc_client.connect("127.0.0.1", "5555");
-      //rpc::client::iservice_proxy* test_service = rpc_client.get_service("test_service");
+      rpc::client::iservice_proxy* test_service = rpc_client.get_service("test_service");
 
       //rpc::cookie_t cookie;
       //rpc_client.addListener(test_service, new CReference_T<test_event>, cookie);
@@ -416,7 +439,7 @@ int main(int argc, char *argv[])
           break;
         }
 
-        //rpc_client.call(test_service, action, params, res);
+        rpc_client.call(test_service, action, params, res);
         res.dump();
       }
     }
