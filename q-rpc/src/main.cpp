@@ -41,21 +41,6 @@
 #include "text_archive.h"
 
 
-struct test_struct {
-  int a;
-  long b;
-
-  std::string s;
-
-  template<typename Archive>
-  void serialize(Archive& ar) {
-    ar & a;
-    ar & b;
-    ar & s;
-  }
-};
-
-
 //#include "rpcserver_default.h"
 //#include "rpcclient_default.h"
 
@@ -140,12 +125,26 @@ public:
 public:
   virtual void send_request(rpc::protocol::message& msg, int timeout=-1) 
   {
-    //connection_.write();
+    event_reset(write_ok_);
+    std::string o;
+    text_oarchiver archive(o);
+    archive << msg;
+
+    this_->stream()->async_write(o);
+    int result = event_timedwait(write_ok_, timeout);
+    if(result)
+      throw rpc::exception("write timeout");
   }
 
   virtual void recv_response(rpc::protocol::message& msg, int timeout=-1) 
   {
-    //connection_.read();
+    event_reset(read_ok_);
+    this_->stream()->async_read();
+    int result = event_timedwait(read_ok_, timeout);
+    if(result)
+      throw rpc::exception("read timeout");
+
+    msg = message_;
   }
 
 privat:
