@@ -108,6 +108,7 @@ public:
     if(!init_rpc_interface_) {
       // intialize interface
       init_rpc_interface_ = true;      
+      std::cerr << "intialize rpc interface " << buffer << std::endl;
       handler_services_proxy(buffer);        
     } else {
       text_iarchiver ar(buffer);
@@ -170,6 +171,7 @@ public:
     std::string s;
     //@todo
     rpcserver_.dump_services_info(s);
+    std::cerr << "export interface to caller:" << s << std::endl;
     stream_.async_write(s);
   }
     
@@ -185,7 +187,7 @@ public:
     ar >> msg;
     rpc::protocol::message res;
     //@todo
-    rpcserver_.handle_message(msg, res, this);
+    rpcserver_.handle_message(msg, res, NULL);
 
     std::string o;
     text_oarchiver oar(o);
@@ -280,7 +282,7 @@ public:
     T* handler = new T(*conn);
     conn->handler(handler);
     conn->handler()->on_connect();
-
+    list_.push_back(conn);
     return true;
   }
 
@@ -288,9 +290,8 @@ private:
   boost::asio::io_service io_service_;
   boost::asio::ip::tcp::acceptor* io_acceptor_;
   io_thread* io_thread_;	
+  std::list< RefPtr<rpc::base_stream> > list_;
 }; // class acceptor
-
-
 
 
 template<class T>
@@ -336,30 +337,13 @@ public:
   
     // wait for connect
     int r = event_timedwait(event_connect_ok_, timeout);
-    if(r != 0) {
+    if(1 == r) {
+      std::cerr << "connect timout" << std::endl;
       throw r;
+    } else if(-1 == r){
+      std::cerr << "connect error" << std::endl;
     }
     std::cerr << "client_base::connect 2" << std::endl;
-  }
-
-// rpc methods
-public:
-  rpc::client::iservice_proxy* get_service(const std::string& service_name) 
-  {
-    rpc::client* client = static_cast<T*>(stream_->handler());
-    if(client)
-       return client->get_service(service_name);
-
-    return 0;
-  }
-
-  void call(rpc::client::iservice_proxy* s, const std::string& func, const rpc::parameters& params,
-    rpc::protocol::response& res) 
-  {
-    rpc::client* client = static_cast<T*>(stream_->handler());
-    if(!client)
-      throw rpc::exception("rpc is not initialized");
-    client->call(s, func, params, res);
   }
   
 public:
@@ -384,6 +368,8 @@ protected:
   event_handle event_connect_ok_;
 }; //class connector
 
+rpc::server rpc::callee::rpcserver_;
+
 } // namespace rpc
 
 
@@ -401,7 +387,7 @@ int main(int argc, char *argv[])
   try
   {
     if(argc > 1) {
-      rpc::acceptor<rpc::callee> server;
+      rpc::acceptor<rpc::caller> server;
       if(!server.listen(5555)) {
         std::cerr << "start server error" << std::endl;
       } else {
@@ -415,10 +401,10 @@ int main(int argc, char *argv[])
       }
     } else {
       // client
-      rpc::connector<rpc::caller> rpc_client;
+      rpc::connector<rpc::callee> rpc_client;
       //rpc_client.initialize("127.0.0.1", 10000);      
       rpc_client.connect("127.0.0.1", "5555");
-      rpc::client::iservice_proxy* test_service = rpc_client.get_service("test_service");
+      //rpc::client::iservice_proxy* test_service = rpc_client.get_service("test_service");
 
       //rpc::cookie_t cookie;
       //rpc_client.addListener(test_service, new CReference_T<test_event>, cookie);
@@ -427,7 +413,7 @@ int main(int argc, char *argv[])
       // call test_service add method
       // 
       rpc::protocol::response res;
-      rpc::protocol::request::parameters params;
+      rpc::parameters params;
       params["p0"] = 20;
       params["p1"] = 35;	
       // rpc_client.call(test_service, "add", params, res);
@@ -439,7 +425,7 @@ int main(int argc, char *argv[])
           break;
         }
 
-        rpc_client.call(test_service, action, params, res);
+        //rpc_client.call(test_service, action, params, res);
         res.dump();
       }
     }

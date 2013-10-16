@@ -64,6 +64,7 @@ public:
     //text_oarchiver archive(o);
     //archive << t;
     outbound_data_ = ostr;
+    char* c = &(outbound_data_[0]); // copy on write
     assert(outbound_data_.data() != ostr.data());
 
     // Format the header.
