@@ -279,10 +279,8 @@ public:
   }
 
   virtual bool OnAccept(RefPtr<rpc::base_stream> conn) {
-    T* handler = new T(*conn);
-    conn->handler(handler);
-    conn->handler()->on_connect();
-    list_.push_back(conn);
+    if(conn->handler())
+      conn->handler()->on_connect();
     return true;
   }
 
@@ -290,7 +288,6 @@ private:
   boost::asio::io_service io_service_;
   boost::asio::ip::tcp::acceptor* io_acceptor_;
   io_thread* io_thread_;	
-  std::list< RefPtr<rpc::base_stream> > list_;
 }; // class acceptor
 
 
@@ -370,7 +367,29 @@ protected:
 
 rpc::server rpc::callee::rpcserver_;
 
+
+class rpccallee : public acceptor<callee> 
+{
+public:
+  virtual bool OnAccept(RefPtr<rpc::base_stream> conn) {
+    rpc::callee* handler = new rpc::callee(*conn);
+    conn->handler(handler);
+    return acceptor<callee>::OnAccept(conn);
+  }
+
+private:
+  std::map<int, rpc::callee*> clients_;
+};
+
+
+class rpccallee_default : public connector<caller> 
+{
+
+};
+
+
 } // namespace rpc
+
 
 
 int main(int argc, char *argv[])
