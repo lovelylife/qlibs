@@ -206,7 +206,6 @@ private:
 };
 
 
-template<class T>
 class acceptor {
 public:
   acceptor()
@@ -227,7 +226,7 @@ public:
 
     RefPtr<rpc::stream_boost_impl> new_connection(new rpc::stream_boost_impl(io_acceptor_->get_io_service()));
     io_acceptor_->async_accept(new_connection->socket(),
-        boost::bind(&acceptor<T>::handle_accept, this,
+        boost::bind(&acceptor::handle_accept, this,
         boost::asio::placeholders::error, new_connection));
        
     io_thread_ = new rpc::io_thread(io_service_);
@@ -260,7 +259,7 @@ public:
     // Start an accept operation for a new connection.
     RefPtr<rpc::stream_boost_impl> new_conn(new rpc::stream_boost_impl(io_acceptor_->get_io_service()));
     io_acceptor_->async_accept(new_conn->socket(),
- 	    boost::bind(&acceptor<T>::handle_accept, this,
+ 	    boost::bind(&acceptor::handle_accept, this,
 	    boost::asio::placeholders::error, new_conn));
   }
 
@@ -323,8 +322,8 @@ public:
 
     // save
     stream_ = p;
-    T* handler = new T(*p);
-    stream_->handler(handler);
+    handler_ = new T(*p);
+    stream_->handler(handler_);
 
     std::cerr << "client_base::connect" << std::endl;
     if(!io_thread_.running())
@@ -363,18 +362,21 @@ protected:
   io_thread io_thread_;
   RefPtr<rpc::base_stream> stream_;
   event_handle event_connect_ok_;
+  RefPtr<T> handler_;
 }; //class connector
 
 rpc::server rpc::callee::rpcserver_;
 
 
-class rpccallee : public acceptor<callee> 
+class rpcserver_default : public acceptor 
 {
 public:
   virtual bool OnAccept(RefPtr<rpc::base_stream> conn) {
     rpc::callee* handler = new rpc::callee(*conn);
     conn->handler(handler);
-    return acceptor<callee>::OnAccept(conn);
+    static int i= 0;
+    clients_[i++] = handler;
+    return acceptor::OnAccept(conn);
   }
 
 private:
@@ -382,8 +384,13 @@ private:
 };
 
 
-class rpccallee_default : public connector<caller> 
+class rpcclient_default : public connector<caller> 
 {
+
+};
+
+class rpcnotify_client_default : public connector<callee> {
+
 
 };
 
@@ -406,7 +413,7 @@ int main(int argc, char *argv[])
   try
   {
     if(argc > 1) {
-      rpc::acceptor<rpc::caller> server;
+      rpc::rpcserver_default server;
       if(!server.listen(5555)) {
         std::cerr << "start server error" << std::endl;
       } else {
