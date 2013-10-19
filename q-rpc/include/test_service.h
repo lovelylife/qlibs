@@ -10,7 +10,7 @@ class test_service
 {
 
 // connection point 
-connection_impl(test_service)
+//connection_impl(test_service)
 
 // rpc interfaces
 rpc_methods_begin(test_service)

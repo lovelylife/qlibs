@@ -36,11 +36,11 @@ struct ievent_listener {
 }; 
 
 
-struct iservice : ievent_listener {
+struct iservice {
   virtual const char* name() = 0;
   virtual const rpc_method_entry* methods() = 0;
-  //virtual void methods(std::map<int, std::string>& funcs) = 0;
   virtual void process(rpc::protocol::request& req, rpc::protocol::response& res, rpc::server_session_ptr session) = 0 ;
+  virtual ~iservice() {}
 };
 
 

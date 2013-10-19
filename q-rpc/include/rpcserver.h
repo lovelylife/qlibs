@@ -80,43 +80,7 @@ private:
   // process addEventListener or removeEventListener request
   void handle_event_message(rpc::protocol::message& input, rpc::protocol::message& output, rpc::server_session_ptr s)
   {
-    rpc::protocol::event res;
-    rpc::protocol::event req;
-    req.from_string(input.body);
-    //req.dump();
 
-    // get service object
-    rpc::services::iservice* is = get_service(input.channel);
-    if(!is) { // error occurred
-      std::ostringstream oss;
-      oss << "unknow service id:" << input.channel;
-      throw rpc::exception(oss.str().c_str());						
-    }
-
-    // get queue_client_key
-    rpc::connection_t key = req.body()["key"].asString();
-    RefPtr<rpc::idispatch> d = s->get_dispatch(key);
-    // get action 
-    int action = req.action();
-    switch(action) {
-    case rpc::protocol::event_add:
-      {
-        rpc::cookie_t cookie = is->addListener(d);        
-        //std::cerr << "call event add: connect(" << c << "), cookie:" << cookie  << std::endl;;
-        res.body()["cookie"] = cookie;
-      }
-      break;
-
-    case rpc::protocol::event_remove:
-      is->removeListener(d, req.body()["cookie"].asInt());
-      break;
-   
-    default:
-      throw rpc::exception("unacceptable event action");
-    }
-    
-    // Êä³öµ½output
-    res.to_string(output.body);
   }
 
 public:

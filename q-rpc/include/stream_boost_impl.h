@@ -141,7 +141,7 @@ private:
   std::vector<char> inbound_data_;
   
   boost::asio::ip::tcp::socket socket_;
-  RefPtr<rpc::message_handler> handler_;
+  rpc::message_handler* handler_;
   
 //  event_handle read_data_ok_;
 //  event_handle write_data_ok_;
