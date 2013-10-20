@@ -118,8 +118,17 @@ public:
   }
 	  
 public:
+  void call(const std::string& service_name, 
+    const std::string& method,
+    const rpc::protocol::request::parameters& params, 
+    rpc::protocol::response& res) 
+  {
+    iservice_proxy* s = get_service(service_name);
+    call(s, method, params, res);
+  }
+ 
   void call(iservice_proxy* s,
-    const std::string& func,
+    const std::string& method,
     const rpc::protocol::request::parameters& params, 
     rpc::protocol::response& res) 
   {
@@ -127,10 +136,10 @@ public:
       throw rpc::exception("invalid argument iservice_proxy*");	
     }
 		
-    int func_id = s->func(func);
+    int func_id = s->func(method);
     if(func_id < 0) {
       std::stringstream oss;
-      oss << s->name() << "have no methods: " << func << std::endl;
+      oss << s->name() << "have no methods: " << method << std::endl;
       throw rpc::exception(oss.str().c_str());
     }
     rpc::protocol::message msg_response;

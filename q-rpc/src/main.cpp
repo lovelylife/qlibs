@@ -290,7 +290,6 @@ private:
   io_thread* io_thread_;	
 }; // class acceptor
 
-
 template<class T>
 class connector : public q::Object 
 {
@@ -303,10 +302,17 @@ public:
   };
  
   virtual ~connector() {}
+ 
+public:
+  virtual void on_init_handler(rpc::base_stream*) = 0;
 
 public:
   void connect(const std::string& host,  const std::string& service, int timeout = -1) {
     rpc::stream_boost_impl* p = new rpc::stream_boost_impl(io_service_);
+    on_init_handler(p);    
+// save
+//    handler_ = new T(p);
+//    p->handler(handler_);
 
     // Resolve the host name into an IP address.
     boost::asio::ip::tcp::resolver resolver(io_service_);
@@ -320,10 +326,6 @@ public:
       boost::bind(&connector<T>::handle_connect, this,
       boost::asio::placeholders::error)
     );
-
-    // save
-    handler_ = new T(p);
-    p->handler(handler_);
 
     std::cerr << "client_base::connect" << std::endl;
     if(!io_thread_.running())
@@ -392,6 +394,12 @@ private:
 class rpcclient_default : public connector<caller> 
 {
 public:
+  virtual void on_init_handler(rpc::base_stream* p) {
+    handler_ = new caller(p);
+    p->handler(handler_);
+  }
+
+public:
   void call(const std::string& service, 
             const std::string& method, 
             const rpc::parameters& params,
@@ -409,33 +417,116 @@ public:
   }
 };
 
-class rpcnotify_client_default : public connector<callee> {
 
+
+class qnotify_server : public acceptor 
+{
+public:
+  void notify(int i, const rpc::parameters& params) {
+    RefPtr<rpc::caller> c = clients_[i];
+    if(c) {
+      rpc::protocol::response res;
+      c->call("qnotify_service", "notify", params, res);
+      
+    }
+  }
+
+// acceptor overrides
+public:
+  virtual bool OnAccept(RefPtr<rpc::base_stream> conn) {
+    rpc::caller* handler = new rpc::caller(conn);
+    conn->handler(handler);
+    static int i= 0;
+    clients_[++i] = handler;
+    return acceptor::OnAccept(conn);
+  }
+
+private:
+  std::map<int, RefPtr<rpc::caller> > clients_;
+};
+
+
+
+
+class qnotify_client : public connector<callee> {
+public:
+  struct inotify {
+    virtual void on_notify(const rpc::parameters& params) = 0;
+    virtual ~inotify() {}
+  };
+
+  class qnotify_service
+    : public rpc::services::iservice
+  {
+  public:
+    qnotify_service(inotify* n)
+    : notify_(n) {
+
+    }
+
+    ~qnotify_service() {
+       if(notify_) {
+         delete notify_;
+       }
+    }
+
+  // rpc interfaces
+  rpc_methods_begin(qnotify_service)
+    rpc_method(1, notify)
+  rpc_methods_end()
+
+  public:
+    void notify(rpc::protocol::request& req, rpc::protocol::response& res, rpc::server_session_ptr) {
+      res.body()["data"] = req.params()["p0"].asInt() + req.params()["p1"].asInt();
+      if(notify_) {
+         notify_->on_notify(req.params());
+      }
+    }
+
+  private:
+    inotify* notify_;
+  }; 
+
+public:
+  virtual void on_init_handler(rpc::base_stream* p) {
+    handler_ = new callee(p, rpcserver_);
+    p->handler(handler_);
+  }
+
+public:
+  void set_notify_handler(rpc::qnotify_client::inotify* p) {
+    rpcserver_.register_service(new qnotify_service(p));
+  }
+
+private:
+  rpc::server rpcserver_;
 
 };
 
 
 } // namespace rpc
 
+class qnotify_event : public rpc::qnotify_client::inotify 
+{
+public:
+  virtual void on_notify(const rpc::parameters& params) {
+    std::cerr << "qnotify_event: " << params << std::endl;
+  }
 
+
+};
 
 int main(int argc, char *argv[])
 {
-  // run as callee called by caller
-  //rpc::acceptor< rpc::callee > acceptor_;
-  //rpc::connector< rpc::caller > connector_;
-
-  // run as caller which call the callee
-  //rpc::acceptor<rpc::caller> acceptor2_;
-  //rpc::connector<rpc::callee> connector2_;
-
-
   try
   {
     if(argc > 1) {
+      rpc::qnotify_server notify_server;
+
       rpc::rpcserver_default server;
       server.register_service(new rpc::services::test_service);
-      if(!server.listen(5555)) {
+
+      if(!server.listen(5555) || !notify_server.listen(5556)) {
         std::cerr << "start server error" << std::endl;
       } else {
         std::cerr << "start server ok" << std::endl;
@@ -444,13 +535,21 @@ int main(int argc, char *argv[])
         std::string action;
         while(std::getline(std::cin, action)) {
           if(action == "exit") break;
+
+          rpc::parameters params;
+          params["a"] = "test";
+          notify_server.notify(0, params);
 	}
       }
     } else {
       // client
       rpc::rpcclient_default rpc_client;
+      rpc::qnotify_client nc;
+      
+      nc.set_notify_handler(new qnotify_event);
       //rpc_client.initialize("127.0.0.1", 10000);      
       rpc_client.connect("127.0.0.1", "5555");
+      nc.connect("127.0.0.1", "5556");
       //rpc::client::iservice_proxy* test_service = rpc_client.get_service("test_service");
 
       //rpc::cookie_t cookie;
