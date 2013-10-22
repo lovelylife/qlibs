@@ -430,6 +430,16 @@ public:
       
     }
   }
+  
+  void dump() {
+    std::map<int, RefPtr<rpc::caller> >::const_iterator c =  clients_.begin();
+    while(c != clients_.end())
+    {
+       std::cerr << "id " <<  c->first << std::endl;
+       c++;
+    }
+
+  }
 
 // acceptor overrides
 public:
@@ -516,6 +526,28 @@ public:
 
 };
 
+
+void split(const std::string& input, const char* split_str, std::vector<std::string>& ls) {
+  ls.clear();
+  std::string s = input;
+  char* p = (char*)s.c_str();
+  p = strtok(p, split_str);
+  while(p) {
+    ls.push_back(p);
+    p = strtok(NULL, split_str);
+  }
+}
+
+void dump_vector(const std::vector<std::string>& ls) {
+  std::vector<std::string>::const_iterator c = ls.begin();
+  int i = 0;
+  while(c!=ls.end()) {
+    
+    std::cerr << "[" << i << "]" << " " << *c << std::endl;
+    i++;c++;
+  }
+}
+
 int main(int argc, char *argv[])
 {
   try
@@ -534,12 +566,24 @@ int main(int argc, char *argv[])
 	// server.register_service(new rpc::services::test_service);
         std::string action;
         while(std::getline(std::cin, action)) {
-          if(action == "exit") break;
-
-          rpc::parameters params;
-          params["a"] = "test";
-          notify_server.notify(0, params);
-	}
+          //std::cerr << "input: " << action << std::endl;
+          std::vector<std::string> ls;
+          split(action, " ", ls);
+          //dump_vector(ls); 
+          if(ls.size() <= 0) continue;
+          std::string f = ls[0];
+          if(f == "exit") break;
+          if(f == "dump") {
+            notify_server.dump();
+            
+          } else if(f=="notify"){
+            if(ls.size() <= 1) continue;
+            int id = atoi(ls[1].c_str());
+            rpc::parameters params;
+            params["a"] = "test";
+            notify_server.notify(id, params);
+	  }
+        }
       }
     } else {
       // client
