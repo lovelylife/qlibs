@@ -2,7 +2,6 @@
 #ifndef stream_h__
 #define stream_h__
 
-
 #include <object.h>
 
 namespace rpc {

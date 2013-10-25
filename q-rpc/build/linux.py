@@ -1,10 +1,12 @@
 
+import os
 
-env = Environment(TARGET_ARCH = 'x86')
-
+#env = Environment(TARGET_ARCH = 'x86')
+env = Environment()
+ 
 base_dir = '../base'
 jsoncpp_dir = '../thanks/jsoncpp'
-boost_dir = '/usr/boost_1_49_0'
+boost_dir = os.environ.get('BOOST_HOME')
 
 libpath = [
   boost_dir + '/stage/lib'
@@ -34,7 +36,7 @@ sources.append(base_dir+'/atomicops_internals_x86_gcc.cc')
 
 env.Program('qrpc', 
   source=sources, 
-  LINKFLAGS=[],
+  LINKFLAGS=['-static'],
   LIBS=libs_,
   LIBPATH=libpath,
   CCFLAGS=includes)

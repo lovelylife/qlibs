@@ -90,6 +90,10 @@ public:
       write_ok_ = event_create(false, false);
   }
 
+  ~caller() {
+    std::cerr << "caller::~caller()" << std::endl;
+  }
+
 // interface rpc::message_handler
 public:
   virtual void on_connect() {
@@ -222,9 +226,10 @@ public:
 
   bool listen(unsigned short port) {
     assert(NULL == io_acceptor_);
-    if(NULL == io_acceptor_) 
-      io_acceptor_ = new boost::asio::ip::tcp::acceptor(io_service_, boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), port));
-
+    if(NULL == io_acceptor_) { 
+      io_acceptor_ = new boost::asio::ip::tcp::acceptor(io_service_, 
+                         boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), port));
+    }
     RefPtr<rpc::stream_boost_impl> new_connection(new rpc::stream_boost_impl(io_acceptor_->get_io_service()));
     io_acceptor_->async_accept(new_connection->socket(),
         boost::bind(&acceptor::handle_accept, this,
@@ -255,13 +260,12 @@ public:
       } catch(...)  {  
         std::cerr <<  "unknown exception." << std::endl;  
       }  
-    }   
-
-    // Start an accept operation for a new connection.
-    RefPtr<rpc::stream_boost_impl> new_conn(new rpc::stream_boost_impl(io_acceptor_->get_io_service()));
-    io_acceptor_->async_accept(new_conn->socket(),
+       // Start an accept operation for a new connection.
+      rpc::stream_boost_impl* new_conn(new rpc::stream_boost_impl(io_acceptor_->get_io_service()));
+      io_acceptor_->async_accept(new_conn->socket(),
  	    boost::bind(&acceptor::handle_accept, this,
 	    boost::asio::placeholders::error, new_conn));
+    }   
   }
 
 
@@ -423,11 +427,13 @@ class qnotify_server : public acceptor
 {
 public:
   void notify(int i, const rpc::parameters& params) {
-    RefPtr<rpc::caller> c = clients_[i];
-    if(c) {
-      rpc::protocol::response res;
-      c->call("qnotify_service", "notify", params, res);
-      
+    
+    std::map<int, RefPtr<rpc::caller> >::iterator c =  clients_.find(i);
+    if(c != clients_.end()) {
+       if(c->second) {
+         rpc::protocol::response res;
+         c->second->call("qnotify_service", "notify", params, res);
+       }
     }
   }
   
@@ -592,8 +598,9 @@ int main(int argc, char *argv[])
       
       nc.set_notify_handler(new qnotify_event);
       //rpc_client.initialize("127.0.0.1", 10000);      
-      rpc_client.connect("127.0.0.1", "5555");
-      nc.connect("127.0.0.1", "5556");
+      //rpc_client.connect("wayixia.com", "5555");
+      nc.connect("wayixia.com", "5556", 10000);
+      //nc.connect("127.0.0.1", "5556", 10000);
       //rpc::client::iservice_proxy* test_service = rpc_client.get_service("test_service");
 
       //rpc::cookie_t cookie;
