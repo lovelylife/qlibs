@@ -21,7 +21,7 @@ includes = [
 ]
 
 
-libs_ = ['pthread','rt', 'boost_system-gcc43-mt-1_49']
+libs_ = ['rt', 'boost_thread-gcc43-mt-1_49','boost_system-gcc43-mt-1_49','pthread']
 
 #sources
 sources = Glob('../src/*.cpp')

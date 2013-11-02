@@ -14,10 +14,6 @@
 
 
 // common libraries
-//#include <reference/IReference.h>
-//#include <phstream/NetLibDef.h>
-//#include <phstream/StreamDecorator.h>
-//#include <memalloc/mallocins.h>
 #include <object.h>
 #include <locker.h>
 #include <thread.h>
@@ -107,7 +103,7 @@ public:
   }
 
   virtual void on_read_completed(const std::string& buffer) {
-    //std::cerr << "callee_handler read_completed." << std::endl;
+    std::cerr << "caller_handler read_completed." << std::endl;
     
     if(!init_rpc_interface_) {
       // intialize interface
@@ -119,10 +115,12 @@ public:
       ar >> message_;
       event_set(read_ok_);
     }
+    stream_->async_read();
+     
   }
 
   virtual void on_write_completed(const std::string& buffer) {  
-    //std::cerr << "callee_handler write_completed." << std::endl;  
+    std::cerr << "caller_handler write_completed." << std::endl;  
     event_set(write_ok_);
   }
 
@@ -136,18 +134,32 @@ public:
     archive << msg;
 
     stream_->async_write(o);
-    int result = event_timedwait(write_ok_, timeout);
-    if(result)
+    int result = event_timedwait(write_ok_, 60000);
+    if(1 == result) {
       throw rpc::exception("write timeout");
+    } else if(-1 == result) {
+      throw rpc::exception("write error");
+    } else if(0 == result ){
+      std::cerr << "write ok" << std::endl;
+    } else {
+      throw rpc::exception("unknow write error");
+    }
   }
 
   virtual void recv_response(rpc::protocol::message& msg, int timeout=-1) 
   {
     event_reset(read_ok_);
-    stream_->async_read();
-    int result = event_timedwait(read_ok_, timeout);
-    if(result)
+    //stream_->async_read();
+    int result = event_timedwait(read_ok_, 60000);
+    if(1 == result) {
       throw rpc::exception("read timeout");
+    } else if(-1 == result) {
+      throw rpc::exception("read error");
+    } else if(0 == result ){
+      std::cerr << "read ok" << std::endl;
+    } else {
+      throw rpc::exception("unknow read  error");
+    }
 
     msg = message_;
   }
@@ -249,9 +261,9 @@ public:
       try {  
         // create handler
         if (conn != NULL) {  
-          boost::format fmt("%1%:%2%");  
-          fmt % conn->socket().remote_endpoint().address().to_string();  
-          fmt % conn->socket().remote_endpoint().port();  
+          //boost::format fmt("%1%:%2%");  
+          //fmt % conn->socket().remote_endpoint().address().to_string();  
+          //fmt % conn->socket().remote_endpoint().port();  
           //conn->set_remote_addr(fmt.str());  
           OnAccept(conn);	
         }  
@@ -261,7 +273,7 @@ public:
         std::cerr <<  "unknown exception." << std::endl;  
       }  
        // Start an accept operation for a new connection.
-      rpc::stream_boost_impl* new_conn(new rpc::stream_boost_impl(io_acceptor_->get_io_service()));
+      RefPtr<rpc::stream_boost_impl> new_conn(new rpc::stream_boost_impl(io_acceptor_->get_io_service()));
       io_acceptor_->async_accept(new_conn->socket(),
  	    boost::bind(&acceptor::handle_accept, this,
 	    boost::asio::placeholders::error, new_conn));
@@ -426,6 +438,16 @@ public:
 class qnotify_server : public acceptor 
 {
 public:
+  qnotify_server() {
+    std::cerr << "qnotify_server::qnotify_server()" << std::endl;
+  }
+
+  ~qnotify_server() {
+
+    std::cerr << "qnotify_server::~qnotify_server()" << std::endl;
+  }
+
+public:
   void notify(int i, const rpc::parameters& params) {
     
     std::map<int, RefPtr<rpc::caller> >::iterator c =  clients_.find(i);
@@ -450,14 +472,17 @@ public:
 // acceptor overrides
 public:
   virtual bool OnAccept(RefPtr<rpc::base_stream> conn) {
+    std::cerr << "qnotify accept a new connection" << std::endl;
     rpc::caller* handler = new rpc::caller(conn);
     conn->handler(handler);
-    static int i= 0;
+    static int i=0; 
+    AutoLock<CriticalSection> lock(critical_section_);
     clients_[++i] = handler;
     return acceptor::OnAccept(conn);
   }
 
 private:
+  CriticalSection critical_section_;
   std::map<int, RefPtr<rpc::caller> > clients_;
 };
 
@@ -554,8 +579,31 @@ void dump_vector(const std::vector<std::string>& ls) {
   }
 }
 
+class t  {
+public:
+  t() {  std::cerr << "t::t() constructor called." << std::endl; }
+  ~t() {  std::cerr << "t::~t() destructor called." << std::endl; }
+  void echo() {
+    std::cerr << "t:echo()" << std::endl;
+  }
+
+};
+
+
+void f(boost::shared_ptr<t> pa) {
+ pa->echo(); 
+
+}
+
+#include <boost/thread/thread.hpp>
+
 int main(int argc, char *argv[])
 {
+//  boost::shared_ptr<t> a(new t);
+//  boost::thread thr(boost::bind(f, a));
+//  thr.join();
+//  return 0;
+
   try
   {
     if(argc > 1) {
@@ -564,14 +612,14 @@ int main(int argc, char *argv[])
       rpc::rpcserver_default server;
       server.register_service(new rpc::services::test_service);
 
-      if(!server.listen(5555) || !notify_server.listen(5556)) {
+      if(/*!server.listen(5555) ||*/ !notify_server.listen(5556)) {
         std::cerr << "start server error" << std::endl;
       } else {
         std::cerr << "start server ok" << std::endl;
-        // register service
-	// server.register_service(new rpc::services::test_service);
         std::string action;
         while(std::getline(std::cin, action)) {
+          try {
+/////////////////////////////
           //std::cerr << "input: " << action << std::endl;
           std::vector<std::string> ls;
           split(action, " ", ls);
@@ -581,7 +629,6 @@ int main(int argc, char *argv[])
           if(f == "exit") break;
           if(f == "dump") {
             notify_server.dump();
-            
           } else if(f=="notify"){
             if(ls.size() <= 1) continue;
             int id = atoi(ls[1].c_str());
@@ -589,7 +636,12 @@ int main(int argc, char *argv[])
             params["a"] = "test";
             notify_server.notify(id, params);
 	  }
+////////////////////////////
+          } catch(const rpc::exception& e) {
+            std::cerr << "error " << e.what() << std::endl;
+          }
         }
+        std::cerr << "exit..." << std::endl;
       }
     } else {
       // client

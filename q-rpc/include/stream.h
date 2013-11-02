@@ -16,6 +16,8 @@ struct base_stream : virtual public q::Object
   // get or set handler
   virtual rpc::message_handler* handler(rpc::message_handler* p=0) = 0;
 
+  virtual ~base_stream() {}
+
 }; // class base_stream
 
 
