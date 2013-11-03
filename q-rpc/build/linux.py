@@ -17,7 +17,8 @@ includes = [
 '-I'+jsoncpp_dir+'/include',
 '-I'+base_dir,
 '-I'+boost_dir,
-'-g',
+#'-g',
+'-DNDEBUG',
 ]
 
 

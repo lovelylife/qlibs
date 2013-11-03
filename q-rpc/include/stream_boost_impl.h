@@ -69,7 +69,7 @@ public:
 
     // Format the header.
     out_pkg_header_.size = outbound_data_.size();		
-		
+    std::cerr << "send package header size: " << out_pkg_header_.size << std::endl;		
     // Write the serialized data to the socket. We use "gather-write" to send
     // both the header and the data in a single write operation.
     std::vector<boost::asio::const_buffer> buffers;

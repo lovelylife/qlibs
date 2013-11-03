@@ -612,7 +612,7 @@ int main(int argc, char *argv[])
       rpc::rpcserver_default server;
       server.register_service(new rpc::services::test_service);
 
-      if(/*!server.listen(5555) ||*/ !notify_server.listen(5556)) {
+      if(!server.listen(5555) || !notify_server.listen(5556)) {
         std::cerr << "start server error" << std::endl;
       } else {
         std::cerr << "start server ok" << std::endl;
