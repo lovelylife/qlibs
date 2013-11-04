@@ -218,7 +218,7 @@ class QRPC {
 $rpc_client = new QRPC("wayixia.com", 5555);
 
 $p0 = 11;
-$p1 = '55';
+$p1 = 55;
 //echo $rpc_client;
 $res = $rpc_client->call('test_service', 'add', array('p0'=>$p0, 'p1'=>$p1));
 print_r($res);
