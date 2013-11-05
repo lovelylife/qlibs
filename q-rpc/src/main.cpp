@@ -448,9 +448,9 @@ public:
   }
 
 public:
-  void notify(int i, const rpc::parameters& params) {
+  void notify(const std::string& id, const rpc::parameters& params) {
     
-    std::map<int, RefPtr<rpc::caller> >::iterator c =  clients_.find(i);
+    std::map<std::string, RefPtr<rpc::caller> >::iterator c =  clients_.find(id);
     if(c != clients_.end()) {
        if(c->second) {
          rpc::protocol::response res;
@@ -460,7 +460,7 @@ public:
   }
   
   void dump() {
-    std::map<int, RefPtr<rpc::caller> >::const_iterator c =  clients_.begin();
+    std::map<std::string, RefPtr<rpc::caller> >::const_iterator c =  clients_.begin();
     while(c != clients_.end())
     {
        std::cerr << "id " <<  c->first << std::endl;
@@ -475,15 +475,32 @@ public:
     std::cerr << "qnotify accept a new connection" << std::endl;
     rpc::caller* handler = new rpc::caller(conn);
     conn->handler(handler);
-    static int i=0; 
+    std::ostringstream os;
+    void* p = (void*)handler;
+    os << p;   
     AutoLock<CriticalSection> lock(critical_section_);
-    clients_[++i] = handler;
+    clients_[os.str()] = handler;
+    // write id to the notify client
+    rpc::protocol::message msg;
+    msg.type = rpc::protocol::message_request;
+    msg.channel = 0; // notify service
+    rpc::protocol::request req;
+    rpc::parameters params;
+    params["key"] = os.str();
+    req.set_action(1); // id     
+    req.set_params(params);
+    req.to_string(msg.body);
+    std::string o;
+    text_oarchiver archive(o);
+    archive << msg;
+    conn->async_write(o);
+    
     return acceptor::OnAccept(conn);
   }
 
 private:
   CriticalSection critical_section_;
-  std::map<int, RefPtr<rpc::caller> > clients_;
+  std::map<std::string, RefPtr<rpc::caller> > clients_;
 };
 
 
@@ -513,10 +530,17 @@ public:
 
   // rpc interfaces
   rpc_methods_begin(qnotify_service)
-    rpc_method(1, notify)
+    rpc_method(1, id)
+    rpc_method(2, notify)
+
   rpc_methods_end()
 
   public:
+    void id(rpc::protocol::request& req, rpc::protocol::response& res, rpc::server_session_ptr) {
+       std::string client_key = req.params()["key"].asString();
+       std::cerr << "client key: " << client_key << std::endl;
+    }
+
     void notify(rpc::protocol::request& req, rpc::protocol::response& res, rpc::server_session_ptr) {
       res.body()["data"] = req.params()["p0"].asInt() + req.params()["p1"].asInt();
       if(notify_) {
@@ -631,7 +655,7 @@ int main(int argc, char *argv[])
             notify_server.dump();
           } else if(f=="notify"){
             if(ls.size() <= 1) continue;
-            int id = atoi(ls[1].c_str());
+            std::string id = ls[1];
             rpc::parameters params;
             params["a"] = "test";
             notify_server.notify(id, params);
