@@ -29,12 +29,6 @@ struct rpc_method_entry {
 
 namespace rpc { namespace services {
 
-// 纯事件接口
-struct ievent_listener {
-  virtual unsigned int addListener(rpc::idispatch* d) = 0;
-  virtual void removeListener(rpc::idispatch* d, unsigned int cookie) = 0;
-}; 
-
 
 struct iservice {
   virtual const char* name() = 0;
@@ -79,18 +73,6 @@ public: \
     return &__methods_map[0]; \
   }
  
-
-#define connection_impl(className) \
-public: \
-  virtual unsigned int addListener(rpc::idispatch* d) {\
-    return connection_point<className>::append(d); \
-  } \
-  \
-  virtual void removeListener(rpc::idispatch* d, unsigned int cookie) { \
-    connection_point<className>::remove(d, cookie);  \
-  }
-
-
 
 #endif // services_h_
 
