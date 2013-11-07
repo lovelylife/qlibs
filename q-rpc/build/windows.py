@@ -1,19 +1,21 @@
+import os
 
-
-env = Environment(TARGET_ARCH = 'x86')
-
-#common directory
+#env = Environment(TARGET_ARCH = 'x86')
+env = Environment()
+ 
 base_dir = '../base'
+jsoncpp_dir = '../thanks/jsoncpp'
+boost_dir = os.environ.get('BOOST_HOME')
 
-#jsoncpp src path
-jsoncpp_path = '../thirdparty/jsoncpp'
+libpath = [
+  boost_dir + '/stage/lib'
+]
 
-#macro and include paths
 includes = [
-'-I../../../../PhRemote/ext/jsoncpp/include',
-'-I../../../../common',
-'-I'+jsoncpp_path+'/include',
-'-I../base',
+'-I../include',
+'-I'+jsoncpp_dir+'/include',
+'-I'+base_dir,
+'-I'+boost_dir,
 '-D_WIN32_WINNT=0x0501', 
 '-DWIN32',
 '-D_WIN32',
@@ -25,22 +27,22 @@ includes = [
 ]
 
 #libraries
-libs_ = ['libjson']
+libs_ = []
 
 #source files
-sources = Glob('*.cpp')
-sources.append(base_dir+'/RefCounted.cc')
-#sources.append(common_dir+'/phstream/BaseStream.cpp')
-#sources.append(common_dir+'/phstream/LFTracker.cpp')
-#sources.append(common_dir+'/phstream/IOCPSockStream.cpp')
-#sources.append(common_dir+'/phstream/InitSock.cpp')
-#sources.append(common_dir+'/thread/BaseThread.cpp')
-#sources.append(common_dir+'/memalloc/mallocins.cpp')
+sources = Glob('../src/*.cpp')
+sources.append(jsoncpp_dir+'/src/json/json_value.cpp')
+sources.append(jsoncpp_dir+'/src/json/json_reader.cpp')
+sources.append(jsoncpp_dir+'/src/json/json_writer.cpp')
+sources.append(base_dir+'/thread.cc')
+sources.append(base_dir+'/ref_counted.cc')
+sources.append(base_dir+'/atomicops_internals_x86_gcc.cc')
+
 
 #build
-env.Program('new-simple-rpc', 
+env.Program('q-rpc', 
   source=sources, 
-  LINKFLAGS=['/PDB:new-simple-rpc.pdb'],
+  LINKFLAGS=['/PDB:q-rpc.pdb'],
   LIBS=libs_,
-  LIBPATH=[],
+  LIBPATH=[boost_dir+'/stage/lib'],
   CCFLAGS=includes)
