@@ -8,9 +8,10 @@ namespace rpc { namespace services {
 class test_service 
 : public rpc::services::iservice
 {
+public:
+  test_service(rpc::qnotify_server* ns) : ns_(ns) {}
+  ~test_service() {}
 
-// connection point 
-//connection_impl(test_service)
 
 // rpc interfaces
 rpc_methods_begin(test_service)
@@ -27,7 +28,8 @@ public:
   void test(rpc::protocol::request&, rpc::protocol::response&, rpc::server_session_ptr) {
     
   }
-
+private:
+  rpc::qnotify_server* ns_;
 }; 
 
 

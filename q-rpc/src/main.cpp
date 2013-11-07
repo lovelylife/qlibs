@@ -25,15 +25,15 @@
 #include "message_handler.h"
 #include "stream.h"
 #include "stream_boost_impl.h"
-#include "dispatch.h"
-#include "connection_point.h"
+#include "text_archive.h"
 #include "services.h"
 #include "test_service.h"
 
 
 #include "rpcclient.h"
 #include "rpcserver.h"
-
+#include "caller.h"
+#include "callee.h"
 #include "text_archive.h"
 
 
@@ -73,154 +73,6 @@ private:
   boost::asio::io_service& io_service_;
   boost::asio::io_service::work work_; 
 };  // io_thread
-
-class caller : public rpc::message_handler, public rpc::client  {
-public:
-  caller(rpc::base_stream* s) 
-  : stream_(s) 
-  , init_rpc_interface_(false) 
-  , read_ok_(0)
-  , write_ok_(0)
-  {
-      read_ok_ = event_create(false, false);
-      write_ok_ = event_create(false, false);
-  }
-
-  ~caller() {
-    std::cerr << "caller::~caller()" << std::endl;
-  }
-
-// interface rpc::message_handler
-public:
-  virtual void on_connect() {
-      std::cerr << "callee_handler connected" << std::endl;
-      stream_->async_read();
-  }
-
-  // Á´½Ó¶Ï¿ª
-  virtual void on_disconnect() { 
-    std::cerr << "callee_handler disconnected not impliement" << std::endl;
-  }
-
-  virtual void on_read_completed(const std::string& buffer) {
-    std::cerr << "caller_handler read_completed." << std::endl;
-    
-    if(!init_rpc_interface_) {
-      // intialize interface
-      init_rpc_interface_ = true;      
-      std::cerr << "intialize rpc interface " << buffer << std::endl;
-      handler_services_proxy(buffer);        
-    } else {
-      text_iarchiver ar(buffer);
-      ar >> message_;
-      event_set(read_ok_);
-    }
-    stream_->async_read();
-     
-  }
-
-  virtual void on_write_completed(const std::string& buffer) {  
-    std::cerr << "caller_handler write_completed." << std::endl;  
-    event_set(write_ok_);
-  }
-
-// rpc::client interface
-public:
-  virtual void send_request(rpc::protocol::message& msg, int timeout=-1) 
-  {
-    event_reset(write_ok_);
-    std::string o;
-    text_oarchiver archive(o);
-    archive << msg;
-
-    stream_->async_write(o);
-    int result = event_timedwait(write_ok_, 60000);
-    if(1 == result) {
-      throw rpc::exception("write timeout");
-    } else if(-1 == result) {
-      throw rpc::exception("write error");
-    } else if(0 == result ){
-      std::cerr << "write ok" << std::endl;
-    } else {
-      throw rpc::exception("unknow write error");
-    }
-  }
-
-  virtual void recv_response(rpc::protocol::message& msg, int timeout=-1) 
-  {
-    event_reset(read_ok_);
-    //stream_->async_read();
-    int result = event_timedwait(read_ok_, 60000);
-    if(1 == result) {
-      throw rpc::exception("read timeout");
-    } else if(-1 == result) {
-      throw rpc::exception("read error");
-    } else if(0 == result ){
-      std::cerr << "read ok" << std::endl;
-    } else {
-      throw rpc::exception("unknow read  error");
-    }
-
-    msg = message_;
-  }
-
-private:
-  RefPtr<rpc::base_stream> stream_;
-  bool init_rpc_interface_;
-  event_handle read_ok_;
-  event_handle write_ok_;
-  rpc::protocol::message message_;
-};
-
-class callee : public rpc::message_handler {
-public:
-  callee(rpc::base_stream* s, rpc::server& r) 
-  : stream_(s) 
-  , rpcserver_(r)
-  {
-    
-  }
-
-// interface rpc::message_handler
-public:
-  void on_connect() {
-    std::cerr << "callee_server:: callee_handler::on_connect()" << std::endl;
-    std::string s;
-    //@todo
-    rpcserver_.dump_services_info(s);
-    std::cerr << "export interface to caller:" << s << std::endl;
-    stream_->async_write(s);
-  }
-    
-  void on_disconnect() {
-    std::cerr << "callee_server:: callee_handler::on_disconnect()" << std::endl;
-  }
-
-  void on_read_completed(const std::string& buf) {
-    //std::cerr << "callee_server:: callee_handler::on_read_completed()" << std::endl;
-    rpc::protocol::message msg;
-    text_iarchiver ar(buf);
-    // std::cerr << buf << std::endl;
-    ar >> msg;
-    rpc::protocol::message res;
-    //@todo
-    rpcserver_.handle_message(msg, res, NULL);
-
-    std::string o;
-    text_oarchiver oar(o);
-    oar << res;
-    stream_->async_write(o);
-  }
-
-  void on_write_completed(const std::string& buf) {
-    //std::cerr << "callee_server:: callee_handler::on_write_completed()" << std::endl;
-    stream_->async_read();
-  }
-
-private:
-  RefPtr<rpc::base_stream> stream_;
-  rpc::server& rpcserver_;
-};
 
 
 class acceptor {
@@ -481,12 +333,19 @@ public:
     AutoLock<CriticalSection> lock(critical_section_);
     clients_[os.str()] = handler;
     // write id to the notify client
+    write_notify_client_id(conn, os.str());
+ 
+    return acceptor::OnAccept(conn);
+  }
+
+  void write_notify_client_id(RefPtr<rpc::base_stream> conn, const std::string& id) {
+   // write id to the notify client
     rpc::protocol::message msg;
     msg.type = rpc::protocol::message_request;
     msg.channel = 0; // notify service
     rpc::protocol::request req;
     rpc::parameters params;
-    params["key"] = os.str();
+    params["key"] = id;
     req.set_action(1); // id     
     req.set_params(params);
     req.to_string(msg.body);
@@ -494,8 +353,6 @@ public:
     text_oarchiver archive(o);
     archive << msg;
     conn->async_write(o);
-    
-    return acceptor::OnAccept(conn);
   }
 
 private:
@@ -632,14 +489,18 @@ int main(int argc, char *argv[])
   {
     if(argc > 1) {
       rpc::qnotify_server notify_server;
+      if(!notify_server.listen(5556)) {
+        std::cerr << "start notify server" << std::endl;
+        return -2;
+      }            
 
       rpc::rpcserver_default server;
-      server.register_service(new rpc::services::test_service);
+      server.register_service(new rpc::services::test_service(&notify_server));
 
-      if(!server.listen(5555) || !notify_server.listen(5556)) {
-        std::cerr << "start server error" << std::endl;
+      if(!server.listen(5555)) {
+       std::cerr << "start rpc server error" << std::endl;
       } else {
-        std::cerr << "start server ok" << std::endl;
+        std::cerr << "start rpc server ok" << std::endl;
         std::string action;
         while(std::getline(std::cin, action)) {
           try {
