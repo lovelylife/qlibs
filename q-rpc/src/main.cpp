@@ -27,18 +27,22 @@
 #include "stream_boost_impl.h"
 #include "text_archive.h"
 #include "services.h"
-#include "test_service.h"
 
 #include "io_thread.h"
 #include "rpcclient.h"
 #include "rpcserver.h"
 #include "caller.h"
 #include "callee.h"
-#include "text_archive.h"
+#include "acceptor.h"
+#include "connector.h"
 
+#include "rpcserver_default.h"
+#include "rpcclient_default.h"
 
-//#include "rpcserver_default.h"
-//#include "rpcclient_default.h"
+#include "qnotify_server.h"
+#include "qnotify_client.h"
+
+#include "test_service.h"
 
 class test_event : public rpc::ievent {
 public:
@@ -57,8 +61,6 @@ public:
   virtual void on_notify(const rpc::parameters& params) {
     std::cerr << "qnotify_event: " << params << std::endl;
   }
-
-
 };
 
 
@@ -83,20 +85,9 @@ void dump_vector(const std::vector<std::string>& ls) {
   }
 }
 
-void f(boost::shared_ptr<t> pa) {
- pa->echo(); 
-
-}
-
-#include <boost/thread/thread.hpp>
 
 int main(int argc, char *argv[])
 {
-//  boost::shared_ptr<t> a(new t);
-//  boost::thread thr(boost::bind(f, a));
-//  thr.join();
-//  return 0;
-
   try
   {
     if(argc > 1) {
