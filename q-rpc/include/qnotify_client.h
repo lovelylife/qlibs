@@ -4,19 +4,20 @@
 
 namespace rpc {
 
-class qnotify_client : public connector<callee> {
-public:
-  struct inotify {
+struct inotify {
     virtual void on_notify(const rpc::parameters& params) = 0;
     virtual ~inotify() {}
-  };
+};
 
+class qnotify_client : public connector<callee> {
+
+public:
   class qnotify_service
     : public rpc::services::iservice
   {
   public:
-    qnotify_service(inotify* n)
-    : notify_(n) {
+    qnotify_service()
+    : notify_(NULL) {
 
     }
 
@@ -24,6 +25,10 @@ public:
        if(notify_) {
          delete notify_;
        }
+    }
+
+    void set_notify(inotify* n) {
+      notify_ = n;
     }
 
   // rpc interfaces
@@ -51,19 +56,32 @@ public:
   }; 
 
 public:
+  qnotify_client() 
+  : service_(new qnotify_service)  
+  {
+    
+    rpcserver_.register_service(service_);
+  }
+
+  ~qnotify_client() {
+    if(service_)
+      delete service_;
+  }
+
+public:
   virtual void on_init_handler(rpc::base_stream* p) {
     handler_ = new callee(p, rpcserver_);
     p->handler(handler_);
   }
 
 public:
-  void set_notify_handler(rpc::qnotify_client::inotify* p) {
-    rpcserver_.register_service(new qnotify_service(p));
+  void set_notify_handler(rpc::inotify* p) {
+    service_->set_notify(p);
   }
 
 private:
   rpc::server rpcserver_;
-
+  qnotify_service* service_;
 };
 
 } //namespace rpc
