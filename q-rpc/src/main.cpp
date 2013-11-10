@@ -66,10 +66,13 @@ public:
 
 public:  
     bool loop() {
-      std::cerr << " notify_dispatcher " << std::endl;
       rpc::protocol::request req;
       if(OK == queue_.pop_timedwait(req, 1000)) {
-        ns_->notify(req.params()["nid"].asString(), req.params()); 
+        try {
+          ns_->notify(req.params()["nid"].asString(), req.params()); 
+	} catch( const std::exception& e) {
+	  std::cerr << "notify task error " << e.what() << " \n" << req.body() << std::endl;
+	}
       }
       return true;
     }
@@ -136,8 +139,16 @@ public:
 class qnotify_event : public rpc::inotify 
 {
 public:
+  virtual void on_initialize(const std::string& nid) {
+    std::cerr << "get notify id: " << nid << std::endl;
+  }
+
   virtual void on_notify(const rpc::parameters& params) {
     std::cerr << "qnotify_event: " << params << std::endl;
+  }
+
+  virtual void on_uninitialize() {
+  
   }
 };
 
