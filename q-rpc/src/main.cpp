@@ -17,7 +17,7 @@
 #include <object.h>
 #include <locker.h>
 #include <thread.h>
-
+#include <semaphore_queue.h>
 
 #include "rpcexception.h"
 #include "rpcprotocol.h"
@@ -44,6 +44,84 @@
 
 #include "test_service.h"
 
+
+
+
+namespace rpc { namespace services {
+
+class notify_dispatcher : public q::Thread {
+public:
+  notify_dispatcher(rpc::qnotify_server* ns):ns_(ns) {
+    queue_.open(10000);
+  }
+
+  ~notify_dispatcher() {
+    queue_.close();
+  }  
+
+public:
+    void add(const rpc::protocol::request& req) {
+      queue_.push(req);
+    }
+
+public:  
+    bool loop() {
+      std::cerr << " notify_dispatcher " << std::endl;
+      rpc::protocol::request req;
+      if(OK == queue_.pop_timedwait(req, 1000)) {
+        ns_->notify(req.params()["nid"].asString(), req.params()); 
+      }
+      return true;
+    }
+
+private:
+  SemaphoreQueue<rpc::protocol::request> queue_;
+  rpc::qnotify_server* ns_;
+};
+
+
+
+class qnotify_service 
+: public rpc::services::iservice
+{
+public:
+  qnotify_service(rpc::qnotify_server* ns) : dispatcher_(ns) {
+    dispatcher_.start();
+  }
+
+  ~qnotify_service() {
+    dispatcher_.stop();
+  }
+
+
+// rpc interfaces
+rpc_methods_begin(qnotify_service)
+rpc_method(1, add)
+rpc_method(2, call)
+rpc_methods_end()
+
+// ½Ó¿Ú
+public:
+  void add(rpc::protocol::request& req, rpc::protocol::response& res, rpc::server_session_ptr) {
+    res.body()["data"] = req.params()["p0"].asInt() + req.params()["p1"].asInt();
+  }
+
+  void call(rpc::protocol::request& req, rpc::protocol::response&, rpc::server_session_ptr) {
+    //std::string nid = req.params()["nid"].asString();
+    //ns_->call(nid, req.params());
+    std::cerr << "recv a notify command" << std::endl;
+    dispatcher_.add(req);
+  }
+
+private:
+  rpc::services::notify_dispatcher dispatcher_;
+}; 
+
+
+} } // namespace services } namespace rpc
+
+
+
 class test_event : public rpc::ievent {
 public:
   virtual void notify(int id, const rpc::parameters& params)
@@ -55,7 +133,7 @@ public:
 };
 
 
-class qnotify_event : public rpc::qnotify_client::inotify 
+class qnotify_event : public rpc::inotify 
 {
 public:
   virtual void on_notify(const rpc::parameters& params) {
@@ -98,7 +176,7 @@ int main(int argc, char *argv[])
       }            
 
       rpc::rpcserver_default server;
-      server.register_service(new rpc::services::test_service(&notify_server));
+      server.register_service(new rpc::services::qnotify_service(&notify_server));
 
       if(!server.listen(5555)) {
        std::cerr << "start rpc server error" << std::endl;

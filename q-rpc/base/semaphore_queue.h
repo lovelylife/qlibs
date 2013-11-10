@@ -1,7 +1,7 @@
 #ifndef SemaphoreQueue_h__
 #define SemaphoreQueue_h__
 
-#include "Semaphore.h"
+#include "semaphore_t.h"
 #include "locker.h"
 #include <list>
 
@@ -14,11 +14,12 @@
 #define SEM_VALUE_MAX   0x3FFFFFFF
 #endif
 
+typedef enum {	OK = 0,	TIMEOUT=1,	FAILED = -1, } ResultCode;
+
 template<class T>
 class SemaphoreQueue
 {
 public:
-	typedef enum {	OK = 0,	TIMEOUT=1,	FAILED = -1, } ResultCode;
 	typedef typename std::list<T> QUEUE;
 
 // 构造析构
