@@ -14,30 +14,32 @@ public:
   }
 
   ~qnotify_server() {
-
     std::cerr << "qnotify_server::~qnotify_server()" << std::endl;
   }
 
 public:
   void notify(const std::string& id, const rpc::parameters& params) {
-    
-    std::map<std::string, RefPtr<rpc::caller> >::iterator c =  clients_.find(id);
-    if(c != clients_.end()) {
-       if(c->second) {
-         rpc::protocol::response res;
-         c->second->call("qnotify_service", "notify", params, res);
-       }
+    RefPtr<rpc::caller> p;	 
+    {
+      AutoLock<CriticalSection> lock(critical_section_);
+      std::map<std::string, RefPtr<rpc::caller> >::iterator c 
+	      =  clients_.find(id);
+      if(c != clients_.end()) p = c->second;
+    }    
+    if(p) {
+      rpc::protocol::response res;
+      p->call("qnotify_service", "notify", params, res);
     }
   }
   
   void dump() {
-    std::map<std::string, RefPtr<rpc::caller> >::const_iterator c =  clients_.begin();
+    std::map<std::string, RefPtr<rpc::caller> >::const_iterator c
+	    =  clients_.begin();
     while(c != clients_.end())
     {
        std::cerr << "id " <<  c->first << std::endl;
        c++;
     }
-
   }
 
 // acceptor overrides

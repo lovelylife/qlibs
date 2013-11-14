@@ -103,18 +103,10 @@ public:
 
 public:
   virtual void on_connect() {
- //   rpc::protocol::message msg;
-	//try {
- //     recv_response(msg, 5000);
- //     handler_services_proxy(msg.body);
-	//} catch(int err) {
- //     std::cerr << "read error code: " << err << std::endl;
-	//}
   }
 
   virtual void on_disconnect() 
   {
-    
   }
 	  
 public:
@@ -126,11 +118,20 @@ public:
     iservice_proxy* s = get_service(service_name);
     call(s, method, params, res);
   }
+
+  void vcall(const std::string& service_name, 
+    const std::string& method, 
+    const rpc::parameters& params) 
+  {
+    rpc::protocol::response res;
+    iservice_proxy* s = get_service(service_name);
+    call(s, method, params, res, false);
+  }
  
   void call(iservice_proxy* s,
     const std::string& method,
     const rpc::protocol::request::parameters& params, 
-    rpc::protocol::response& res) 
+    rpc::protocol::response& res, bool vcall = false) 
   {
     if(NULL == s) {
       throw rpc::exception("invalid argument iservice_proxy*");	
@@ -144,18 +145,22 @@ public:
     }
     rpc::protocol::message msg_response;
     rpc::protocol::message msg_request;
-    msg_request.type = rpc::protocol::message_request;
+    msg_request.type = (!vcall)?rpc::protocol::message_request:rpc::protocol::message_request_void;
     msg_request.channel = s->channel();
 
     rpc::protocol::request req;
     req.set_action(func_id);
     req.set_params(params);		
     req.to_string(msg_request.body);
+    if(!vcall) {
+      rpc::protocol::message msg_response;
+      // call
+      call_proxy(msg_request, msg_response);	
+      res.from_string(msg_response.body);
+    } else {
+      call_proxy_void(msg_request);
+    }
     
-    // call
-    call_proxy(msg_request, msg_response);	
-    
-    res.from_string(msg_response.body);
   }
 
   void addListener(iservice_proxy* s, ievent* handler, rpc::cookie_t& cookie)
@@ -238,6 +243,10 @@ private:
     send_request(input_msg);
     // 实际使用代码
     recv_response(output_msg);    
+  }
+
+  void call_proxy_void(rpc::protocol::message& input_msg) {
+    send_request(input_msg);
   }
 
 public:
