@@ -41,7 +41,8 @@ public:
   public:
     void id(rpc::protocol::request& req, rpc::protocol::response& res, rpc::server_session_ptr) {
        std::string client_key = req.params()["key"].asString();
-       std::cerr << "client key: " << client_key << std::endl;
+       //std::cerr << "client key: " << client_key << std::endl;
+       notify_->on_initialize(client_key);
     }
 
     void notify(rpc::protocol::request& req, rpc::protocol::response& res, rpc::server_session_ptr) {

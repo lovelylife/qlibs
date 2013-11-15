@@ -50,10 +50,10 @@ public:
   
     // wait for connect
     int r = event_timedwait(event_connect_ok_, timeout);
-    if(1 == r) {
+    if(event_timeout == r) {
       std::cerr << "connect timout" << std::endl;
       throw r;
-    } else if(-1 == r){
+    } else if(event_error == r){
       std::cerr << "connect error" << std::endl;
     }
     std::cerr << "client_base::connect 2" << std::endl;
