@@ -57,6 +57,16 @@ public:
 
 // rpc::client interface
 public:
+  virtual void send_request_noack(rpc::protocol::message& msg) 
+  {
+    event_reset(write_ok_);
+    std::string o;
+    text_oarchiver archive(o);
+    archive << msg;
+
+    stream_->async_write(o);
+  }
+
   virtual void send_request(rpc::protocol::message& msg, int timeout=-1) 
   {
     event_reset(write_ok_);

@@ -45,7 +45,6 @@ public:
     }
 
     void notify(rpc::protocol::request& req, rpc::protocol::response& res, rpc::server_session_ptr) {
-      res.body()["data"] = req.params()["p0"].asInt() + req.params()["p1"].asInt();
       if(notify_) {
          notify_->on_notify(req.params());
       }

@@ -223,6 +223,10 @@ public:
 
 // override by network layer
 private:
+  virtual void send_request_noack(rpc::protocol::message& msg) {
+    
+  }
+
   virtual void send_request(rpc::protocol::message& msg, int timeout=-1) 
   {
     //connection_.write();
@@ -246,7 +250,7 @@ private:
   }
 
   void call_proxy_void(rpc::protocol::message& input_msg) {
-    send_request(input_msg);
+    send_request_noack(input_msg);
   }
 
 public:

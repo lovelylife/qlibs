@@ -22,13 +22,12 @@ public:
     RefPtr<rpc::caller> p;	 
     {
       AutoLock<CriticalSection> lock(critical_section_);
-      std::map<std::string, RefPtr<rpc::caller> >::iterator c 
-	      =  clients_.find(id);
+      std::map<std::string, RefPtr<rpc::caller> >::iterator c =  clients_.find(id);
       if(c != clients_.end()) p = c->second;
     }    
     if(p) {
-      rpc::protocol::response res;
-      p->call("qnotify_service", "notify", params, res);
+      std::cerr << params << std::endl;
+      p->vcall("qnotify_service", "notify", params);
     }
   }
   
