@@ -5,7 +5,9 @@
 namespace rpc {
 
 struct inotify {
+    virtual void on_initialize(const std::string& key) = 0;
     virtual void on_notify(const rpc::parameters& params) = 0;
+    virtual void on_uninitialize() = 0;
     virtual ~inotify() {}
 };
 
