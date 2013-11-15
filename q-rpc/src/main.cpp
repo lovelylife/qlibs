@@ -106,13 +106,14 @@ rpc_methods_end()
 // ½Ó¿Ú
 public:
   void add(rpc::protocol::request& req, rpc::protocol::response& res, rpc::server_session_ptr) {
+    std::cerr << "[qnotify_service] add method called" << std::endl;
     res.body()["data"] = req.params()["p0"].asInt() + req.params()["p1"].asInt();
   }
 
   void call(rpc::protocol::request& req, rpc::protocol::response&, rpc::server_session_ptr) {
     //std::string nid = req.params()["nid"].asString();
     //ns_->call(nid, req.params());
-    std::cerr << "recv a notify command" << std::endl;
+    std::cerr << "[qnotify_service] recv a notify command" << std::endl;
     dispatcher_.add(req);
   }
 

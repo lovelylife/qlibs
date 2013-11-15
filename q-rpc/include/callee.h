@@ -20,7 +20,7 @@ public:
     std::string s;
     //@todo
     rpcserver_.dump_services_info(s);
-    std::cerr << "export interface to caller:" << s << std::endl;
+    std::cerr << "export interface to caller." << std::endl;
     stream_->async_write(s);
   }
     
@@ -32,11 +32,14 @@ public:
     //std::cerr << "callee_server:: callee_handler::on_read_completed()" << std::endl;
     rpc::protocol::message msg;
     text_iarchiver ar(buf);
-    // std::cerr << buf << std::endl;
     ar >> msg;
     rpc::protocol::message res;
     //@todo
     rpcserver_.handle_message(msg, res, NULL);
+    if(msg.type == rpc::protocol::message_request_void) {
+      stream_->async_read();
+      return;
+    }
 
     std::string o;
     text_oarchiver oar(o);

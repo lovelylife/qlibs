@@ -12,7 +12,7 @@ public:
 
   ~stream_boost_impl() 
   {
-     std::cerr << "~stream_boost_imp()" << std::endl;
+     //std::cerr << "~stream_boost_imp()" << std::endl;
      socket_.close();
   }
 
@@ -22,7 +22,7 @@ public:
   {
     //read_data_ok_  = event_create(false, false);
     //write_data_ok_ = event_create(false, false);
-    std::cerr << "stream_boost_imp()" << std::endl;
+    //std::cerr << "stream_boost_imp()" << std::endl;
   }
 
 // base_stream 

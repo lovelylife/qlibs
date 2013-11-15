@@ -39,7 +39,7 @@ public:
     if(!init_rpc_interface_) {
       // intialize interface
       init_rpc_interface_ = true;      
-      std::cerr << "intialize rpc interface " << buffer << std::endl;
+      std::cerr << "intialize rpc interface." << std::endl;
       handler_services_proxy(buffer);        
     } else {
       text_iarchiver ar(buffer);

@@ -114,15 +114,6 @@ public:
         func_array.append(func_item);
         (entry++);
       }
-      //c->second->register_functions(funcs_map);
-      //std::map<int, std::string>::const_iterator f = funcs_map.begin();
-      //while(f!=funcs_map.end()) {
-      //  Json::Value func_item(Json::objectValue);
-      //  func_item["id"] = f->first;
-      //  func_item["name"] = f->second;
-      //  func_array.append(func_item);
-      //  f++;
-      //}
       s["funcs"] =  func_array;
       array.append(s); 
       c++;
