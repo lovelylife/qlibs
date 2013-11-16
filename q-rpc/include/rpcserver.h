@@ -23,6 +23,7 @@ public:
     int message_type = input_msg.type;
     switch(input_msg.type) {
     case rpc::protocol::message_request:
+    case rpc::protocol::message_request_void:
       handle_request_message(input_msg, output_msg, s);
       break;		
 

@@ -40,11 +40,9 @@ class QRPC_MESSAGE {
   }
 
   function from_binary($bstr) {
-    //var_dump($bstr);
     //echo "from_binary:".$bstr." end\n";
     $arr = unpack('ltype/h/lchannel/h/a*body', $bstr);
     if($arr == false) {
-    //  echo "unpack error\n";
     } else { 
       //print_r($arr);
       $this->type = $arr['type'];
@@ -53,18 +51,6 @@ class QRPC_MESSAGE {
     }
   }
 };
-/*
-// test code
-$struct = new QRPC_MESSAGE;
-$struct->type = 1;
-$struct->channel = 2;
-$struct->body = "test body ok!";
-
-$struct2 = new QRPC_MESSAGE;
-$struct2->from_binary($struct->to_binary());
-print_r($struct);
-print_r($struct2);
-&*/
 
 
 class QRPC_SERIALIZER {
@@ -246,13 +232,13 @@ class QRPC {
 }
 $rpc_client = new QRPC("wayixia.com", 5555); //wayixia.com
 
-$p0 = '006636A0';
+$p0 = '00662988';
 $p1 = 55;
 echo $rpc_client;
-$res = $rpc_client->call('qnotify_service', 'call', array('nid'=>$p0, 'p1'=>$p1));
+$res = $rpc_client->vcall('qnotify_service', 'call', array('nid'=>$p0, 'p1'=>$p1));
 //print_r($res);
 //$body = $res->body();
-echo "$p0+$p1=".$body['data'];
+//echo "$p0+$p1=".$body['data'];
 //$rpc_client->call('test_service', 'test', array());
 
 
