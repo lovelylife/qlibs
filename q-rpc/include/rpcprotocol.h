@@ -47,8 +47,8 @@ namespace rpc { namespace protocol {
 
 static const int message_request  = 0;
 static const int message_response = 1;
-static const int message_event    = 2;
-static const int message_request_void = 3;
+static const int message_request_void = 2;
+static const int message_event    = 3;
 
 
 static const int event_add	  = 0;

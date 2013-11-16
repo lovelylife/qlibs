@@ -52,33 +52,51 @@ namespace rpc { namespace services {
 class notify_dispatcher : public q::Thread {
 public:
   notify_dispatcher(rpc::qnotify_server* ns):ns_(ns) {
-    queue_.open(10000);
+//    queue_.open(10000);
   }
 
   ~notify_dispatcher() {
-    queue_.close();
+//    queue_.close();
   }  
 
 public:
     void add(const rpc::protocol::request& req) {
-      queue_.push(req);
+      AutoLock<CriticalSection> lock(critical_);
+      queue_.push_back(req);
+      std::cerr << "[notify_dispatcher] add after size: " << queue_.size() << std::endl;
     }
 
 public:  
     bool loop() {
       rpc::protocol::request req;
-      if(OK == queue_.pop_timedwait(req, 1000)) {
-        try {
-          ns_->notify(req.params()["nid"].asString(), req.params()); 
-	} catch( const std::exception& e) {
-	  std::cerr << "notify task error " << e.what() << " \n" << req.body() << std::endl;
+      bool is_empty = false;
+      {
+        AutoLock<CriticalSection> lock(critical_);
+        is_empty = (queue_.size() <= 0);
+        if(!is_empty) {
+	  req = queue_.front();
+	  queue_.pop_front();
 	}
       }
+
+      if(is_empty) {
+        Sleep(10);
+	return true;
+      }
+      std::cerr << "[rpc::dispatcher]send a notify" << std::endl;
+      try {
+         ns_->notify(req.params()["nid"].asString(), req.params()); 
+      } catch( const std::exception& e) {
+         std::cerr << "notify task error " << e.what() << " \n" << req.body() << std::endl;
+      }
+
       return true;
     }
 
 private:
-  SemaphoreQueue<rpc::protocol::request> queue_;
+  //SemaphoreQueue<rpc::protocol::request> queue_;
+  CriticalSection critical_;
+  std::list<rpc::protocol::request> queue_;  
   rpc::qnotify_server* ns_;
 };
 

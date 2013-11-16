@@ -125,7 +125,7 @@ public:
   {
     rpc::protocol::response res;
     iservice_proxy* s = get_service(service_name);
-    call(s, method, params, res, false);
+    call(s, method, params, res, true);
   }
  
   void call(iservice_proxy* s,

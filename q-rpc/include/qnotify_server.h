@@ -26,7 +26,7 @@ public:
       if(c != clients_.end()) p = c->second;
     }    
     if(p) {
-      std::cerr << params << std::endl;
+      //std::cerr << params << std::endl;
       p->vcall("qnotify_service", "notify", params);
     }
   }
@@ -44,7 +44,7 @@ public:
 // acceptor overrides
 public:
   virtual bool OnAccept(RefPtr<rpc::base_stream> conn) {
-    std::cerr << "qnotify accept a new connection" << std::endl;
+    //std::cerr << "qnotify accept a new connection" << std::endl;
     rpc::caller* handler = new rpc::caller(conn);
     conn->handler(handler);
     std::ostringstream os;

@@ -5,12 +5,29 @@
  *  q-rpc php client   
  * */
 
+
+// bind error handler
+set_error_handler(err_handler, E_ALL);
+
+function err_handler( $errno , $errstr , $errfile , $errline) {
+    if($errno != E_NOTICE && $errno != E_DEPRECATED && $errno != E_WARNING) {
+        echo "<pre><h1>PHPKind Exception:<h1>";
+        echo "<h3>Application: </h3>".$_GET['app']."\n";
+        echo "<h3>Message: </h3>".$errstr."\n";
+        // echo "<h3>File: </h3>".$errfile." : ". $errline."\r\n";
+		echo print_stack_trace();
+	    echo "</pre>\r\n";
+        exit(1);
+    }    
+}
+
 class QRPC_MESSAGE {
   public $type;
   public $channel;
   public $body;
   const message_request = 0;
-  const message_response= 1; 
+  const message_response= 1;
+  const message_request_void = 2;
   function __construct() {}
   function QRPC_MESSAGE() {  $this->__construct(); }
 
@@ -180,17 +197,26 @@ class QRPC {
     socket_write($this->sock_, $header, 4);  
     socket_write($this->sock_, $data, $length);
   }
+   
   function call($service_name, $method_name, $params) {
+    return $this->call__($service_name, $method_name, $params, false);
+  }
+
+  function vcall($service_name, $method_name, $params) {
+    return $this->call__($service_name, $method_name, $params, true);    
+  }
+
+  function call__($service_name, $method_name, $params, $noack) {
     $channel_id = $this->get_service($service_name);   
     $func_id = $this->get_func($service_name, $method_name);    
     //echo $func_id;
     if($func_id < 0) {
-      trigger_error('rpc service('.$service_name.') or method('.$method_name.') is not exists', E_USER_ERROR);
+	  return false;
+      //trigger_error('rpc service('.$service_name.') or method('.$method_name.') is not exists', E_USER_ERROR);
     }
-
-    $msg_response = new QRPC_MESSAGE();
+    
     $msg_request  = new QRPC_MESSAGE();
-    $msg_request->type = QRPC_MESSAGE::message_request; 
+    $msg_request->type = ($noack)?QRPC_MESSAGE::message_request_void:QRPC_MESSAGE::message_request; 
     $msg_request->channel = $channel_id;
 
     $request = new QRPC_REQUEST;
@@ -198,12 +224,15 @@ class QRPC {
     $request->set_params($params);
     $msg_request->body = $request->to_string();
     $this->write_pkg($msg_request->to_binary());
-    $data = $this->read_pkg();
-    $msg_response->from_binary($data);
-    $response = new QRPC_RESPONSE;
-    $response->from_string($msg_response->body);
-    //print_r($response);
-    return $response;
+
+	if(!$noack) {
+		$msg_response = new QRPC_MESSAGE();
+	    $data = $this->read_pkg();
+		$msg_response->from_binary($data);
+		$response = new QRPC_RESPONSE;
+		$response->from_string($msg_response->body);
+		return $response;
+	}
   }
 
   function __toString() {
@@ -217,12 +246,12 @@ class QRPC {
 }
 $rpc_client = new QRPC("wayixia.com", 5555); //wayixia.com
 
-$p0 = '0x911a158';
+$p0 = '006636A0';
 $p1 = 55;
-//echo $rpc_client;
+echo $rpc_client;
 $res = $rpc_client->call('qnotify_service', 'call', array('nid'=>$p0, 'p1'=>$p1));
-print_r($res);
-$body = $res->body();
+//print_r($res);
+//$body = $res->body();
 echo "$p0+$p1=".$body['data'];
 //$rpc_client->call('test_service', 'test', array());
 
