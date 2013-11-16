@@ -227,19 +227,27 @@ class QRPC {
     $str .="interfaces: " . json_encode($this->interfaces_) . "\n";
     return $str;
   }
-
-
 }
+
+// sample for test
 $rpc_client = new QRPC("wayixia.com", 5555); //wayixia.com
 
-$p0 = '00662988';
-$p1 = 55;
-echo $rpc_client;
-$res = $rpc_client->vcall('qnotify_service', 'call', array('nid'=>$p0, 'p1'=>$p1));
-//print_r($res);
-//$body = $res->body();
-//echo "$p0+$p1=".$body['data'];
-//$rpc_client->call('test_service', 'test', array());
+
+// echo $rpc_client;
+// call no return
+$msg = "notify message";
+$rpc_client->vcall('qnotify_service', 'call', array('nid'=>'00717748', 'test'=>$msg));
+
+
+$p0 = 18;
+$p1 = 81;
+$res = $rpc_client->call('qnotify_service', 'add', array('p0'=>$p0, 'p1'=>$p1));
+print_r($res);
+if(!empty($res)) {
+	$body = $res->body();
+	echo "$p0+$p1=".$body['data'];
+}
+
 
 
 
