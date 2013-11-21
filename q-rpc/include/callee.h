@@ -15,7 +15,7 @@ public:
 
 // interface rpc::message_handler
 public:
-  void on_connect() {
+  virtual void on_connect() {
     std::cerr << "callee_server:: callee_handler::on_connect()" << std::endl;
     std::string s;
     //@todo
@@ -24,7 +24,7 @@ public:
     stream_->async_write(s);
   }
     
-  void on_disconnect() {
+  virtual void on_disconnect() {
     std::cerr << "callee_server:: callee_handler::on_disconnect()" << std::endl;
   }
 

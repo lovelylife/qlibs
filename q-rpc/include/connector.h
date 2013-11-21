@@ -5,7 +5,6 @@
 
 namespace rpc {
 
-template<class T>
 class connector : public q::Object 
 {
 public:
@@ -16,18 +15,22 @@ public:
     event_connect_ok_ = event_create(false, false);
   };
  
-  virtual ~connector() {}
+  virtual ~connector() {
+    io_service_.stop();
+    io_thread_.stop();
+    if(event_connect_ok_) {
+      event_destroy(event_connect_ok_);
+    }
+  }
  
 public:
-  virtual void on_init_handler(rpc::base_stream*) = 0;
+  virtual rpc::message_handler* on_init_handler(rpc::base_stream*) = 0;
 
 public:
   void connect(const std::string& host,  const std::string& service, int timeout = -1) {
     rpc::stream_boost_impl* p = new rpc::stream_boost_impl(io_service_);
-    on_init_handler(p);    
-// save
-//    handler_ = new T(p);
-//    p->handler(handler_);
+    handler_ = on_init_handler(p);
+    p->handler(handler_);
 
     // Resolve the host name into an IP address.
     boost::asio::ip::tcp::resolver resolver(io_service_);
@@ -38,7 +41,7 @@ public:
     boost::asio::async_connect(
       p->socket(), 
       endpoint_iterator,
-      boost::bind(&connector<T>::handle_connect, this,
+      boost::bind(&connector::handle_connect, this,
       boost::asio::placeholders::error)
     );
 
@@ -77,7 +80,7 @@ protected:
   boost::asio::io_service io_service_;
   io_thread io_thread_;
   event_handle event_connect_ok_;
-  RefPtr<T> handler_;
+  RefPtr<rpc::message_handler> handler_;
 }; //class connector
 
 } // namespace rpc

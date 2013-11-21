@@ -10,9 +10,28 @@ struct inotify {
     virtual void on_uninitialize() = 0;
     virtual ~inotify() {}
 };
+/**/
+class qnotify_client;
 
-class qnotify_client : public connector<callee> {
+class notify_callee : public callee {
+public:
+  notify_callee(rpc::base_stream* s, rpc::server& r, qnotify_client* t) 
+  : rpc::callee(s, r)
+  , this_(t)
+  {
 
+  }
+
+// rpc::callee overrides
+public:
+  virtual void on_disconnect();
+
+private:
+  qnotify_client* this_;
+};
+
+
+class qnotify_client : public connector {
 public:
   class qnotify_service
     : public rpc::services::iservice
@@ -31,6 +50,11 @@ public:
 
     void set_notify(inotify* n) {
       notify_ = n;
+    }
+
+    void on_disconnect() {
+      if(notify_)
+        notify_->on_uninitialize();
     }
 
   // rpc interfaces
@@ -70,10 +94,15 @@ public:
       delete service_;
   }
 
+// connector overrides
 public:
-  virtual void on_init_handler(rpc::base_stream* p) {
-    handler_ = new callee(p, rpcserver_);
-    p->handler(handler_);
+  virtual rpc::message_handler* on_init_handler(rpc::base_stream* p) {
+    return (new notify_callee(p, rpcserver_, this));
+  }
+
+public:
+  void on_disconnect() {
+    service_->on_disconnect();
   }
 
 public:
@@ -85,6 +114,12 @@ private:
   rpc::server rpcserver_;
   qnotify_service* service_;
 };
+
+void notify_callee::on_disconnect() {
+    rpc::callee::on_disconnect();
+    if(this_)
+      this_->on_disconnect();
+}
 
 } //namespace rpc
 
