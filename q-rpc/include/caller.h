@@ -18,6 +18,12 @@ public:
   }
 
   ~caller() {
+    if(read_ok_)
+      event_destroy(read_ok_);
+
+    if(write_ok_)
+      event_destroy(write_ok_);
+
     std::cerr << "caller::~caller()" << std::endl;
   }
 
