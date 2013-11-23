@@ -11,15 +11,16 @@ public:
   connector() 
   : io_service_()
   , io_thread_(io_service_)
+  , socket_connect_ok_(false)
   {
-    event_connect_ok_ = event_create(false, false);
+    event_connect_ = event_create(false, false);
   };
  
   virtual ~connector() {
     io_service_.stop();
     io_thread_.stop();
-    if(event_connect_ok_) {
-      event_destroy(event_connect_ok_);
+    if(event_connect_) {
+      event_destroy(event_connect_);
     }
   }
  
@@ -49,16 +50,19 @@ public:
     if(!io_thread_.running())
       io_thread_.start();
 
-    std::cerr << "client_base::connect 1" << std::endl;
-  
+    std::cerr << "client_base::connect 1" << std::endl;  
     // wait for connect
-    int r = event_timedwait(event_connect_ok_, timeout);
+    int r = event_timedwait(event_connect_, timeout);
     if(event_timeout == r) {
-      std::cerr << "connect timout" << std::endl;
-      throw r;
+      throw rpc::exception("connect timout");
     } else if(event_error == r){
-      std::cerr << "connect error" << std::endl;
+      throw rpc::exception("connect wait error");
     }
+
+    if(!socket_connect_ok_) {
+      throw rpc::exception("connect failed");
+    }
+
     std::cerr << "client_base::connect 2" << std::endl;
   }
 
@@ -66,21 +70,25 @@ private:
   /// Handle completion of a connect operation.
   void handle_connect(const boost::system::error_code& e){
     if (!e) {
+      socket_connect_ok_ = true;
       if(handler_)
         handler_->on_connect();
     } else {
+      socket_connect_ok_ = false;
       std::cerr << e.message() << std::endl;
       if(handler_)
-         handler_->on_disconnect();
+         handler_->on_disconnect(message_handler::connect, e.message());
     }
-    event_set(event_connect_ok_);
+    event_set(event_connect_);
   }
 
 protected:
   boost::asio::io_service io_service_;
   io_thread io_thread_;
-  event_handle event_connect_ok_;
+  bool socket_connect_ok_;
+  event_handle event_connect_;
   RefPtr<rpc::message_handler> handler_;
+
 }; //class connector
 
 } // namespace rpc

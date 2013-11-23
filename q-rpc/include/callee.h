@@ -24,8 +24,8 @@ public:
     stream_->async_write(s);
   }
     
-  virtual void on_disconnect() {
-    std::cerr << "callee_server:: callee_handler::on_disconnect()" << std::endl;
+  virtual void on_disconnect(stream_step step, const std::string& err_msg) {
+    std::cerr << "callee_server:: callee_handler::on_disconnect()" << err_msg << std::endl;
   }
 
   void on_read_completed(const std::string& buf) {

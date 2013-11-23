@@ -89,7 +89,7 @@ public:
       //event_set(write_data_ok_);
     } else {
       if(handler_)
-        handler_->on_disconnect();
+        handler_->on_disconnect(message_handler::write, e.message());
     }
   }
 
@@ -107,7 +107,7 @@ public:
   {
     if (e) {
       if(handler_)
-        handler_->on_disconnect();
+        handler_->on_disconnect(message_handler::read, e.message());
       //throw rpc::exception("network error");
     } else {
       // Start an asynchronous call to receive the data.
@@ -125,7 +125,7 @@ public:
   {
     if (e) {
       if(handler_)
-        handler_->on_disconnect();
+        handler_->on_disconnect(message_handler::read, e.message());
     } else {
       std::string archive_data(&inbound_data_[0], inbound_data_.size());
       if(handler_) 
@@ -138,14 +138,9 @@ private:
   rpc::protocol::package_header in_pkg_header_;
   rpc::protocol::message message_;
   std::string       outbound_data_;
-  std::vector<char> inbound_data_;
-  
+  std::vector<char> inbound_data_;  
   boost::asio::ip::tcp::socket socket_;
-  rpc::message_handler* handler_;
-  
-//  event_handle read_data_ok_;
-//  event_handle write_data_ok_;
-  
+  rpc::message_handler* handler_;  
 }; // stream_boost_impl
 
 
