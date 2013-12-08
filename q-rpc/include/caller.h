@@ -35,7 +35,7 @@ public:
   }
 
   // Á´½Ó¶Ï¿ª
-  virtual void on_disconnect() { 
+  virtual void on_disconnect(stream_step step, const std::string& err_msg) { 
     std::cerr << "callee_handler disconnected not impliement" << std::endl;
   }
 

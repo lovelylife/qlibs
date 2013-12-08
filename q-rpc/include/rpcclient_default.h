@@ -4,12 +4,14 @@
 
 namespace rpc {
 
-class rpcclient_default : public connector<caller> 
+class rpcclient_default : public connector
 {
 public:
-  virtual void on_init_handler(rpc::base_stream* p) {
-    handler_ = new caller(p);
-    p->handler(handler_);
+  virtual rpc::message_handler* on_init_handler(rpc::base_stream* p)
+  {
+    rpc::caller* c = (new rpc::caller(p));
+    c_ = c;
+    return c;
   }
 
 public:
@@ -22,12 +24,14 @@ public:
       throw rpc::exception("invalid rpc caller.");
     }
 
-    rpc::client::iservice_proxy* s = handler_->get_service(service);
+    rpc::client::iservice_proxy* s = c_->get_service(service);
     if(NULL == s) 
       throw rpc::exception("have no service");
 
-    handler_->call(s, method, params, res); 
+    c_->call(s, method, params, res); 
   }
+private: 
+  RefPtr<caller> c_;
 };
 
 } //namespace rpc

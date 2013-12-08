@@ -80,7 +80,7 @@ public:
       }
 
       if(is_empty) {
-        Sleep(10);
+        sleep(10);
 	return true;
       }
       std::cerr << "[rpc::dispatcher]send a notify" << std::endl;
@@ -151,7 +151,7 @@ public:
     if(id == 1) {
       std::cerr << "a : " << params["a"].asInt() << "; b : " << params["b"].asInt() << std::endl;   
     }
-  } 
+  }
 };
 
 
@@ -166,8 +166,9 @@ public:
     std::cerr << "qnotify_event: " << params << std::endl;
   }
 
-  virtual void on_uninitialize() {
-  
+  virtual void on_uninitialize(int step, const std::string& err_msg)
+  {
+    std::cerr << "error: " << step << " msg: " << err_msg << std::endl;
   }
 };
 
@@ -193,6 +194,17 @@ void dump_vector(const std::vector<std::string>& ls) {
   }
 }
 
+/*
+bool runas_deamon(int argc, char* argv) {
+  std::string cmd = "-d";
+  for(int i=1; i < argc; i++) {
+    if(cmd == argv[i])
+      return true;
+  }
+
+  return false;
+}
+*/
 
 int main(int argc, char *argv[])
 {
