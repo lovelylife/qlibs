@@ -1,0 +1,147 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=gb2312" />
+<title>D类</title>
+<style type="text/css">
+html, body {
+    margin:0;
+}
+</style>
+<script type="text/javascript">
+!!window.__defineGetter__ && !/MSIE/.test(navigator.userAgent) && function () {
+    !window.opera && window.__defineGetter__('event', function () {
+    //兼容Event对象
+        var o = arguments.callee;
+        do {
+            if (o.arguments[0] instanceof Event) return o.arguments[0];
+        } while (o = o.caller);
+        return null;
+    });
+    
+    window.attachEvent = Document.prototype.attachEvent = Element.prototype.attachEvent = function (type, listener, capture) {
+    //兼容attachEvent方法
+        return this.addEventListener(new String(type).substr(2), listener, capture || false);
+    };
+    
+    window.detachEvent = Document.prototype.detachEvent = Element.prototype.detachEvent = function (type, listener, capture) {
+    //兼容detachEvent方法
+        return this.removeEventListener(new String(type).substr(2), listener, capture || false);
+    };
+    
+}();
+var D = {
+//拽补助类
+    lock : false
+    
+    , dom : function () {
+    //document相关属性
+        return {
+            left : document.documentElement.scrollLeft
+            , top : document.documentElement.scrollTop
+            , width : document.documentElement.clientWidth
+            , height : document.documentElement.clientHeight
+            , body : document.documentElement
+        };
+    }
+    , mos : function (e) {
+    //获取鼠标绝对位置
+        var dom = this.dom();
+        
+        return { 'x' : dom.left + e.clientX, 'y' : dom.top + e.clientY }
+    }
+    
+    , pos : function (o) {
+    //获取元素绝对位置
+        var x = 0, y = 0;
+        do { x += o.offsetLeft, y += o.offsetTop; } while (o = o.offsetParent);
+        return { 'x' : x, 'y' : y };
+    }
+    
+    , start : function (element, startEventHandler, moveEventHandler, stopEventHandler) {
+    //移动开始
+        if (this.lock) return;
+        else this.lock = true; //先上锁安全。。。:D
+    
+        var pos = this.pos(element) //元素位置
+            , mos = this.mos(window.event) //鼠标位置
+            , eventHandlers = { MF : null, EF : null } //事件记录
+            , property = { x : mos.x - pos.x, y : mos.y - pos.y, left : pos.x, top : pos.y } //属性
+            , _MF = this.move(moveEventHandler, property) //移动过程事件闭包
+            , _EF = this.stop(element, stopEventHandler, eventHandlers); //移动停止事件闭包
+  
+  try { document.selection && document.selection.empty && (document.selection.empty(), 1) || window.getSelection && window.getSelection().removeAllRanges(); } catch (exp) {}
+        
+        document.attachEvent('onmousemove', _MF); //鼠标移动
+        document.attachEvent('onmouseup', _EF); //鼠标释放
+        
+        element.setCapture
+            ? (element.setCapture(), element.attachEvent('onlosecapture', _EF))
+            : window.attachEvent('onblur', _EF); //鼠标捕获丢失则释放
+        
+        eventHandlers.MF = _MF, eventHandlers.EF = _EF;
+        
+        startEventHandler && startEventHandler(property); //直接传过去。。。请误污染- -
+    }
+    
+    , move : function (moveEventHandler, property) {
+    //移动中
+        var wc = this;
+        
+        return function (e) {
+            var mos = wc.mos(e || window.event), dom = wc.dom();
+            window.getSelection && window.getSelection().removeAllRanges();
+            
+            /MSIE/.test(navigator.userAgent) && function () {
+            //IE滚屏
+                if (mos.x > dom.left + dom.width) dom.body.scrollLeft = mos.x - dom.width;
+                else if (mos.x < dom.left) dom.body.scrollLeft = mos.x;
+                if (mos.y > dom.top + dom.height) dom.body.scrollTop = mos.y - dom.height;
+                else if (mos.y < dom.top) dom.body.scrollTop = mos.y;
+            }();
+   
+   property.left = mos.x - property.x, property.top = mos.y - property.y;
+            
+            moveEventHandler && moveEventHandler(property); //直接传过去。。。请误污染- -;
+        };
+    }
+    
+    , stop : function (element, stopEventHandler, eventHandlers) {
+    //移动结束
+        var wc = this;
+        return function (e) {
+            document.detachEvent('onmousemove', eventHandlers.MF);
+            document.detachEvent('onmouseup', eventHandlers.EF);
+            element.setCapture
+                ? (element.detachEvent('onlosecapture', eventHandlers.EF), element.releaseCapture())
+                : window.detachEvent('onblur', eventHandlers.EF);
+   wc.lock = false; //事件都干掉了可以放心解锁了
+   stopEventHandler && stopEventHandler();
+        };
+    }
+    
+};
+</script>
+</head>
+<body style="-moz-user-select:none;-webkit-user-select: none;">
+<div style=position:relative; width:100px; height:100px; background-color:#000000;">
+    <div style="position:absolute; width:20px; height:20px; line-height:20px; left:50%; top:50%; margin:-10px 0 0 -10px;
+background-color:#F00; text-align:center; cursor:move;"
+        onmousedown="var wc = this;D.start(wc, null, function (property) {
+            var node = wc.parentNode;
+            var a = D.pos(node), b = D.pos(wc);
+            node.style.left = property.left - b.x + a.x + 'px';
+            node.style.top = property.top - b.y + a.y + 'px';
+        }, null);"
+    >拽</div>
+</div>
+<div style="width:50px; height:50px; line-height:50px; text-align:center; background-color:#F00; position:absolute;
+cursor:move;"
+    onmousedown="var wc = this;D.start(wc, null, function (property) {
+        wc.style.left = property.left + 'px';
+        wc.style.top = property.top + 'px';
+    }, null);"
+>拽</div>
+<div style="height:1000px;"></div>
+</body>
+</html>

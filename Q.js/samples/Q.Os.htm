@@ -1,0 +1,214 @@
+<!DOCTYPE>
+<html>
+<head>
+  <title>Q.os | QLib | Powered By PHPKIND</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <!-- 使用QLib控件是必须包含样式表 -->
+  <link type="text/css" rel="stylesheet" href="../ui.css" />
+  <style>
+  .skin-default {}
+  #task-bar { position:fixed; bottom: 0; height: 35px; left:0; right:0; background: transparent url(../images/task-bar2.png) -150px -2px; z-index:9999999999999999; }
+  #task-bar #task-list button { background: none; border:0px; margin:0; padding: 0 15px;;line-height:35px; max-width: 150px; text-overflow: ellipsis;overflow:hidden; outline:0;}
+  #task-bar #task-list button.item { color:#000;}
+	#task-bar #task-list button.item:hover, 
+	#task-bar #task-list button.selected-item { background: #FF9900; color:#FFF;}
+  </style>
+
+
+  <!--  
+  提示：src="{QLib目录}/Q.js" 
+  根据实际存放路径， 测试代码都是在QLib目录的samples文件夹下，所以这里用的是"../Q.js" 
+  -->
+  <script type="text/javascript" src="../Q.js">
+  <!--
+  // 需要加载额外库时
+  import utils.stl;
+  import utils.xml;
+  import ui.contextmenu;
+  import ui.wndx-1-0-2;
+  -->
+  </script>
+
+  <script>
+  <!--
+  var g_test_window;
+  var g_test_dialog;
+	var g_multi_window;
+  var g_task_items = [];
+  Q.Ready(function() {
+    //Q.debug(true);
+    Q.setdebug(Q.$('debug_window'));
+    // 提示对话框
+    Q.$('btnOpenMessageBox').onclick = function() {
+      g_test_dialog = new Q.Dialog({
+        title: "提示窗口提示窗口提示窗口提示窗口提示窗口提示窗口提示窗口提示窗口提示窗口提示窗口提示窗口提示窗口提示窗口提示窗口提示窗口提示窗口",
+        content: Q.$('test-domodal'),
+        onok : function() { return true; }
+      });
+
+      g_test_dialog.domodal($GetDesktopWindow());
+    }
+
+    Q.$('btnOpenWindow').onclick = function() {
+      g_test_window = new Q.Window({width:480, height:370});
+      g_test_window.show(true);
+      g_test_window.set_content("test flash");
+      g_test_window.adjust();
+      g_test_window.center();
+    }
+  
+    Q.$('btnOpenMultiWindow').onclick = function() {
+      g_multi_window = new Q.Window({title: "multiwindow 1", width:480, height:370});
+      g_multi_window.show(true);
+      g_multi_window.center();
+      
+      var sub1 = new Q.Window({title: "child 1", width: 100, height:100, parent: g_multi_window, wstyle: CONST.STYLE_CHILD})
+      var sub2 = new Q.Window({title: "child 2", width: 100, height:100, parent: g_multi_window, wstyle: CONST.STYLE_CHILD})
+      var sub3 = new Q.Window({title: "child popup", width: 100, height:100, parent: g_multi_window})
+    
+      sub1.show(true);
+      sub2.show(true);
+      sub3.show(true);
+    }
+
+    Q.$('test-domodal').onclick = function() {
+      Q.MessageBox({
+        parent: g_test_dialog,
+        title: "test",
+        content: 'test-domodal',
+        onok : function() { return true; }
+      });
+    }
+
+    Q.$('btnClear').onclick=function() {
+      Q.$('debug_window').innerHTML = '';
+    }
+    
+    Q.$('btnRefreshTaskBar').onclick=function() {
+      Q.$('task-list').innerHTML = "";
+      // intialize task bar 
+      __GLOBALS.desktop.wnds.each(function(item) {
+        Q.$('task-list').innerHTML += "<button class=\"item\">"+$GetTitleText(item)+"</button>";
+        return true;
+      });
+    }
+
+    register_hook(function(hwnd, message_id) {
+      if(message_id == MESSAGE.CREATE) {
+	      var button = document.createElement('button');
+			  button.className = "item";
+        button.innerText = $GetTitleText(hwnd);	
+        button.bind_data = hwnd;	
+			  button.onclick = function(wnd, btn){ 
+			    return function() {
+            var nodes = Q.$('task-list').childNodes;
+            for(var i=0; i < nodes.length; i++) {
+              var item = nodes[i];
+              item.className = "item";
+            }
+            btn.className = "selected-item";
+            $BindWindowMessage(wnd, MESSAGE.ACTIVATE)();
+          }; 
+				}(hwnd, button);
+        /*
+        var nodes = Q.$('task-list').childNodes;
+        for(var i=0; i < nodes.length; i++) {
+          var item = nodes[i];
+          item.className = "item";
+        }*/
+        Q.$('task-list').appendChild(button);
+      } if(message_id == MESSAGE.ACTIVATE) {
+        var nodes = Q.$('task-list').childNodes;
+        for(var i=0; i < nodes.length; i++) {
+          var item = nodes[i];
+          if(item.bind_data == hwnd) {
+            item.className="selected-item";
+          } else {
+            item.className = "item";
+          }
+        }
+      } if(message_id == MESSAGE.CLOSE) {
+        var nodes = Q.$('task-list').childNodes;
+        for(var i=0; i < nodes.length; i++) {
+          var item = nodes[i];
+          if(item.bind_data == hwnd) {
+            item.onclick = null;
+            item.parentNode.removeChild(item);
+          }
+          //item.className = "item";
+        }
+      }
+    });
+  });
+  -->
+  </script>
+</head>
+<body onselectstart="return false;" style=" background: transparent url(../images/bg.jpg) center center;height: 100%;overflow:hidden;-moz-user-select:none;-webkit-user-select: none;">
+
+<p></p>
+<button id="btnRefreshTaskBar">RefreshTaskBar</button>
+<button id="btnClear">Clear</button>
+<button id="btnOpenWindow">Window</button>
+<button id="btnOpenMultiWindow">MultiWindow</button>
+<button id="btnOpenMessageBox">MessageBox</button>
+<!-- wndx template -->
+<embed id="flash" style="display:none;" pluginspage='http://www.macromedia.com/go/getflashplayer' src='http://you.video.sina.com.cn/api/sinawebApi/outplayrefer.php/vid=3685396_1292548084_ah21RiZsBjPK+l1lHz2stqkP7KQNt6nki2O2vlasJQZdQ0/XM5GaZNUC4yDQFokbpWFOQpA6dvcg/s.swf' type='application/x-shockwave-flash' name='sinaplayer' allowFullScreen='true' allowScriptAccess='always' width='480' height='370' wmode='transparent'></embed>
+
+<button id="test-domodal" style="display:none;">DoModal</button>
+<!-- wndx template -->
+<br>
+
+<div id='debug_window' style='width:100%;height: 300px;overflow: auto;'>
+
+</div>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<!--div style="background: red; height: 40px; line-height: 40px; ">
+  <button style="margin: 12px 0 0 0; padding:0; background:none; height: 16px;border-width:0;background:blue;">test</button>
+</div-->
+
+
+<div class="skin-default" id="task-bar">
+  <div id="task-list">
+  </div> 
+</div>
+
+</body>
+</html>
