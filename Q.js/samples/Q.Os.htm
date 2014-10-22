@@ -7,11 +7,11 @@
   <link type="text/css" rel="stylesheet" href="../ui.css" />
   <style>
   .skin-default {}
-  #task-bar { position:fixed; bottom: 0; height: 35px; left:0; right:0; background: transparent url(../images/task-bar2.png) -150px -2px; z-index:9999999999999999; }
+  #task-bar { position:fixed; bottom: 0; height: 35px; left:0; right:0; background: #FFFF00 url(../images/task-bar2.png) -150px -2px; z-index:9999999999999999; }
   #task-bar #task-list button { background: none; border:0px; margin:0; padding: 0 15px;;line-height:35px; max-width: 150px; text-overflow: ellipsis;overflow:hidden; outline:0;}
   #task-bar #task-list button.item { color:#000;}
-	#task-bar #task-list button.item:hover, 
-	#task-bar #task-list button.selected-item { background: #FF9900; color:#FFF;}
+  #task-bar #task-list button.item:hover, 
+  #task-bar #task-list button.selected-item { background: #FF9900; color:#FFF;}
   </style>
 
 
@@ -33,7 +33,7 @@
   <!--
   var g_test_window;
   var g_test_dialog;
-	var g_multi_window;
+  var g_multi_window;
   var g_task_items = [];
   Q.Ready(function() {
     //Q.debug(true);
@@ -95,12 +95,12 @@
 
     register_hook(function(hwnd, message_id) {
       if(message_id == MESSAGE.CREATE) {
-	      var button = document.createElement('button');
-			  button.className = "item";
-        button.innerText = $GetTitleText(hwnd);	
-        button.bind_data = hwnd;	
-			  button.onclick = function(wnd, btn){ 
-			    return function() {
+        var button = document.createElement('button');
+        button.className = "item";
+        button.innerText = $GetTitleText(hwnd);  
+        button.bind_data = hwnd;  
+        button.onclick = function(wnd, btn){ 
+          return function() {
             var nodes = Q.$('task-list').childNodes;
             for(var i=0; i < nodes.length; i++) {
               var item = nodes[i];
@@ -109,13 +109,7 @@
             btn.className = "selected-item";
             $BindWindowMessage(wnd, MESSAGE.ACTIVATE)();
           }; 
-				}(hwnd, button);
-        /*
-        var nodes = Q.$('task-list').childNodes;
-        for(var i=0; i < nodes.length; i++) {
-          var item = nodes[i];
-          item.className = "item";
-        }*/
+        }(hwnd, button);
         Q.$('task-list').appendChild(button);
       } if(message_id == MESSAGE.ACTIVATE) {
         var nodes = Q.$('task-list').childNodes;

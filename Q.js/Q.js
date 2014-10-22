@@ -33,7 +33,7 @@
   var _delayDOMReady = [];
 
   // 基于prototype的继承实现
-	// 警告：调用父类的（被重载的）同名函数调用需要借助this.__super__.method.call(this, arguments);
+  // 警告：调用父类的（被重载的）同名函数调用需要借助this.__super__.method.call(this, arguments);
   var CLASS = function() {};
   CLASS.prototype.extend = function(props) {
     var sup = this.prototype;  
@@ -49,14 +49,14 @@
     sub.prototype.constructor = sub;
     sub.extend = sub.prototype.extend;
   
-		return sub;
+    return sub;
   }
 
-	CLASS.extend = function(props) {
+  CLASS.extend = function(props) {
     return this.prototype.extend.call(this, props);
   }
 
-	var Q = window.Q = CLASS;
+  var Q = window.Q = CLASS;
 
   Q.ELEMENT_NODE = 1;
   Q.ELEMENT_TEXTNODE = 3;
@@ -190,7 +190,7 @@
     }    
   };
   
-	// OnLoad
+  // OnLoad
   Q.DOMReady = function(evt) {
     if(!_LoadCompleted) {
       Q.registerDelayDOMReady(Q.delayDOMReady);
@@ -199,7 +199,7 @@
     }        
   };
   
-	// 当所有脚本都加载后开始执行Ready回调
+  // 当所有脚本都加载后开始执行Ready回调
   Q.delayDOMReady = function() {
     while(_OnPageLoad.length > 0) { _OnPageLoad.shift()(); }
   };
@@ -207,10 +207,10 @@
   // push event when document loaded
   Q.Ready = function(f, push_front) {
     var back = !push_front;
-		if(back)
-		  _OnPageLoad.push(f); 
-		else 
-		  _OnPageLoad.unshift(f); 
+    if(back)
+      _OnPageLoad.push(f); 
+    else 
+      _OnPageLoad.unshift(f); 
   };
 
   // current Q.js所在路径

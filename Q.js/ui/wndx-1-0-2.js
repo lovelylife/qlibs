@@ -411,8 +411,8 @@ function $CenterWindow(wndNode) {
 }
 
 function $AddDragObject(wndNode, obj) { wndNode.drag_objects.append(obj); }
-function $RemoveDragObjects(wndNode, obj) { wndNode.drag_objects.erase(obj); }
-function $IsDragObject(wndNode, obj) { if(!$IsWindow(wndNode)) return false;  return wndNode.drag_objects.find(obj); }
+function $RemoveDragObject(wndNode, obj) { wndNode.drag_objects.erase(obj); }
+function $IsDragObject(wndNode, obj) { return $IsWindow(wndNode) && wndNode.drag_objects.find(obj); }
 
 function $SetWindowStyle(wndNode, ws){ 
   wndNode.wstyle = ws;
