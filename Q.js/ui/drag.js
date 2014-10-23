@@ -8,7 +8,6 @@ Q.draging = Q.extend({
   nn6 : Q.isNS6(),
   ie  : Q.isIE(),
   hCaptureWnd : null,
-  //hDragWnd : null,
   isdrag : false,
   x : 0,
   y : 0,
@@ -31,11 +30,6 @@ Q.draging = Q.extend({
 
     Q.addEvent(document, 'mousedown', _this.MouseDown_Hanlder);
     Q.addEvent(document, 'mouseup', _this.MouseUp_Handler);
-    
-    _this.hDragWnd = document.createElement('div');
-    document.body.appendChild(_this.hDragWnd);
-    _this.hDragWnd.style.cssText = 'position:absolute;display:none;z-index: 1000000; background:#474747;cursor:default;';
-    _this.hDragWnd.className = 'alpha_5';
   },
 
   attach_object : function(obj_or_id, is_dragable) {
@@ -82,12 +76,6 @@ Q.draging = Q.extend({
       _this.x = _this.nn6 ? evt.clientX : evt.clientX;
       Q.printf("start x:"+_this.x+", y:"+_this.y)      
         
-      //_this.hDragWnd.style.display = 'none';
-      //_this.hDragWnd.style.width = _this.hCaptureWnd.offsetWidth + 'px';
-      //_this.hDragWnd.style.height = _this.hCaptureWnd.offsetHeight + 'px';
-      //_this.hDragWnd.style.top = pos.top + 'px'; //_this.hCaptureWnd.style.top;
-      //_this.hDragWnd.style.left = pos.left + 'px'; //_this.hCaptureWnd.style.left;
-        
       // 添加MouseMove事件
       _this.tmr = setTimeout(function() { Q.addEvent(document, 'mousemove', _this.MouseMove_Handler) }, 100);
       return false; 
@@ -100,7 +88,6 @@ Q.draging = Q.extend({
     evt = evt || window.event
     //if (_this.isdrag && !$IsMaxWindow(_this.hCaptureWnd)) {
     if (_this.isdrag) {
-      //_this.hDragWnd.style.display = '';
       var x = (_this.nn6?(_this.beginX+evt.clientX-_this.x):(_this.beginX+evt.clientX-_this.x));
       var y = (_this.nn6?(_this.beginY+evt.clientY-_this.y):(_this.beginY+evt.clientY-_this.y));
       //if(x < 0) {  x = 0; }
@@ -116,10 +103,12 @@ Q.draging = Q.extend({
       //}
       Q.printf("moving x:"+x+", y:"+y)      
       // 移动拖动窗口位置
-      _this.hCaptureWnd.style.left = x+'px';
-      _this.hCaptureWnd.style.top = y+'px';
-      //_this.hDragWnd.style.left = x+'px';
-      //_this.hDragWnd.style.top = y+'px';
+      var pos_parent = {left:0, top:0, right:0, bottom:0};
+      if(_this.hCaptureWnd.parentNode) {
+	pos_parent = Q.absPosition(_this.hCaptureWnd.parentNode);
+      }
+      _this.hCaptureWnd.style.left = (x-pos_parent.left)+'px';
+      _this.hCaptureWnd.style.top = (y-pos_parent.top)+'px';
       
       // 保存坐标
       _this.endX = x;
@@ -137,7 +126,6 @@ Q.draging = Q.extend({
       Q.printf("end x:"+pos.left+", y:"+pos.top)      
       Q.removeEvent(document,'mousemove',_this.MouseMove_Handler);
       _this.isdrag=false;
-      //_this.hDragWnd.style.display = 'none';
       var x = _this.endX-pos.left;
       var y = _this.endY-pos.top;
       Q.printf("end x:"+x+", y:"+y)      
