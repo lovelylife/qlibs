@@ -32,27 +32,48 @@ Q.draging = Q.extend({
     Q.addEvent(document, 'mouseup', _this.MouseUp_Handler);
   },
 
-  attach_object : function(obj_or_id, is_dragable) {
+  attach_object : function(obj_or_id, config) {
     var obj = Q.$(obj_or_id);
+    var config = config || {};
     obj.setAttribute('q-drag-object', true);
-    //obj.is_dragable = is_dragable || function() { return true; }
+    obj.q_drag_objects = new Q.LIST();
+    obj.q_onmove = config.onmove || function(x, y) {
+      var obj = this;    
+      var width = obj.offsetWidth;
+      var height= obj.offsetHeight;
+      obj.style.left = x + 'px'; 
+      obj.style.top  = y + 'px'; 
+      obj.style.right = (x+width) + 'px';
+      obj.style.bottom= (y+height) + 'px';  
+    };
+    if(!!config.self) 
+      this.add_drag_handler(obj, obj);
+    var init_drag_objects = config.objects || [];
+    for(var i=0; i < init_drag_objects.length; i++) {
+      this.add_drag_handler(obj, init_drag_objects[i]);
+    }
   },
 
   deattach_object : function(obj_or_id) {
     var obj = Q.$(obj_or_id);
     obj.removeAttribute('q-drag-object');
-    //obj.is_dragable = is_dragable || function() { return true; }
   },
 
-
-  is_q_drag_object : function(obj_or_id, child) {
-    var obj = Q.$(obj_or_id);
-    return !!obj.getAttribute('q-drag-object') 
-    // return (object.is_drag() && object.id_drag(child))
+  add_drag_handler : function(drag_object, handler) {
+    drag_object.q_drag_objects.append(handler); 
+  },
+  
+  remove_drag_handler : function(drag_object, handler) {
+    drag_object.q_drag_objects.erase(handler); 
+  },
+  
+  is_drag_handler : function(drag_object, handler) {
+    return this.is_dragable(drag_object) && drag_object.q_drag_objects.find(handler); 
   },
 
-  is_object_dragable : function(obj, child) {
-    return this.is_q_drag_object(obj);
+  is_dragable : function(drag_object) {
+    var obj = Q.$(drag_object);
+    return !!obj.getAttribute('q-drag-object'); 
   },
 
   _MouseDown : function(evt) {
@@ -61,12 +82,12 @@ Q.draging = Q.extend({
     if(evt.button == Q.RBUTTON){ return; } // 屏蔽右键拖动
     var target_wnd = drag_handle = _this.nn6 ? evt.target : evt.srcElement; // 获取鼠标悬停所在的对象句柄
     
-    while(target_wnd && !_this.is_q_drag_object(target_wnd) && (target_wnd != document.body)) {
+    while(target_wnd && !_this.is_dragable(target_wnd) && (target_wnd != document.body)) {
       target_wnd = target_wnd.parentNode;
     }
 
     //if(target_wnd && (!$IsMaxWindow(target_wnd)) && $IsDragObject(target_wnd, oDragHandle)) {
-    if(target_wnd && _this.is_object_dragable(target_wnd, drag_handle)) {
+    if(target_wnd && _this.is_drag_handler(target_wnd, drag_handle)) {
       var pos = Q.absPosition(target_wnd);
       _this.isdrag = true; 
       _this.hCaptureWnd = target_wnd; 
@@ -74,10 +95,10 @@ Q.draging = Q.extend({
       _this.y = _this.nn6 ? evt.clientY : evt.clientY; 
       _this.beginX = pos.left; //parseInt(_this.hCaptureWnd.style.left+0); 
       _this.x = _this.nn6 ? evt.clientX : evt.clientX;
-      Q.printf("start x:"+_this.x+", y:"+_this.y)      
+      //Q.printf("start x:"+_this.x+", y:"+_this.y)      
         
       // 添加MouseMove事件
-      _this.tmr = setTimeout(function() { Q.addEvent(document, 'mousemove', _this.MouseMove_Handler) }, 100);
+      _this.tmr = setTimeout(function() { Q.printf('add mousemove listener'); Q.addEvent(document, 'mousemove', _this.MouseMove_Handler);  }, 100);
       return false; 
     }
   },
@@ -86,30 +107,17 @@ Q.draging = Q.extend({
     var _this = this;
     _this.isMoved = true;
     evt = evt || window.event
-    //if (_this.isdrag && !$IsMaxWindow(_this.hCaptureWnd)) {
+    Q.printf("moving x:"+evt.clientX+", y:"+evt.clientY)      
     if (_this.isdrag) {
       var x = (_this.nn6?(_this.beginX+evt.clientX-_this.x):(_this.beginX+evt.clientX-_this.x));
       var y = (_this.nn6?(_this.beginY+evt.clientY-_this.y):(_this.beginY+evt.clientY-_this.y));
-      //if(x < 0) {  x = 0; }
-
-      //if(x+_this.hDragWnd.offsetWidth >  document.body.scrollWidth) {
-      //  x = document.body.scrollWidth - _this.hDragWnd.offsetWidth;
-      //}
-
-      //if(y <0) {y = 0;}
-      
-      //if(y+_this.hDragWnd.offsetHeight >  document.body.scrollHeight) {
-      //  y = document.body.scrollHeight - _this.hDragWnd.offsetHeight;
-      //}
-      Q.printf("moving x:"+x+", y:"+y)      
+      Q.printf("draging x:"+x+", y:"+y)      
       // 移动拖动窗口位置
       var pos_parent = {left:0, top:0, right:0, bottom:0};
       if(_this.hCaptureWnd.parentNode) {
-	pos_parent = Q.absPosition(_this.hCaptureWnd.parentNode);
+        pos_parent = Q.absPosition(_this.hCaptureWnd.parentNode);
       }
-      _this.hCaptureWnd.style.left = (x-pos_parent.left)+'px';
-      _this.hCaptureWnd.style.top = (y-pos_parent.top)+'px';
-      
+      _this.hCaptureWnd.q_onmove(x-pos_parent.left, y-pos_parent.top);
       // 保存坐标
       _this.endX = x;
       _this.endY = y;
@@ -130,19 +138,10 @@ Q.draging = Q.extend({
       var y = _this.endY-pos.top;
       Q.printf("end x:"+x+", y:"+y)      
       Q.removeEvent(document,'mousemove',_this.MouseMove_Handler);
-      _this.isMoved && _this._move(_this.hCaptureWnd, x, y);
+      _this.isMoved && _this.hCaptureWnd && _this.hCaptureWnd.q_onmove(x, y);
     }
     _this.isMoved=false;
   },
-
-  _move : function(obj, pos_left, pos_top) {
-    var width = obj.offsetWidth;
-    var height= obj.offsetHeight;
-    obj.style.left = pos_left + 'px'; 
-    obj.style.top  = pos_top + 'px'; 
-    obj.style.right = (pos_left+width) + 'px';
-    obj.style.bottom= (pos_top+height) + 'px';
-  }
 });
 
 Q.Ready(function() {

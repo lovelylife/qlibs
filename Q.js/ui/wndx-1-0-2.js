@@ -60,8 +60,6 @@ Q.Ready(function() {
   __GLOBALS.desktop.active_child = null;
   __GLOBALS.explorer = new Q.UIApplication();
   $CreateMaskLayer(__GLOBALS.desktop);
-  (new __DRAGWND());
-
 }, true);
 
 
@@ -162,7 +160,7 @@ function $CreateMaskLayer(wndNode) {
 function $ShowWindow(wndNode, ws)  {
   if( ws == CONST.SW_SHOW ){
     wndNode.style.display = '';
-    $ActivateWindow(wndNode);
+    $BindWindowMessage(wndNode, MESSAGE.ACTIVATE)();
   } else if( ws == CONST.SW_HIDE ) {
     wndNode.style.display = 'none';
     $MaskWindow(wndNode, false);
@@ -410,10 +408,6 @@ function $CenterWindow(wndNode) {
   $MoveTo(wndNode, left, top);
 }
 
-function $AddDragObject(wndNode, obj) { wndNode.drag_objects.append(obj); }
-function $RemoveDragObject(wndNode, obj) { wndNode.drag_objects.erase(obj); }
-function $IsDragObject(wndNode, obj) { return $IsWindow(wndNode) && wndNode.drag_objects.find(obj); }
-
 function $SetWindowStyle(wndNode, ws){ 
   wndNode.wstyle = ws;
   if($IsStyle(ws, CONST.STYLE_FIXED)) {
@@ -462,6 +456,7 @@ var MESSAGE = {
   MAX   : 2,
   CLOSE : 3,
   ACTIVATE : 4,
+  MOVE : 5,
 }
 
 function $DefaultWindowProc(hwnd, msg, data) {
@@ -505,6 +500,9 @@ function $DefaultWindowProc(hwnd, msg, data) {
       }
       // 先激活顶层窗口
       $ActivateWindow(t, ++top_zindex);
+      if(t != hwnd) {
+        $BindWindowMessage(t, MESSAGE.ACTIVATE)();
+      }
       // 一层层设置zindex
       while(t && t.modal_prev) {
         t = t.modal_prev;
@@ -512,7 +510,11 @@ function $DefaultWindowProc(hwnd, msg, data) {
       }
     }
     break;  
-  }
+  case MESSAGE.MOVE:
+    break;
+  } 
+
+
   invoke_hook(hwnd, msg);
 }
 
@@ -575,9 +577,6 @@ function $CreateWindowTitlebar(hwnd)  {
 
   hwnd.hTitle = hTitle;
   hwnd.appendChild(hTitle);
-  $AddDragObject(hwnd, hwnd.hTitle);
-  $AddDragObject(hwnd, hwnd.hTitle.hTitleCtrlBar);
-  $AddDragObject(hwnd, hwnd.hTitle.hTitleContent);
 }
 
 
@@ -601,7 +600,6 @@ function $CreateWindow(parent_wnd, title, ws, pos_left, pos_top, width, height, 
   hwnd.modal_next   = null;
   hwnd.model_prev   = null;  
   hwnd.wnds         = new Q.LIST();   // 窗口
-  hwnd.drag_objects = new Q.LIST();
   hwnd.active_child = null; 
   hwnd.title_text   = title || 'untitled';
   hwnd.status_type  = CONST.SIZE_NORMAL;
@@ -665,7 +663,11 @@ function $CreateWindow(parent_wnd, title, ws, pos_left, pos_top, width, height, 
   
   // render 
   container.appendChild(hwnd);
-
+  Q.drag.attach_object(hwnd, {
+    objects : [hwnd.hTitle, hwnd.hTitle.hTitleCtrlBar, hwnd.hTitle.hTitleContent],
+    onmove: Q.bind_handler(hwnd, function(x, y) { $MoveTo(this, x, y); }),
+  });
+  
   return hwnd;
 }
 
@@ -734,7 +736,6 @@ function $MakeResizable(obj) {
     if( ( status != CONST.SIZE_MAX ) && ( status == CONST.SIZE_RESIZING ) && ( evt.button == Q.LBUTTON ) )
     {
       //Q.printf('mouseup in '+status);
-      obj.draging = false;
       $SetWindowStatus(obj, CONST.SIZE_NORMAL);
       if(obj.releaseCapture)
         obj.releaseCapture();
@@ -806,124 +807,6 @@ function $MakeResizable(obj) {
     }
   }
 }
-
-/*-----------------------------------------------------------------
- $ window dragging
- $ dialog base class
- $ date: 2007-11-20
--------------------------------------------------------------------*/
-var __DRAGWND = Q.extend({
-  nn6 : Q.isNS6(),
-  ie  : Q.isIE(),
-  hCaptureWnd : null,
-  hDragWnd : null,
-  isdrag : false,
-  x : 0,
-  y : 0,
-  beginX : 0,
-  beginY : 0,
-  endX : 0,
-  endY : 0,
-  MouseDown_Hanlder : null,
-  MouseUp_Handler : null,
-  MouseMove_Handler : null,
-  isMoved : false,
-  tmr : null,
-  construct : function(){
-    var _this = this;
-
-    // 缓存时间
-    _this.MouseDown_Hanlder = function(evt) { _this._MouseDown(evt); }
-    _this.MouseUp_Handler = function(evt) { _this._MouseUp(evt); }
-    _this.MouseMove_Handler = function(evt) { _this._MouseMove(evt); }
-
-    Q.addEvent(document, 'mousedown', _this.MouseDown_Hanlder);
-    Q.addEvent(document, 'mouseup', _this.MouseUp_Handler);
-    
-    _this.hDragWnd = document.createElement('div');
-    document.body.appendChild(_this.hDragWnd);
-    _this.hDragWnd.style.cssText = 'position:absolute;display:none;z-index: 1000000; background:#474747;cursor:default;';
-    _this.hDragWnd.className = 'alpha_5';
-  },
-
-  _MouseDown : function(evt) {
-    var _this = this;
-    evt = evt || window.event;
-    if(evt.button == Q.RBUTTON){ return; } // 屏蔽右键拖动
-    var target_wnd = oDragHandle = _this.nn6 ? evt.target : evt.srcElement; // 获取鼠标悬停所在的对象句柄
-    
-    while(target_wnd && (target_wnd.className.indexOf('clsWindow') == -1 ) && target_wnd != $GetDesktopWindow()) {
-      target_wnd = target_wnd.parentNode;
-    }
-
-    if(target_wnd && (!$IsMaxWindow(target_wnd)) && $IsDragObject(target_wnd, oDragHandle)) {
-      var pos = Q.absPosition(target_wnd);
-      _this.isdrag = true; 
-      _this.hCaptureWnd = target_wnd; 
-      _this.beginY = pos.top; //parseInt(_this.hCaptureWnd.style.top+0); 
-      _this.y = _this.nn6 ? evt.clientY : evt.clientY; 
-      _this.beginX = pos.left; //parseInt(_this.hCaptureWnd.style.left+0); 
-      _this.x = _this.nn6 ? evt.clientX : evt.clientX;
-        
-      _this.hDragWnd.style.display = 'none';
-      _this.hDragWnd.style.width = _this.hCaptureWnd.offsetWidth + 'px';
-      _this.hDragWnd.style.height = _this.hCaptureWnd.offsetHeight + 'px';
-      _this.hDragWnd.style.top = pos.top + 'px'; //_this.hCaptureWnd.style.top;
-      _this.hDragWnd.style.left = pos.left + 'px'; //_this.hCaptureWnd.style.left;
-        
-      // 添加MouseMove事件
-      _this.tmr = setTimeout(function() { Q.addEvent(document, 'mousemove', _this.MouseMove_Handler) }, 100);
-      return false; 
-    }
-  },
-    
-  _MouseMove : function(evt){
-    var _this = this;
-    _this.isMoved = true;
-    evt = evt || window.event
-    if (_this.isdrag && !$IsMaxWindow(_this.hCaptureWnd)) {
-      _this.hDragWnd.style.display = '';
-      var x = (_this.nn6?(_this.beginX+evt.clientX-_this.x):(_this.beginX+evt.clientX-_this.x));
-      var y = (_this.nn6?(_this.beginY+evt.clientY-_this.y):(_this.beginY+evt.clientY-_this.y));
-      if(x < 0) {  x = 0; }
-
-      if(x+_this.hDragWnd.offsetWidth >  document.body.scrollWidth) {
-        x = document.body.scrollWidth - _this.hDragWnd.offsetWidth;
-      }
-
-      if(y <0) {y = 0;}
-      
-      if(y+_this.hDragWnd.offsetHeight >  document.body.scrollHeight) {
-        y = document.body.scrollHeight - _this.hDragWnd.offsetHeight;
-      }
-      
-      // 移动拖动窗口位置
-      _this.hDragWnd.style.left = x+'px';
-      _this.hDragWnd.style.top = y+'px';
-      
-      // 保存坐标
-      _this.endX = x;
-      _this.endY = y;
-
-      return false; 
-    }
-  },
-
-  _MouseUp : function(evt) {
-    var _this = this;
-    clearTimeout(_this.tmr);
-    if(_this.isdrag ) {
-      var pos = Q.absPosition(_this.hCaptureWnd.parentNode);
-      Q.removeEvent(document,'mousemove',_this.MouseMove_Handler);
-      _this.isdrag=false;
-      _this.hDragWnd.style.display = 'none';
-       
-      _this.isMoved && $MoveTo(_this.hCaptureWnd, _this.endX-pos.left, _this.endY-pos.top);
-      //$ShowWindow(_this.hCaptureWnd, CONST.SW_SHOW);
-    }
-    _this.isMoved=false;
-  }
-});
 
 /*-----------------------------------------------------------------
  $ class Q.Window
