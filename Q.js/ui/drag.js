@@ -95,10 +95,9 @@ Q.draging = Q.extend({
       _this.y = _this.nn6 ? evt.clientY : evt.clientY; 
       _this.beginX = pos.left; //parseInt(_this.hCaptureWnd.style.left+0); 
       _this.x = _this.nn6 ? evt.clientX : evt.clientX;
-      //Q.printf("start x:"+_this.x+", y:"+_this.y)      
         
       // 添加MouseMove事件
-      _this.tmr = setTimeout(function() { Q.printf('add mousemove listener'); Q.addEvent(document, 'mousemove', _this.MouseMove_Handler);  }, 100);
+      _this.tmr = setTimeout(function() { Q.addEvent(document, 'mousemove', _this.MouseMove_Handler);  }, 100);
       return false; 
     }
   },
@@ -107,11 +106,9 @@ Q.draging = Q.extend({
     var _this = this;
     _this.isMoved = true;
     evt = evt || window.event
-    Q.printf("moving x:"+evt.clientX+", y:"+evt.clientY)      
     if (_this.isdrag) {
       var x = (_this.nn6?(_this.beginX+evt.clientX-_this.x):(_this.beginX+evt.clientX-_this.x));
       var y = (_this.nn6?(_this.beginY+evt.clientY-_this.y):(_this.beginY+evt.clientY-_this.y));
-      Q.printf("draging x:"+x+", y:"+y)      
       // 移动拖动窗口位置
       var pos_parent = {left:0, top:0, right:0, bottom:0};
       if(_this.hCaptureWnd.parentNode) {
@@ -131,12 +128,10 @@ Q.draging = Q.extend({
     clearTimeout(_this.tmr);
     if(_this.isdrag ) {
       var pos = Q.absPosition(_this.hCaptureWnd.parentNode);
-      Q.printf("end x:"+pos.left+", y:"+pos.top)      
       Q.removeEvent(document,'mousemove',_this.MouseMove_Handler);
       _this.isdrag=false;
       var x = _this.endX-pos.left;
       var y = _this.endY-pos.top;
-      Q.printf("end x:"+x+", y:"+y)      
       Q.removeEvent(document,'mousemove',_this.MouseMove_Handler);
       _this.isMoved && _this.hCaptureWnd && _this.hCaptureWnd.q_onmove(x, y);
     }
