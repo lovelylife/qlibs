@@ -5,20 +5,16 @@
 -------------------------------------------------------------------*/
 
 Q.draging = Q.extend({
-  nn6 : Q.isNS6(),
-  ie  : Q.isIE(),
   hCaptureWnd : null,
-  isdrag : false,
+  is_drag : false,
   x : 0,
   y : 0,
-  beginX : 0,
-  beginY : 0,
-  endX : 0,
-  endY : 0,
+  begin_left : 0,
+  begin_top : 0,
   MouseDown_Hanlder : null,
   MouseUp_Handler : null,
   MouseMove_Handler : null,
-  isMoved : false,
+  is_moved : false,
   tmr : null,
   construct : function(){
     var _this = this;
@@ -39,12 +35,9 @@ Q.draging = Q.extend({
     obj.q_drag_objects = new Q.LIST();
     obj.q_onmove = config.onmove || function(x, y) {
       var obj = this;    
-      var width = obj.offsetWidth;
-      var height= obj.offsetHeight;
+      Q.printf('x: ' + x + '; y:' + y + ';');
       obj.style.left = x + 'px'; 
       obj.style.top  = y + 'px'; 
-      obj.style.right = (x+width) + 'px';
-      obj.style.bottom= (y+height) + 'px';  
     };
     if(!!config.self) 
       this.add_drag_handler(obj, obj);
@@ -73,7 +66,7 @@ Q.draging = Q.extend({
 
   is_dragable : function(drag_object) {
     var obj = Q.$(drag_object);
-    return !!obj.getAttribute('q-drag-object'); 
+    return obj && obj.getAttribute && !!obj.getAttribute('q-drag-object'); 
   },
 
   _MouseDown : function(evt) {
@@ -88,14 +81,13 @@ Q.draging = Q.extend({
 
     //if(target_wnd && (!$IsMaxWindow(target_wnd)) && $IsDragObject(target_wnd, oDragHandle)) {
     if(target_wnd && _this.is_drag_handler(target_wnd, drag_handle)) {
-      var pos = Q.absPosition(target_wnd);
-      _this.isdrag = true; 
       _this.hCaptureWnd = target_wnd; 
-      _this.beginY = pos.top; //parseInt(_this.hCaptureWnd.style.top+0); 
-      _this.y = _this.nn6 ? evt.clientY : evt.clientY; 
-      _this.beginX = pos.left; //parseInt(_this.hCaptureWnd.style.left+0); 
-      _this.x = _this.nn6 ? evt.clientX : evt.clientX;
-        
+      _this.is_drag = true; 
+      _this.x = evt.clientX;
+      _this.y = evt.clientY; 
+      
+      _this.begin_left = target_wnd.offsetLeft;  
+      _this.begin_top = target_wnd.offsetTop; 
       // 添加MouseMove事件
       _this.tmr = setTimeout(function() { Q.addEvent(document, 'mousemove', _this.MouseMove_Handler);  }, 100);
       return false; 
@@ -104,21 +96,16 @@ Q.draging = Q.extend({
     
   _MouseMove : function(evt){
     var _this = this;
-    _this.isMoved = true;
+    _this.is_moved = true;
     evt = evt || window.event
-    if (_this.isdrag) {
-      var x = (_this.nn6?(_this.beginX+evt.clientX-_this.x):(_this.beginX+evt.clientX-_this.x));
-      var y = (_this.nn6?(_this.beginY+evt.clientY-_this.y):(_this.beginY+evt.clientY-_this.y));
-      // 移动拖动窗口位置
-      var pos_parent = {left:0, top:0, right:0, bottom:0};
-      if(_this.hCaptureWnd.parentNode) {
-        pos_parent = Q.absPosition(_this.hCaptureWnd.parentNode);
+    if (_this.is_drag) {
+      var x = evt.clientX-_this.x;
+      var y = evt.clientY-_this.y;
+      if(_this.hCaptureWnd.style.zoom) {
+        _this.hCaptureWnd.q_onmove(_this.begin_left+(x/_this.hCaptureWnd.style.zoom), _this.begin_top+(y/_this.hCaptureWnd.style.zoom));
+      } else {
+        _this.hCaptureWnd.q_onmove(_this.begin_left+x, _this.begin_top+y);
       }
-      _this.hCaptureWnd.q_onmove(x-pos_parent.left, y-pos_parent.top);
-      // 保存坐标
-      _this.endX = x;
-      _this.endY = y;
-
       return false; 
     }
   },
@@ -126,16 +113,11 @@ Q.draging = Q.extend({
   _MouseUp : function(evt) {
     var _this = this;
     clearTimeout(_this.tmr);
-    if(_this.isdrag ) {
-      var pos = Q.absPosition(_this.hCaptureWnd.parentNode);
+    if(_this.is_drag ) {
+      _this.is_drag=false;
       Q.removeEvent(document,'mousemove',_this.MouseMove_Handler);
-      _this.isdrag=false;
-      var x = _this.endX-pos.left;
-      var y = _this.endY-pos.top;
-      Q.removeEvent(document,'mousemove',_this.MouseMove_Handler);
-      _this.isMoved && _this.hCaptureWnd && _this.hCaptureWnd.q_onmove(x, y);
     }
-    _this.isMoved=false;
+    _this.is_moved=false;
   },
 });
 

@@ -73,12 +73,11 @@
   };
 
   // enable/disable debug
-  Q.debug = function(enable) { Q._DEBUG.enable = enable; };
   Q.setdebug = function(output) { Q._DEBUG.stdoutput = output; }
 
   // print debug info to 'stdoutput' element
   Q.printf = function(message) {
-    if(Q._DEBUG.enable) {
+    if(Q._DEBUG.stdoutput) {
       Q._DEBUG.stdoutput.innerHTML += '<br/>'+message;
       Q._DEBUG.stdoutput.scrollTop = Q._DEBUG.stdoutput.scrollHeight;
     } else {
@@ -123,8 +122,6 @@
   // 兼容ff的attachEvent接口
   Q.addEvent = function(obj, evtName, fnHandler, useCapture) {
     obj = Q.$(obj);
-    //Q.printf('nouse');
-    Q.printf(obj + ', ' + evtName + ', ' + fnHandler + ', ');
     if(obj.addEventListener) {
       obj.addEventListener(evtName, fnHandler, !!useCapture);
     } else if(obj.attachEvent) {
