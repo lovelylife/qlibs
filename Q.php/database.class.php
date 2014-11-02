@@ -217,8 +217,9 @@ class CLASS_DB_MYSQL extends CLASS_DB_BASE {
         return $records[0];
 	}
 
-	function get_results($sql, &$result) {
-
+  function dummy(&$record) {}
+    
+	function get_results($sql, &$result, $call=array()) {
 		if(!is_array($result)) {
 			$this->set_error('invalid parameter $$result');
 			return false;
@@ -229,9 +230,23 @@ class CLASS_DB_MYSQL extends CLASS_DB_BASE {
 			trigger_error($this->get_error(), E_USER_ERROR);
 			return false;
 		}
+    
+    $context = $call['context'];
+    $method  = $call['method'];
+    if(!is_object($context)) {
+      $context = $this;
+    }
 
+    
+    if(!method_exists($context, $method)) {
+      $context = $this;
+      $method  = 'dummy';
+    }
+     
+    // check callback
 		while($record = $this->fetch_assoc($this->result)) {
-			array_push($result, $record);
+      $context->$method($record);
+      array_push($result, $record);
 		}
 
 		return true;
