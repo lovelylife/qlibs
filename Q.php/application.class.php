@@ -198,7 +198,7 @@ class CLASS_APPLICATION {
     return false;
   }
 
-  private function create_database($dbcfgs) {
+  function create_database($dbcfgs) {
     // print_r($dbcfgs);
     //'type' => 'mysql',
     //'host' => '',
