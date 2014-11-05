@@ -6,16 +6,14 @@
   the component can be used as UI.components[id]
 ---------------------------------------------------------*/
 
-var __SELECT = Q.KLASS();
-
-__SELECT.prototype = {
+Q.selector = Q.extend({
 	hwnd : null,        // select 控件显示区域
 	selwnd : null,      // 弹出的列表选择窗口
 	info_wnd: null,
 	htmlSelect : null,  // 绑定的select控件
 	binited : false,	// for select
 	binited2 : false,	// for hwnd
-	_initialize : function(HTMLSelect) {
+	construct : function(HTMLSelect) {
 		var _this = this;
 		_this.htmlSelect = HTMLSelect;
 		_this.htmlSelect.style.display = 'none';
@@ -204,6 +202,5 @@ __SELECT.prototype = {
 	itemMouseOver   : function(item) {},
 	itemKeyDown     : function(item) {},
 	itemKeyUp       : function(item) {}
-}
+});
 
-Q.selector = __SELECT;
