@@ -561,3 +561,7 @@ position:relative;
 #year,#month{padding-right:10px;background:url(images/calendar/onbottom.gif) no-repeat center right;}/*图片路径可以改成自己的*/
 /*Date*/
 
+
+.q-slider { position:relative; }
+.q-slider .q-thumb { position: absolute; }
+
