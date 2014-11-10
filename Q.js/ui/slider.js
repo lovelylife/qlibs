@@ -28,6 +28,7 @@ function find_item(root, cmp) {
 Q.slider = Q.extend({
   min : 0,
   max : 100,
+  value : 0,
   duration  : 1,
   hwnd  : null,
   thumb : null,
@@ -38,6 +39,7 @@ Q.slider = Q.extend({
     this.min = config.min;
     this.max = config.max;
     this.duration = config.duration || 1;
+    this.value = config.value || 0;
     if(typeof config.on_xscroll == 'function') {
       this.on_xscroll = config.on_xscroll;
     }
@@ -56,19 +58,32 @@ Q.slider = Q.extend({
             y = 0;
           if(y > (_this.hwnd.offsetHeight-_this.thumb.offsetHeight))
             y =  (_this.hwnd.offsetHeight-_this.thumb.offsetHeight);
-          _this.on_yscroll(Math.floor(_this.min + ((_this.max-_this.min)*(y*1.0)/(_this.hwnd.offsetHeight-_this.thumb.offsetHeight))));
+          _this.value = Math.floor(_this.min + ((_this.max-_this.min)*(y*1.0)/(_this.hwnd.offsetHeight-_this.thumb.offsetHeight)));
+          _this.on_yscroll(_this.value);
           _this.thumb.style.top = y + 'px';
         } else {          
           if(x < 0) 
             x = 0;
           if(x > (_this.hwnd.offsetWidth-_this.thumb.offsetWidth))
             x =  (_this.hwnd.offsetWidth-_this.thumb.offsetWidth);
-          _this.on_xscroll(Math.floor(_this.min + ((_this.max-_this.min)*(x*1.0)/(_this.hwnd.offsetWidth-_this.thumb.offsetWidth))));
+          _this.value = Math.floor(_this.min + ((_this.max-_this.min)*(x*1.0)/(_this.hwnd.offsetWidth-_this.thumb.offsetWidth)));
+          _this.on_xscroll(_this.value);
           _this.thumb.style.left = x + 'px';
         }
       }});
+
+      var f =  (_this.value-_this.min)*1.0/(_this.max-_this.min);
+      if(_this.type != 'hr') {
+     	 var y = Math.floor(f*(_this.hwnd.offsetHeight-_this.thumb.offsetHeight));	
+	 _this.thumb.style.top = y + 'px';
+      } else {
+	var x = Math.floor(f*(_this.hwnd.offsetWidth-_this.thumb.offsetWidth));
+        _this.thumb.style.left = x + 'px';
+      }
     }
   },
+
+
 
   on_xscroll : function(value) {}, 
   on_yscroll : function(value) {},
