@@ -1,89 +1,88 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN""http://www.w3.org/TR/html4/strict.dtd">
 <html>
 <head>
-    <title>Q.Ready | QLib | Powered By PHPKIND</title>
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-	<!-- 使用QLib控件是必须包含样式表 -->
-	<link type="text/css" rel="stylesheet" href="../ui.css" />
-	<!--  
-	提示：src="{QLib目录}/Q.js" 
-	根据实际存放路径， 测试代码都是在QLib目录的samples文件夹下，所以这里用的是"../Q.js" 
-	-->
+  <title>Q.contextmenu | QLib | Powered By PHPKIND</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <!-- 使用QLib控件是必须包含样式表 -->
+  <link type="text/css" rel="stylesheet" href="../ui.css" />
+  <!--  
+  提示：src="{QLib目录}/Q.js" 
+  根据实际存放路径， 测试代码都是在QLib目录的samples文件夹下，所以这里用的是"../Q.js" 
+  -->
     <script type="text/javascript" src="../Q.js">
-	<!--
-	// 需要加载额外库时
-	import ui.contextmenu;
+  <!--
+  // 需要加载额外库时
+  import ui.contextmenu;
 
-	-->
-	</script>
+  -->
+  </script>
 
-    <script>
-    <!--
-	
-	// 全局菜单实例 class_menu
-	var g_menu = null;
+  <script>
+  <!--
+  
+  // 全局菜单实例 class_menu
+  var g_menu = null;
 
-    Q.Ready(function() {
-		// 初始化菜单
-		g_menu = new class_menu();
-		
-		var m1 = new class_menuitem({
-			text: "菜单一",
-			callback : function(menuitem) {
-				
-			}
-		});
+  Q.Ready(function() 
+  {
+    // 初始化菜单
+    g_menu = new class_menu();
+    
+    var m1 = new class_menuitem({
+      text: "菜单一",
+      callback : function(menuitem) {
+        
+      }
+    });
 
-		var m2 = new class_menuitem({
-			text: "菜单二", 
-			callback : function(menuitem) {
-				
-			}
-		});
+    var m2 = new class_menuitem({
+      text: "菜单二", 
+      callback : function(menuitem) {
+        
+      }
+    });
 
-		var m3 = new class_menuitem({type: MENU_SEPERATOR, text: ""});
-		var m4 = new class_menuitem({text: "子菜单"});
-		g_menu.addMenuItem(m1);
-		g_menu.addMenuItem(m2);
-		g_menu.addMenuItem(m3);
-		g_menu.addMenuItem(m4);
+    var m3 = new class_menuitem({type: MENU_SEPERATOR, text: ""});
+    var m4 = new class_menuitem({text: "子菜单"});
+    g_menu.addMenuItem(m1);
+    g_menu.addMenuItem(m2);
+    g_menu.addMenuItem(m3);
+    g_menu.addMenuItem(m4);
 
-		var m41 = new class_menuitem({
-			text: "子菜单一",
-			callback : function(menuitem) {
-				
-			}
-		});
+    var m41 = new class_menuitem({
+      text: "子菜单一",
+      callback : function(menuitem) {
+        
+      }
+    });
 
-		var m42 = new class_menuitem({
-			text: "子菜单二asdfasdfasdf", 
-			callback : function(menuitem) {
-				alert('您点击的是子菜单二！');
-			}
-		});
-		
-		m4.addSubMenuItem(m41);
-		m4.addSubMenuItem(m42);
+    var m42 = new class_menuitem({
+      text: "子菜单二asdfasdfasdf", 
+      callback : function(menuitem) {
+        alert('您点击的是子菜单二！');
+      }
+    });
+    
+    m4.addSubMenuItem(m41);
+    m4.addSubMenuItem(m42);
 
-		g_menu.hide();
+    g_menu.hide();
 
-		// 获得"显示菜单"按钮对象
-		var oBtnMenu = Q.$('btnMenu');
-		// 添加单击事件
-		oBtnMenu.onclick = function() {
-			g_menu.showElement(this);
-		}
+    // 获得"显示菜单"按钮对象
+    var oBtnMenu = Q.$('btnMenu');
+    // 添加单击事件
+    oBtnMenu.onclick = function() {
+      g_menu.showElement(this);
+    }
 
-	});
+  });
 
-    -->
-    </script>
+  -->
+  </script>
 </head>
 <body>
 
 <button id="btnMenu">显示菜单</button>
-
-<div class="x-layer x-menu" id="ext-gen129" style="position: absolute; z-index: 15000; left: 19px; top: 222px; visibility: visible; "><a class="x-menu-focus" href="#" onclick="return false;" tabindex="-1" id="ext-gen132"></a><ul class="x-menu-list" id="ext-gen133"><li class="x-menu-list-item x-item-disabled" id="ext-gen137" style="opacity: 1; "><a href="#" class="x-menu-item x-filetree-nodename" id="ext-gen138"><img src="../extjs/resources/images/default/s.gif" class="x-menu-item-icon ">order-2.png</a></li><li class="x-menu-list-item " id="ext-gen139"><a href="#" class="x-menu-item x-menu-item-arrow" id="ext-gen140"><img src="../img/silk/icons/application_go.png" class="x-menu-item-icon ">Open (Enter)</a></li><li class="x-menu-list-item x-menu-sep-li" id="ext-gen141"><span class="x-menu-sep" id="ext-gen142">&nbsp;</span></li><li class="x-menu-list-item  x-item-disabled" id="ext-gen143"><a href="#" class="x-menu-item" id="ext-gen144"><img src="../img/silk/icons/arrow_refresh.png" class="x-menu-item-icon ">R<span style="text-decoration:underline">e</span>load (Ctrl+E)</a></li><li class="x-menu-list-item  x-item-disabled" id="ext-gen145"><a href="#" class="x-menu-item" id="ext-gen146"><img src="../img/silk/icons/arrow_right.png" class="x-menu-item-icon ">Expand all (Ctrl+Right Arrow)</a></li><li class="x-menu-list-item  x-item-disabled" id="ext-gen147"><a href="#" class="x-menu-item" id="ext-gen148"><img src="../img/silk/icons/arrow_left.png" class="x-menu-item-icon ">Collapse all (Ctrl+Left Arrow)</a></li><li class="x-menu-list-item x-menu-sep-li" id="ext-gen149"><span class="x-menu-sep" id="ext-gen150">&nbsp;</span></li><li class="x-menu-list-item " id="ext-gen151"><a href="#" class="x-menu-item" id="ext-gen152"><img src="../img/silk/icons/pencil.png" class="x-menu-item-icon ">Rename (F2)</a></li><li class="x-menu-list-item " id="ext-gen153"><a href="#" class="x-menu-item" id="ext-gen154"><img src="../img/silk/icons/cross.png" class="x-menu-item-icon ">Delete (Delete Key)</a></li><li class="x-menu-list-item " id="ext-gen155"><a href="#" class="x-menu-item" id="ext-gen156"><img src="../img/silk/icons/folder_add.png" class="x-menu-item-icon ">New folder... (Ctrl+N)</a></li><li class="x-menu-list-item x-menu-sep-li" id="ext-gen157"><span class="x-menu-sep" id="ext-gen158">&nbsp;</span></li></ul></div>
 
 </body>
 </html>

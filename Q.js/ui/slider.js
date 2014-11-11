@@ -71,19 +71,33 @@ Q.slider = Q.extend({
           _this.thumb.style.left = x + 'px';
         }
       }});
-
-      var f =  (_this.value-_this.min)*1.0/(_this.max-_this.min);
-      if(_this.type != 'hr') {
-     	 var y = Math.floor(f*(_this.hwnd.offsetHeight-_this.thumb.offsetHeight));	
-	 _this.thumb.style.top = y + 'px';
-      } else {
-	var x = Math.floor(f*(_this.hwnd.offsetWidth-_this.thumb.offsetWidth));
-        _this.thumb.style.left = x + 'px';
-      }
+      _this.set_value(config.value);
     }
   },
 
+  get_value : function() {
+    return this.value;
+  },
 
+  set_value : function(value) {
+    var _this = this;
+    if(value > _this.max) {
+      _this.value = _this.max;
+    } else if(value < _this.min) { 
+      _this.value = _this.min;
+    } else {
+      _this.value = value;
+    }
+    var f =  (_this.value-_this.min)*1.0/(_this.max-_this.min);
+   
+    if(_this.type != 'hr') {
+      var y = Math.floor(f*(_this.hwnd.offsetHeight-_this.thumb.offsetHeight));	
+      _this.thumb.style.top = y + 'px';
+    } else {
+      var x = Math.floor(f*(_this.hwnd.offsetWidth-_this.thumb.offsetWidth));
+      _this.thumb.style.left = x + 'px';
+    }
+  },
 
   on_xscroll : function(value) {}, 
   on_yscroll : function(value) {},

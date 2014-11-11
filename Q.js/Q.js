@@ -301,32 +301,27 @@
   Q.isOpera = function() { return Q.agent().indexOf("opera") != -1; }
   Q.isNS6   = function() { return Q.isW3C() && (navigator.appName=="Netscape"); }
 
-  function Initialize() {
-    // get Browser
-    //为Firefox下的DOM对象增加innerText属性
-    if(Q.isNS6()) { //firefox innerText define
-      HTMLElement.prototype.__defineGetter__("innerText",    function() { return this.textContent; });
-      HTMLElement.prototype.__defineSetter__("innerText",    function(sText) { this.textContent=sText; });
-      HTMLElement.prototype.__defineGetter__("currentStyle", function () { return this.ownerDocument.defaultView.getComputedStyle(this, null); });
-      // 兼容ff，ie的鼠标按键值
-      Q.LBUTTON  = 0;
-      Q.MBUTTON  = 1;
+  // get Browser
+  //为Firefox下的DOM对象增加innerText属性
+  if(Q.isNS6()) { //firefox innerText define
+    HTMLElement.prototype.__defineGetter__("innerText",    function() { return this.textContent; });
+    HTMLElement.prototype.__defineSetter__("innerText",    function(sText) { this.textContent=sText; });
+    HTMLElement.prototype.__defineGetter__("currentStyle", function () { return this.ownerDocument.defaultView.getComputedStyle(this, null); });
+    // 兼容ff，ie的鼠标按键值
+    Q.LBUTTON  = 0;
+    Q.MBUTTON  = 1;
       
-      // 解析地址页面的查询字段
-      var querystring = location.search.toString();
-      querystring = querystring.substring(1, querystring.length);
-      var queryMap = querystring.split('&');
-      for(var i=0; i < queryMap.length; i++) {
-        var t = queryMap[i].split('=');
-        if(t.length != 2) { continue; }
-        _querystring[t[0]] = t[1];
-      }
+    // 解析地址页面的查询字段
+    var querystring = location.search.toString();
+    querystring = querystring.substring(1, querystring.length);
+    var queryMap = querystring.split('&');
+    for(var i=0; i < queryMap.length; i++) {
+      var t = queryMap[i].split('=');
+      if(t.length != 2) { continue; }
+      _querystring[t[0]] = t[1];
     }
-
-    jsloader();
-    Q.addEvent(window, 'load', Q.DOMReady);  
   }
 
-  // initialize
-  Initialize();
+  jsloader();
+  Q.addEvent(window, 'load', Q.DOMReady);  
 })();
