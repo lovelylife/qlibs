@@ -16,7 +16,7 @@ Q.draging = Q.extend({
   MouseMove_Handler : null,
   is_moved : false,
   tmr : null,
-  construct : function(){
+  __init__ : function(){
     var _this = this;
 
     // 缓存时间

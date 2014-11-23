@@ -7,14 +7,14 @@ Q.NODE = Q.extend({
   next : null,
   prev : null,
   data  : null,
-  construct : function(data) { this.data = data; }
+  __init__ : function(data) { this.data = data; }
 });
 
 Q.LIST = Q.extend({
 
 head : null,  // 链表的头部
 length : 0,
-construct : function() {},
+__init__ : function() {},
 begin :    function() {  return this.head; },  // not head  use as STL
 end :      function() {  return null;  },
 len :      function() {  return this.length;  },
@@ -92,7 +92,7 @@ var STRUCT_HASMAP = Q.extend({
   base : null,
   length : 0,
   dataIndex : 0,
-  construct : function() {
+  __init__ : function() {
     this.base = new Object();
   },
   

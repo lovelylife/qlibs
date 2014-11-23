@@ -33,23 +33,26 @@
   var _delayDOMReady = [];
 
   // 基于prototype的继承实现
-  // 警告：调用父类的（被重载的）同名函数调用需要借助this.__super__.method.call(this, arguments);
+  // 警告：调用父类的（被重载的）同名函数调用需要借助parent_class.prototype.method.call(this, arguments);
   var CLASS = function() {};
   CLASS.prototype.extend = function(props) {
-    var sup = this.prototype;  
-    var sub = function() {
-      this.construct.apply(this, arguments);
+    var parent_class = this.prototype;  
+    var this_class = function() {
+      this.__init__.apply(this, arguments);
     };
+   
+    // sub class -> parent class 
+    this_class.prototype = Object.create(parent_class);
     
-    sub.prototype = Object.create(this.prototype);
+    // copy properties
     for(var name in props) {
-      sub.prototype[name] = props[name];  
+      this_class.prototype[name] = props[name];  
     }
-    sub.prototype.__super__ = sup;  
-    sub.prototype.constructor = sub;
-    sub.extend = sub.prototype.extend;
-  
-    return sub;
+
+    this_class.prototype.constructor = this_class;
+    this_class.extend = parent_class.extend;
+
+    return this_class;
   }
 
   CLASS.extend = function(props) {

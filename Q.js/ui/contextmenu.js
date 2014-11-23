@@ -28,7 +28,7 @@ var class_menuitem = Q.extend({
 	items : null,
 	binddata : null,
 	isChecked : true,
-	construct : function(json) {
+	__init__ : function(json) {
 		var _this = this;
 		_this.items = [];
 		_this.parentMenu = json.parentMenu;
@@ -236,7 +236,7 @@ var class_menu = Q.extend({
 	activeItem : null,
 	items : null,
 	_fHide : null,
-	construct : function() {
+	__init__ : function() {
 		var _this = this;
 		_this.items = [];
 		_this.initview();

@@ -157,7 +157,7 @@ timer: null,
 begin: 0,
 duration: 0,
 max  : 0,
-construct : function(cfg) {
+__init__ : function(cfg) {
    var _this = this;
    if(cfg.tween == 'Linear' || !Tween[cfg.tween] ) {
       _this.func = Tween.Linear;

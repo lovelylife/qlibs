@@ -32,7 +32,7 @@ Q.slider = Q.extend({
   duration  : 1,
   hwnd  : null,
   thumb : null,
-  construct: function(config) {
+  __init__: function(config) {
     var _this = this;
     config = config || {};
     this.type = (config.type == 'vt')?'vt':'hr';

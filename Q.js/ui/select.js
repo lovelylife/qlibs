@@ -13,7 +13,7 @@ Q.selector = Q.extend({
   htmlSelect : null,  // 绑定的select控件
   binited : false,  // for select
   binited2 : false,  // for hwnd
-  construct : function(HTMLSelect) {
+  __init__ : function(HTMLSelect) {
     var _this = this;
     _this.htmlSelect = HTMLSelect;
     _this.htmlSelect.style.display = 'none';

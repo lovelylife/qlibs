@@ -2,6 +2,7 @@
  $ 文档：wndx.js
  $ 功能：封装的窗口api和相关定义
  $ 日期：2007-10-09 15:47
+ $ 更新：2014-11-22 23:47
  $ 作者：LovelyLife
  $ 邮件：Life.qm@gmail.com
  $ 版权: 请勿擅自修改版权和作者
@@ -69,7 +70,7 @@ Q.Ready(function() {
 ---------------------------------------------------------------------------*/
 Q.Application = Q.extend({
 id : -1,   // application id
-construct : function(params) {
+__init__ : function(params) {
   // generator app id
   this.id = ++__GLOBALS.appid;
   __GLOBALS.apps[this.id] = this;
@@ -83,8 +84,8 @@ end : function() {
 
 Q.UIApplication = Q.Application.extend({
 wnds_map: null,
-construct : function(params) {
-  this.__super__.construct.call(this, arguments);
+__init__ : function(params) {
+  Q.Application.prototype.__init__.call(this, arguments);
   this.wnds_map = new Q.LIST();
 },
 
@@ -432,7 +433,7 @@ function $SetWindowStyle(wndNode, ws){
   } else {
     $GetMinCtrlButton(wndNode).style.display='none';
   }
-  
+   
   if( $IsStyle(ws, CONST.STYLE_WITHBOTTOM) ) {
     $GetClient(wndNode).className = "clsClientArea clsWithBottom"
     wndNode.hBottomBar.style.display = '';
@@ -489,7 +490,6 @@ function $DefaultWindowProc(hwnd, msg, data) {
       var top_wnd = $GetTopZIndexWindow($GetDesktopWindow());
       var top_zindex = $GetWindowZIndex(top_wnd);
       var t = hwnd;
-
       // 最底部的模式窗口
       while(t && t.modal_prev) 
         t = t.modal_prev;
@@ -498,6 +498,7 @@ function $DefaultWindowProc(hwnd, msg, data) {
         t = t.modal_next;
         ++top_zindex;  
       }
+
       // 先激活顶层窗口
       $ActivateWindow(t, ++top_zindex);
       if(t != hwnd) {
@@ -816,7 +817,7 @@ function $MakeResizable(obj) {
 // 创建窗口，并返回一个窗口操作类
 Q.Window = Q.extend({
 hwnd : null,
-construct : function(config) {
+__init__ : function(config) {
   config = config || {};
   var _this = this;
   var title = config.title || '无标题';
@@ -858,29 +859,43 @@ adjust : function()        { $FitWindow(this.hwnd); },
 -------------------------------------------------------------------*/
 Q.Dialog = Q.Window.extend({
 old_window_proc : null,
-construct : function(config) {
+__init__ : function(config) {
   config = config || {};
   config.wstyle = config.wstyle || CONST.STYLE_DEFAULT;
   config.wstyle |= CONST.STYLE_FIXED;
   config.wstyle |= CONST.STYLE_CLOSE;
-  config.wstyle |= CONST.STYLE_WITHBOTTOM;
   config.wstyle &= ~CONST.STYLE_MAX;
   config.wstyle &= ~CONST.STYLE_MIN;
   config.wstyle &= ~CONST.STYLE_ICON;
-
-  this.__super__.construct.call(this, config);
+  this.on_close = config.on_close || function() {};
+  var buttons = [];
+  if(config.buttons instanceof Array) {
+    config.wstyle |= CONST.STYLE_WITHBOTTOM;
+    buttons = config.buttons;
+  } 
+  Q.Window.prototype.__init__.call(this, config);
   this.old_window_proc = this.set_window_proc( (function(qwindow) {
     return function(hwnd, msgid, json) { return qwindow.window_proc(msgid, json);}
-  })(this)); 
+  })(this));
+ 
+  // initialize buttons 
+  for(var i=0; i < buttons.length; i++) {
+    var button = buttons[i];
+    var style = button.style || 'sysbtn';
+    this.add_bottom_button(button.text, style, Q.bind_handler(this, function() { if(button.onclick()) { this.end_dialog(); } }));
+  }
 },
 
 // dialog procedure
 window_proc : function(msgid, json) {
   switch(msgid) {
   case MESSAGE.CLOSE:
-    $MaskWindow(this.hwnd.modal_prev, false);
-    this.hwnd.modal_prev.modal_next = null;
-    this.hwnd.modal_prev = null;
+    this.on_close();
+    if(this.hwnd.modal_prev) {
+      $MaskWindow(this.hwnd.modal_prev, false);
+      this.hwnd.modal_prev.modal_next = null;
+      this.hwnd.modal_prev = null;
+    }
     break;
   }
 
@@ -941,44 +956,26 @@ var MSGBOX_CANCEL  = 0x0020;  // 取消
 var MSGBOX_YESNO   = MSGBOX_YES | MSGBOX_NO;  // 是/否
 var MSGBOX_YESNOCANCEL  = MSGBOX_YES | MSGBOX_NO | MSGBOX_CANCEL;  // 是/否/取消
 
-Q.MessageBox = function(config) {
+Q.MessageBox = Q.Dialog.extend({
+tes_pro: null,
+__init__: function(config) {
   config = config || {};
   config.width  = config.width  || 360;
   config.height = config.height || 200;
-  var dlg = new Q.Dialog(config);
-  dlg.set_content(config.content);
-  dlg.onok = config.onok || function() {};
-  dlg.onno = config.onno || function() {};
-  dlg.oncancel = config.oncancel || function() {};
   config.bstyle = config.bstyle || MSGBOX_YES;
+  config.buttons = [];
   if( $IsWithStyle(MSGBOX_YES, config.bstyle) ) {
-    dlg.add_bottom_button('  是  ', 'sysbtn', Q.bind_handler(dlg, function() {
-        var return_ok = true;
-        if(this.onok)  { 
-          return_ok = this.onok(); 
-        }
-        if(return_ok) {
-          this.end_dialog();
-        }          
-      }))
-  }
-    
+    config.buttons.push({text: ' 是 ', onclick: Q.bind_handler(this, function() { this.end_dialog(); })})   
+  } 
   if( $IsWithStyle(MSGBOX_NO, config.bstyle) ) {
-    dlg.add_bottom_button('  否  ', 'sysbtn', Q.bind_handler(dlg, function(){
-        if(this.onno){ this.onno(); }
-        this.end_dialog();
-      }))
   }
-
   if( $IsWithStyle(MSGBOX_CANCEL, config.bstyle) ) {
-    dlg.add_bottom_button(' 取消 ', 'syscancelbtn', Q.bind_handler(dlg,  function(){
-        if(this.oncancel){ this.oncancel(); }
-        this.end_dialog();
-      }))
   }
 
-  dlg.domodal();
-  dlg.adjust();
-  dlg.center();
+  Q.Dialog.prototype.__init__.call(this, config);
+  this.domodal();
+  this.adjust();
+  this.center();
 }
+});
 
