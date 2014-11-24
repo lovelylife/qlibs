@@ -175,6 +175,14 @@
     return { t: t, l: l, w: w, h: h };
   };
 
+  Q.copy = function(src_object) {
+    var target_object = {}; 
+    for(var name in src_object) {
+      target_object[name] = src_object[name];
+    }
+    return target_object;
+  };
+
   // QLib Dir
   Q.libDir = function() { return _libdir; };
   // get querystring

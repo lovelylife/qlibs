@@ -88,7 +88,7 @@ html { margin: 0px; padding: 0px; height: 100%; border:none; }
 .clsMaskWindow {position:absolute; background: #000000; display:; left:0;top:0;right:0;bottom:0;}
 .clsClientArea {overflow: hidden; position:absolute; left:0; top:30px; right:0; bottom:0;margin:0;padding:0;}
 .clsClientArea .clsWithBottom {overflow: hidden; position:absolute; left:0; top:30px; right:0; bottom:30;margin:0;padding:0; background: #FF0;}
-.clsBottomBar {position: absolute; bottom: 0; left:0; right:0;height:30px; line-height:30px; text-align:right;background: #F1F1F1;border-top: 1px solid #e0e0e0; font-size: 13px;}
+.clsBottomBar {position: absolute; bottom: 0; left:0; right:0;height:30px; line-height:30px; text-align:right;background: #F1F1F1;border-top: 1px solid #e0e0e0; }
 .clsDragWindow {position:absolute;display:none;background:blue;cursor:default;}
 
 
@@ -132,10 +132,11 @@ html { margin: 0px; padding: 0px; height: 100%; border:none; }
 	border-width: 1px;
 	border-style: outset;
 	color: white;
-	height: 24px;
-    line-height: 24px;
-	padding: 0 10px ; 
+	height: 26px;
+  line-height: 26px;
+	padding: 0 15px ; 
 	margin-right: 5px;
+  margin-top:2px;
 }
 
 .syscancelbtn { 

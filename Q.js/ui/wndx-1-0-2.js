@@ -882,7 +882,8 @@ __init__ : function(config) {
   for(var i=0; i < buttons.length; i++) {
     var button = buttons[i];
     var style = button.style || 'sysbtn';
-    this.add_bottom_button(button.text, style, Q.bind_handler(this, function() { if(button.onclick()) { this.end_dialog(); } }));
+    this.add_bottom_button(button.text, style, (function(dialog, btn) { 
+      return function() { if(btn.onclick()) { dialog.end_dialog(); }}})(this, button));
   }
 },
 
@@ -942,14 +943,11 @@ end_dialog : function(code) {
     return CONST.IDCANCEL;
 },
 
-});
+}); // Q.Dialog
 
 /*-----------------------------------------------------------------
   class Q.MessageBox
 -------------------------------------------------------------------*/
-var MSGBOX_LEFT    = 0x0001;
-var MSGBOX_CENTER  = 0x0002;
-var MSGBOX_RIGHT   = 0x0004;
 var MSGBOX_YES     = 0x0008;  // 是
 var MSGBOX_NO      = 0x0010;    // 否
 var MSGBOX_CANCEL  = 0x0020;  // 取消
@@ -957,25 +955,23 @@ var MSGBOX_YESNO   = MSGBOX_YES | MSGBOX_NO;  // 是/否
 var MSGBOX_YESNOCANCEL  = MSGBOX_YES | MSGBOX_NO | MSGBOX_CANCEL;  // 是/否/取消
 
 Q.MessageBox = Q.Dialog.extend({
-tes_pro: null,
 __init__: function(config) {
   config = config || {};
   config.width  = config.width  || 360;
   config.height = config.height || 200;
   config.bstyle = config.bstyle || MSGBOX_YES;
   config.buttons = [];
-  if( $IsWithStyle(MSGBOX_YES, config.bstyle) ) {
+  if( $IsWithStyle(MSGBOX_YES, config.bstyle) )
     config.buttons.push({text: ' 是 ', onclick: Q.bind_handler(this, function() { this.end_dialog(); })})   
-  } 
-  if( $IsWithStyle(MSGBOX_NO, config.bstyle) ) {
-  }
-  if( $IsWithStyle(MSGBOX_CANCEL, config.bstyle) ) {
-  }
+  if( $IsWithStyle(MSGBOX_NO, config.bstyle) ) 
+    config.buttons.push({text: ' 否 ', onclick: Q.bind_handler(this, function() { this.end_dialog(); })})   
+  if( $IsWithStyle(MSGBOX_CANCEL, config.bstyle) ) 
+    config.buttons.push({text: ' 取消 ', onclick: Q.bind_handler(this, function() { this.end_dialog(); })})   
 
   Q.Dialog.prototype.__init__.call(this, config);
   this.domodal();
   this.adjust();
   this.center();
 }
-});
+}); // Q.MessageBox
 

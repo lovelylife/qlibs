@@ -80,7 +80,6 @@
   var g_test_dialog;
   var g_multi_window;
   Q.Ready(function() {
-    //Q.setdebug(Q.$('debug_window'));
     // 提示对话框
     Q.$('btnOpenMessageBox').onclick = function() {
       g_test_messagebox = new Q.MessageBox({
@@ -97,8 +96,12 @@
         height:370,
         buttons: [
           { 
-            text:'确定', 
+            text:'确 定', 
             onclick: function() { alert(1); return true; } 
+          }, 
+          { 
+            text:'取 消', 
+            onclick: function() { alert(2); return true; } 
           }, 
         ],
         });
@@ -115,10 +118,6 @@
         content: 'test-domodal',
       });
     }
-
-    Q.$('btnClear').onclick=function() {
-      Q.$('debug_window').innerHTML = '';
-    }
   });
   
   -->
@@ -127,7 +126,6 @@
 <body onselectstart="return false;" style=" background: #CCC;height: 100%;overflow:hidden;-moz-user-select:none;-webkit-user-select: none;">
 
 <p>提示对话框</p>
-<button id="btnClear">Clear</button>
 <button id="btnOpenDialog">Dialog</button>
 <button id="btnOpenMessageBox">MessageBox</button>
 <!-- wndx template -->
