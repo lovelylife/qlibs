@@ -40,7 +40,9 @@ var CONST = {
   SIZE_MINING :  6,
 
 // dialog define
-  IDCANCEL :          '0'
+  IDCANCEL :          '0',
+  IDOK     :          '1',
+  IDNO     :          '2',
 };
 
 CONST.STYLE_DEFAULT = CONST.STYLE_TITLE|CONST.STYLE_ICON|CONST.STYLE_MAX|CONST.STYLE_MIN|CONST.STYLE_CLOSE;
@@ -948,26 +950,26 @@ end_dialog : function(code) {
 /*-----------------------------------------------------------------
   class Q.MessageBox
 -------------------------------------------------------------------*/
-var MSGBOX_YES     = 0x0008;  // 是
-var MSGBOX_NO      = 0x0010;    // 否
-var MSGBOX_CANCEL  = 0x0020;  // 取消
-var MSGBOX_YESNO   = MSGBOX_YES | MSGBOX_NO;  // 是/否
-var MSGBOX_YESNOCANCEL  = MSGBOX_YES | MSGBOX_NO | MSGBOX_CANCEL;  // 是/否/取消
 
 Q.MessageBox = Q.Dialog.extend({
 __init__: function(config) {
   config = config || {};
   config.width  = config.width  || 360;
   config.height = config.height || 200;
-  config.bstyle = config.bstyle || MSGBOX_YES;
   config.buttons = [];
-  if( $IsWithStyle(MSGBOX_YES, config.bstyle) )
-    config.buttons.push({text: ' 是 ', onclick: Q.bind_handler(this, function() { this.end_dialog(); })})   
-  if( $IsWithStyle(MSGBOX_NO, config.bstyle) ) 
-    config.buttons.push({text: ' 否 ', onclick: Q.bind_handler(this, function() { this.end_dialog(); })})   
-  if( $IsWithStyle(MSGBOX_CANCEL, config.bstyle) ) 
-    config.buttons.push({text: ' 取消 ', onclick: Q.bind_handler(this, function() { this.end_dialog(); })})   
-
+  config.on_ok = config.on_ok || function() { return true; };
+  if( typeof config.on_ok == 'function' ) {
+    this.on_ok = config.on_ok;
+    config.buttons.push({text: ' 是 ', onclick: Q.bind_handler(this, function() { this.on_ok() && this.end_dialog(CONST.IDOK); })})   
+  }
+  if( typeof config.on_no == 'function' ) {
+    this.on_no = config.on_no;
+    config.buttons.push({text: ' 否 ', onclick: Q.bind_handler(this, function() { this.on_no() && this.end_dialog(CONST.IDNO); })})   
+  }
+  if( typeof config.on_cancel == 'function' ) {
+    this.on_cancel = config.on_cancel;
+    config.buttons.push({text: ' 取消 ', onclick: Q.bind_handler(this, function() { this.on_cancel() && this.end_dialog(CONST.IDCANCEL); })})   
+  }
   Q.Dialog.prototype.__init__.call(this, config);
   this.domodal();
   this.adjust();

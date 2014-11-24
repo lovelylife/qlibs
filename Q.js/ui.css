@@ -144,9 +144,12 @@ html { margin: 0px; padding: 0px; height: 100%; border:none; }
 	border-width:1px; 
 	border-style:outset;
 	color:#333; 
-	height:24px;
-	margin:2px; 
-	line-height:24px;
+	height:26px;
+	margin:5px; 
+	line-height:26px;
+	padding: 0 15px ; 
+	margin-right: 5px;
+  margin-top:2px;
 }
 
 .sysinput { 
