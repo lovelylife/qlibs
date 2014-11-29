@@ -92,9 +92,11 @@ Q.slider = Q.extend({
    
     if(_this.type != 'hr') {
       var y = Math.floor(f*(_this.hwnd.offsetHeight-_this.thumb.offsetHeight));	
+      _this.on_yscroll(_this.value);
       _this.thumb.style.top = y + 'px';
     } else {
       var x = Math.floor(f*(_this.hwnd.offsetWidth-_this.thumb.offsetWidth));
+      _this.on_xscroll(_this.value);
       _this.thumb.style.left = x + 'px';
     }
   },
