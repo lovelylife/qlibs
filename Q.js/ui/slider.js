@@ -39,15 +39,13 @@ Q.slider = Q.extend({
     this.min = config.min;
     this.max = config.max;
     this.duration = config.duration || 1;
-    this.value = config.value || 0;
+    this.value = is_numeric(config.value)?config.value:0;
     if(typeof config.on_xscroll == 'function') {
       this.on_xscroll = config.on_xscroll;
     }
     if(typeof config.on_yscroll == 'function') {
       this.on_yscroll = config.on_yscroll;
     }
-    this.duration = config.duration || 1;
-    this.duration = config.duration || 1;
     this.hwnd = Q.$(config.id);
     this.thumb = find_item(this.hwnd, function(e) { return (e && e.nodeType == Q.ELEMENT_NODE) && (e.className.indexOf('q-thumb') >= 0); });
       
