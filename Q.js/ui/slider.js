@@ -39,7 +39,7 @@ Q.slider = Q.extend({
     this.min = config.min;
     this.max = config.max;
     this.duration = config.duration || 1;
-    this.value = is_numeric(config.value)?config.value:0;
+    this.value = (config.value)?config.value:0;
     if(typeof config.on_xscroll == 'function') {
       this.on_xscroll = config.on_xscroll;
     }

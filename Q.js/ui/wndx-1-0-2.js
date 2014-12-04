@@ -964,11 +964,11 @@ __init__: function(config) {
   }
   if( typeof config.on_no == 'function' ) {
     this.on_no = config.on_no;
-    config.buttons.push({text: ' 否 ', onclick: Q.bind_handler(this, function() { this.on_no() && this.end_dialog(CONST.IDNO); })})   
+    config.buttons.push({text: ' 否 ', style:'syscancelbtn', onclick: Q.bind_handler(this, function() { this.on_no() && this.end_dialog(CONST.IDNO); })})   
   }
   if( typeof config.on_cancel == 'function' ) {
     this.on_cancel = config.on_cancel;
-    config.buttons.push({text: ' 取消 ', onclick: Q.bind_handler(this, function() { this.on_cancel() && this.end_dialog(CONST.IDCANCEL); })})   
+    config.buttons.push({text: ' 取消 ', style:'syscancelbtn', onclick: Q.bind_handler(this, function() { this.on_cancel() && this.end_dialog(CONST.IDCANCEL); })})   
   }
   Q.Dialog.prototype.__init__.call(this, config);
   this.domodal();
