@@ -47,21 +47,20 @@ var CurrentStyle = function(element){
 
 // create the Data Store
 Q.store = Q.extend({
-
 records : null,  // 记录集
 proxy : null,
 currentpage : -1,
 length : 0,
-__init__ : function(json) {
+__init__ : function(config) {
+  var config = config || {}; 
   var _this = this;
   _this.records = new STRUCT_HASMAP;
-  if(!json) {  return;  }
-  _this.remote = json.remote || false;
-  if(json.datasource)
-    _this.load_json(json.datasource);
+  _this.remote = config.remote || false;
+  if(config.datasource)
+    _this.load_json(config.datasource);
   
-  if(json.proxy) { 
-    _this.proxy = json.proxy; 
+  if(config.proxy) { 
+    _this.proxy = config.proxy; 
     _this.load_remote(0, 30, null);
   }
 },
@@ -77,7 +76,6 @@ load_json : function(jsonsrouce, bClearOldData) {
       record["dataIndex"] = _this.records.dataIndex; // 存储数据索引， 用于确定改记录在记录集中的位置
       _this.records.push(record);
   });
-  // _this.length = _this.records.length;
 },
   
 load_remote : function(page, pagesize, callback) {
@@ -86,7 +84,7 @@ load_remote : function(page, pagesize, callback) {
     command: _this.proxy+'&page='+page+'&size='+pagesize,
     oncomplete : function(xmlhttp) {
       //alert(xmlhttp.responseText);
-      var s = eval('(' + xmlhttp.responseText + ')');
+      var s = Q.json_decode(xmlhttp.responseText);
       _this.load_json(s.data);
       _this.length = s.extra;
       
@@ -102,7 +100,6 @@ load_page : function(page, pagesize, callback) {
   var _this = this;
     
   if(_this.proxy) {
-    // alert('remote');
     _this.load_remote(page, pagesize, fnCallback);
   } else {
     var pagedata = new STRUCT_HASMAP;
@@ -320,90 +317,34 @@ wndMoveLine : null,
 wstyle : null,
 columns: [],
 evtListener : {},
-jstore : null,
+store : null,
 
 // 处理选中行
 rows_selected : null,
-rows_checked : null,
 
 
 __init__ : function(json) {
   var _this = this;
-
+  json = json || {};
   //样式解析
   _this.wstyle = _this.STYLE['WS_NONE'];
   _this._styleparse(json.wstyle);
-  
-  // 数据存储器
-  _this.jstore = json.jstore;
-
+  _this.title = json.title;
+  _this.store = json.store;
   // 选中行的DOM元素
   _this.rows_selected = new STRUCT_HASMAP;
-
-  // Checked 元素
-  _this.rows_checked = new STRUCT_HASMAP;
-
   _this.columns = json.columns || [];
 
-  if(_this.isCheckBoxStyle()) {
-    _this.columns.unshift({name: '_check', 
-      title: '<input type="checkbox">', 
-      renderer : function(record) { return '<input type="checkbox">';},
-      align: 'center',
-      className : 'jtable_checkbox',
-      issortable : false,
-      fixedWidth : true,
-      width: 40,
-      isHTML: true
-    });
-  }
-  
   // method overrides
   if(typeof json.row_onclick == 'function') {  _this.row_onclick = json.row_onclick; }
-  if(typeof json.row_onclick == 'string') {
-    try {
-      _this.row_onclick = eval(json.row_onclick);
-    } catch(e) {
-      alert(e + '\n'+json.row_onclick);  
-    }
-  }
-    
   if(typeof json.row_onmouseover == 'function') {  _this.row_onmouseover = json.row_onmouseover; }
-  if(typeof json.row_onmouseover == 'string') {
-    try {
-      _this.row_onmouseover = eval(json.row_onmouseover);
-    } catch(e) {
-      alert(e + '\n'+json.row_onmouseover);  
-    }
-  }
-
   if(typeof json.row_onmouseout == 'function') {  _this.row_onmouseout = json.row_onmouseout; }
-  if(typeof json.row_onmouseout == 'string') {
-    try {
-      _this.row_onmouseout = eval(json.row_onmouseout);
-    } catch(e) {
-      alert(e + '\n'+json.row_onmouseout);    
-    }
-  }
-    
   if(typeof json.row_oninsert == 'function') {  _this.row_oninsert = json.row_oninsert; }
-  if(typeof json.row_oninsert == 'string') {
-    try {
-      _this.row_oninsert = eval(json.row_oninsert);
-    } catch(e) {
-      alert(e + '\n'+json.row_oninsert);    
-    }
-  }
 
   // 初始化父窗口 wndParent,用来显示jtable控件
   // 并初始化jtable视图
   _this.wndParent = Q.$(json.container);
-  if(_this.wndParent.nodeType && _this.wndParent.nodeType == Q.ELEMENT_NODE) {
-    _this._initview();
-  } else {
-    alert('初始化界面出错，'+json.container+'不存在'); 
-    return;
-  }
+  _this._initview();
 
   // 监听改变窗口大小事件，用户自适应父容器的宽度或者高度
   Q.addEvent(window, 'resize', 
@@ -417,31 +358,6 @@ __init__ : function(json) {
   _this.render();
   _this.autosize();
 },
-
-// 创建jtable的框架，代码如下:
-// <div class="jtable_hwnd">
-//  <div class="jtable_titlebar"></div>
-//  <div class="jtable_frame">
-//    <div class="jtable_headtable_group">
-//      <table cellpadding="0" cellspacing="0" border="0">
-//      <tbody>
-//        <tr>
-//          <td><div class="jtable_title">column head</div></td>
-//        </tr>
-//      </tbody>
-//      </table>
-//    </div>
-//    <div class="jtable_datatable_group">
-//      <table cellpadding="0" cellspacing="0" border="0">
-//      <tbody>
-//        <tr dataindex="0"><td><div class="jtable_cdata">data</div></td></tr>
-//      </tbody>
-//      </table>
-//    </div>
-//  </div>
-//  <div class="jtable_toolbar"></div>
-// </div>
-// 
 
 //  初始化表格控件视图
 _initview : function() {
@@ -474,6 +390,7 @@ _initview : function() {
   _this.wndMoveLine.className = 'jtable_moveline';
   _this.wndMoveLine.style.display = 'none';
   
+  _this.wndTitleBar.innerText = _this.title;
   // 在浏览器中渲染控件视图
   _this.wndParent.appendChild(_this.wnd);
 
@@ -486,13 +403,6 @@ _initview : function() {
 
   // 加载jtable的列
   _this.loadColumns();
-  
-  //加载checkbox样式，默认设置多选模式
-  if(_this.isCheckBoxStyle()) {
-    _this.wndTableHeaderRow.cells[0].childNodes[0].childNodes[0].childNodes[0].onclick = function() {
-      _this.rows_selected_all(this.checked);
-    };
-  }
 
   // 添加事件
   _this.wndGroupHeader.onselectstart = function(evt) {return false;};
@@ -602,15 +512,6 @@ append : function(nIndex, record) {
     TD.appendChild(cell);
   }
 
-  if(_this.isCheckBoxStyle()) {
-    _this.rows_checked.add(record['dataIndex'], ROW.cells[0].childNodes[0].childNodes[0]);
-    ROW.cells[0].childNodes[0].childNodes[0].onclick=function(evt) {
-      evt = evt || window.event;
-      _this.row_set_selected(this.parentNode.parentNode.parentNode, this.checked);
-      evt.cancelBubble = true;
-    }
-  }
-
   _this.row_oninsert(ROW, record);
 },
 
@@ -641,7 +542,7 @@ loadData : function(datasrc, bClearOldData) {
     _this.wndTableHeaderRow.cells[0].childNodes[0].childNodes[0].childNodes[0].checked = false;  
   }
 
-  _this.jstore.load_json(datasrc, !!bClearOldData);
+  _this.store.load_json(datasrc, !!bClearOldData);
   if(!!bClearOldData) {
     _this.wndTableData.removeChild(_this.wndTableData.firstChild);
   }
@@ -649,7 +550,7 @@ loadData : function(datasrc, bClearOldData) {
 
 render : function() {
   var _this = this;
-  this.jstore.render(function(record, index) {
+  this.store.render(function(record, index) {
     _this.append(index, record);
   });
 },
@@ -659,9 +560,6 @@ loadColumns : function() {
   for(var i=0; i < _this.columns.length; i++) {
     var column = _this.columns[i];
     column.width = parseInt(column.width, 10);
-    if(typeof column.renderer == 'string') {
-      column.renderer = eval(column.renderer);
-    }
     _this.insertcolumn(i, column);
   }
 },
@@ -680,7 +578,7 @@ insertcolumn : function(arrIndex, json) {
   TD.firstChild.ondblclick = function() { _this._column_dblclick(this.parentNode.cellIndex);};
 
   //!固定宽度
-  if(!json.fixedWidth) {
+  if(!json.fixed) {
     new __TH(TD, {moveline: _this.wndMoveLine, 
       onStart: function(evt, handler) { 
         _this.column_MouseDown(evt, handler); 
@@ -742,7 +640,7 @@ _column_click : function(nCol) {
   // alert(column.clicks);
   // 出示排序函数
   if(column.sort) {
-    this.sortTable(nCol, true, column.sort);
+    //this.sortTable(nCol, true, column.sort);
   }
   
   if(column&&column.clicks) {
@@ -753,76 +651,6 @@ _column_click : function(nCol) {
 },
   
 _column_dblclick : function(nCol) {},
-
-sortTable : function(col, rev, cmpfunc) {
-  // Get the table or table section to sort.
-  var _this = this;
-  var column = this.columns[col];
-  var columnName = column.name;
-  
-  var tblEl = _this.wndTableData.tBodies[0];
-  // The first time this function is called for a given table, set up an
-  // array of reverse sort flags.
-  if (tblEl.reverseSort == null) {
-    tblEl.reverseSort = new Array();
-    // Also, assume the team name column is initially sorted.
-    tblEl.lastColumn = 1;
-  }
-  // If this column has not been sorted before, set the initial sort direction.
-  if (tblEl.reverseSort[col] == null)
-  tblEl.reverseSort[col] = rev;
-  // If this column was the last one sorted, reverse its sort direction.
-  if (col == tblEl.lastColumn)
-  tblEl.reverseSort[col] = !tblEl.reverseSort[col];
-  // Remember this column as the last one sorted.
-  tblEl.lastColumn = col;
-  // Set the table display style to "none" - necessary for Netscape 6
-  // browsers.
-  var oldDsply = tblEl.style.display;
-  tblEl.style.display = "none";
-  // Sort the rows based on the content of the specified column using a
-  // selection sort.
-  var tmpEl;
-  var i, j;
-  var minVal, minIdx;
-  var testVal;
-  var cmp;
-  
-  for (i = 0; i < tblEl.rows.length - 1; i++) {
-    // Assume the current row has the minimum value.
-    minIdx = i;
-    //alert(tblEl.rows[i].data)
-    minVal = tblEl.rows[i].data;    // getTextValue(tblEl.rows[i].cells[col])
-    // Search the rows that follow the current one for a smaller value.
-    for (j = i + 1; j < tblEl.rows.length; j++) {
-      testVal =  tblEl.rows[j].data; //getTextValue(tblEl.rows[j].cells[col]);
-      cmp = cmpfunc(minVal, testVal, columnName);
-      
-      // Negate the comparison result if the reverse sort flag is set.
-      if (tblEl.reverseSort[col])
-        cmp = -cmp;
-      // Sort by the second column (team name) if those values are equal.
-      //if (cmp == 0 && col != 1)
-      //  cmp = cmpfunc(getTextValue(tblEl.rows[minIdx].cells[1]), getTextValue(tblEl.rows[j].cells[1]));
-      // If this row has a smaller value than the current minimum, remember its
-      // position and update the current minimum value.
-      if (cmp > 0) {
-        minIdx = j;
-        minVal = testVal;
-      }
-    }
-    // By now, we have the row with the smallest value. Remove it from the
-    // table and insert it before the current row.
-    if (minIdx > i) {
-      tmpEl = tblEl.removeChild(tblEl.rows[minIdx]);
-      tblEl.insertBefore(tmpEl, tblEl.rows[i]);
-      // tblEl.rows[minIdx].swapNode(tblEl.rows[i]);
-    }
-  }
-  // Restore the table's display style.
-  tblEl.style.display = oldDsply;
-  return false;
-},
 
 onClickColumn : function(nCol) {},
 onDblClickColumn : function(nCol) {},
@@ -837,7 +665,7 @@ _rows_onclick : function(row) {
     return false;
   }
 
-  var dataIndex = parseInt(row.getAttribute('dataIndex'), 10);
+  var dataIndex = row.getAttribute('dataIndex');
   
   // 不支持多选
   if(!_this.isMultiSelect()) {
@@ -851,18 +679,14 @@ _rows_onclick : function(row) {
     }
     
   } else {
-    if(_this.isCheckBoxStyle()) {
-      _this.row_set_selected(row, !_this.row_is_checked(row));  
+    if(_this.select_mode == SELECT_MODE_CTRL) { // CTRL键按下时
+      _this.row_set_selected(row,!_this.row_is_selected(row));  
+    } else if(_this.select_mode == SELECT_MODE_SHIFT) { // SHIFT键按下时
     } else {
-      if(_this.select_mode == SELECT_MODE_CTRL) { // CTRL键按下时
-        _this.row_set_selected(row,!_this.row_is_selected(row));  
-      } else if(_this.select_mode == SELECT_MODE_SHIFT) { // SHIFT键按下时
-      } else {
-        _this.rows_selected.each( function(node, key) { 
-            _this.row_set_selected(_this.rows_selected.item(key),false);
-          });
-        _this.row_set_selected(row, true);
-      }
+      _this.rows_selected.each( function(node, key) { 
+          _this.row_set_selected(_this.rows_selected.item(key),false);
+      });
+      _this.row_set_selected(row, true);
     }
   }
   _this.row_onclick(row);
@@ -899,60 +723,37 @@ row_oninsert : function(row, record) {},
 
 rows_each : function(callback) {
   var _this = this;
-  if(typeof callback != 'function') { alert('rows_each callback was not a function'); return; }
   for(var i=0; i < _this.wndTableData.rows.length; i++) {
     callback(_this.wndTableData.rows[i]);
   }
 },
+
+row_index : function(row) { return parseInt(row.getAttribute('dataIndex'),10); },
 
 row_enable : function(row, enabled) {
   var _this = this;
   var dataIndex = parseInt(row.getAttribute('dataIndex'), 10);
   // 设置选中颜色
   // _this.row_set_color(row, '#DFE8F6'); //'#A2CAEA'
-  row.getAttribute('_disabled', !enabled);
-  if(_this.isCheckBoxStyle()) {
-    _this.checkboxes.item(dataIndex).disabled = !enabled;
-  }
 },
   
 row_remove : function(row) {
   var _this = this;
-  try {
-    var record = _this.jstore.records[_this.get_row_dataIndex(row)];
-    _this.wndTableData.deleteRow(row.rowIndex);
-    _this.jstore.remove(record);
-    _this.autosize();
-  } catch(e) {
-    alert(e.description);
-  }
+  var record = _this.store.records[_this.row_index(row)];
+  _this.wndTableData.deleteRow(row.rowIndex);
+  _this.store.remove(record);
+  _this.autosize();
 },
   
 row_insert : function(index, record) {
   var _this = this;
-  _this.jstore.push(record);
+  _this.store.push(record);
   _this.insertrow(index, record);
   _this.autosize();
 },
 
-row_is_enabled : function(row) {
-  return (!row.getAttribute('_disabled'));
-},
-
-row_is_checked : function(row) {
-  var _this = this;
-  var dataIndex = parseInt(row.getAttribute('dataIndex'), 10);
-  if(_this.isCheckBoxStyle()) {
-    return _this.rows_checked.item(dataIndex).checked;
-  }
-  return false;
-},
-
-row_is_selected : function(row) {
-  var _this = this;
-  var dataIndex = parseInt(row.getAttribute('dataIndex'), 10);
-  return _this.rows_selected.has(dataIndex);
-},
+row_is_enabled : function(row) { return (!row.getAttribute('_disabled')); },
+row_is_selected : function(row) { return this.rows_selected.has(this.row_index(row)); },
 
 // 设置选择
 rows_selected_all : function(bSelectAll) {
@@ -962,37 +763,28 @@ rows_selected_all : function(bSelectAll) {
   });
 },  
   
-row_set_color : function(row, bgColor) {
-  row.style.background = bgColor;
-},
-  
 row_set_selected : function(row, bSelected) {
   var _this = this;
   if(_this.row_is_enabled(row)) {
-    var dataIndex = parseInt(row.getAttribute('dataIndex'), 10);
+    var dataIndex = row.getAttribute('dataIndex');
     // 设置颜色
     if(bSelected) {
-      _this.row_set_color(row, '#DFE8F6'); //'#A2CAEA'
+      row.style.backgroundColor = '#DFE8F6';
       _this.rows_selected.add(dataIndex, row);
     } else {
-      _this.row_set_color(row, 'none');
+      row.style.backgroundColor = 'none';
       _this.rows_selected.remove(dataIndex);
     }      
-
-    if(_this.isCheckBoxStyle()) {
-      _this.rows_checked.item(dataIndex).checked = bSelected;
-      _this.wndTableHeaderRow.cells[0].childNodes[0].childNodes[0].childNodes[0].checked = (_this.rows_selected.length == _this.wndTableData.rows.length);  
-    }
   }  
 },
   
 get_records : function(row) {
   var _this = this;
   var dataIndex = parseInt(_this.get_row_dataIndex(row), 10);
-  var store = _this.jstore;
+  var store = _this.store;
   var arr = [];
   if(-1 == dataIndex) {  
-    _this.jstore.records.each(function(node, i) { arr.push(node); });
+    _this.store.records.each(function(node, i) { arr.push(node); });
     return arr;
   }
 
@@ -1019,37 +811,14 @@ get_rows_selected : function() {
   return arr;
 },
   
-get_row_dataIndex : function(row) {
-  if(row.nodeType == 1) {
-    return parseInt(row.getAttribute('dataIndex'),10);  
-  } else {
-    return -1;
-  }
+row_index : function(row) {
+  return parseInt(row.getAttribute('dataIndex'),10);  
 },
 
-get_width : function() {
-},
-
-get_height : function() {
-},
-  
 get_text : function(row, fieldName) {
   var _this = this;
   var record = _this.get_records(row)[0];
   return record[fieldName];
-},
-  
-set_text_index : function(row, cellIndex, szText, isHTML) {
-    
-},
-  
-set_text : function(row, fieldName, szText, isHTML) {
-
-},
-  
-// 工具栏插件注册
-plugin_register : function(plugin, isNotSplit) {
-    
 },
   
 sync_scroll : function() {}
