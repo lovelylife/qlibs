@@ -14,24 +14,24 @@
     return;
   }
     
-  // Q
-  var Q = {};
-  window.Q = Q;
   // QLib base dir
   var _libdir = null;
   // dom elements cache
   var _domcache = {};    
-  // OnPageLoad Message Queue
-  var _OnPageLoad = [];
+  // on_page_load Message Queue
+  var _on_page_load = [];
   // QueryString
   var _querystring = {};
-  // Browser
-  Q.Browser = {};
 
   // LoadCompleted
   var _LoadCompleted = false;
   var _delayDOMReady = [];
 
+  // string prototype
+  String.prototype.trim      = function() { return this.replace(/(^\s*)|(\s*$)/g, ""); }
+　String.prototype.trim_left = function() { return this.replace(/(^\s*)/g,""); }
+  String.prototype.trim_right= function() { return this.replace(/(\s*$)/g,""); }
+  
   // 基于prototype的继承实现
   // 警告：调用父类的（被重载的）同名函数调用需要借助parent_class.prototype.method.call(this, arguments);
   var CLASS = function() {};
@@ -40,7 +40,6 @@
     var this_class = function() {
       this.__init__.apply(this, arguments);
     };
-   
     // sub class -> parent class 
     this_class.prototype = Object.create(parent_class);
     
@@ -48,7 +47,6 @@
     for(var name in props) {
       this_class.prototype[name] = props[name];  
     }
-
     this_class.prototype.constructor = this_class;
     this_class.extend = parent_class.extend;
 
@@ -59,8 +57,10 @@
     return this.prototype.extend.call(this, props);
   }
 
-  var Q = window.Q = CLASS;
-
+  var Q = CLASS;
+  window.Q = Q;
+  
+  Q.Browser = {};
   Q.ELEMENT_NODE = 1;
   Q.ELEMENT_TEXTNODE = 3;
 
@@ -116,12 +116,6 @@
     }
   };
 
-  Q.DelayLoad = function() {
-    if(_LoadCompleted) {
-      while(_delayDOMReady.length > 0) { _delayDOMReady.shift()(); }
-    }
-  };
-    
   // 兼容ff的attachEvent接口
   Q.addEvent = function(obj, evtName, fnHandler, useCapture) {
     obj = Q.$(obj);
@@ -144,6 +138,40 @@
       obj["on" + evtName] = null;
     }
   };
+
+  Q.addClass = function(element, new_class) {
+    var arr = (element.className+" "+new_class).trim().split(/\s+/);
+    var class_name = '';
+    var collections = {};
+    for(var i=0; i<arr.length; i++) { 
+      collections[arr[i]] = 0;
+    }
+    for(var key in collections) 
+      class_name += key + ' ';
+    element.className = class_name.trim();
+    return element;
+  }
+
+  Q.removeClass = function(element, remove_class) {
+    var arr = element.className.split(/\s+/);
+    var arr2= remove_class.split(/\s+/);
+    var arr3= [];
+    for(var i=0;i < arr.length; i++) {
+      var remove = false;
+      for(var j=0; j< arr2.length; j++) {
+        if(arr[i] == arr2[j]) {
+          remove = true;
+        }
+      }
+      if(!remove) {
+        arr3.push(arr[i]);
+      }
+    }
+    
+    element.className = arr3.join(' ');
+
+    return element;
+  }
 
   // 获取element的绝对位置
   Q.absPosition = function(element) {
@@ -183,25 +211,8 @@
     return target_object;
   };
 
-  // QLib Dir
-  Q.libDir = function() { return _libdir; };
   // get querystring
   Q.GET = function(key) { return _querystring[key]; };
-  Q.querystring = function(arrExcepts) {
-    if(arrExcepts) {
-      var e = _querystring;
-      for(var i=0; i<arrExcepts.length; i++) {
-        delete e[arrExcepts[i]];
-      }
-
-      var str = '';
-      for(var name in e) {
-        str += '&'+name+'='+e[name];
-      }
-      
-      return str.substring(1, str.length);    
-    }    
-  };
   
   // OnLoad
   Q.DOMReady = function(evt) {
@@ -214,16 +225,16 @@
   
   // 当所有脚本都加载后开始执行Ready回调
   Q.delayDOMReady = function() {
-    while(_OnPageLoad.length > 0) { _OnPageLoad.shift()(); }
+    while(_on_page_load.length > 0) { _on_page_load.shift()(); }
   };
 
   // push event when document loaded
   Q.Ready = function(f, push_front) {
     var back = !push_front;
     if(back)
-      _OnPageLoad.push(f); 
+      _on_page_load.push(f); 
     else 
-      _OnPageLoad.unshift(f); 
+      _on_page_load.unshift(f); 
   };
 
   // current Q.js所在路径
@@ -262,7 +273,7 @@
     ar = ar||[];
     if(ar.length<=0) { 
       _LoadCompleted = true;
-      Q.DelayLoad();
+      while(_delayDOMReady.length > 0) { _delayDOMReady.shift()(); }
       return;
     }
     
@@ -331,6 +342,12 @@
       if(t.length != 2) { continue; }
       _querystring[t[0]] = t[1];
     }
+  }
+    
+  var query = location.search.slice(1).split('&');
+  for(var i=0; i < query.length; i++) {
+    var values = query[i].split('=');
+    _querystring[values[0]] = values[1];
   }
 
   jsloader();
