@@ -23,22 +23,20 @@ class CLASS_APPLICATION {
   private $databases_;
     
   // 路径
-  private $dir_log_;
-  private $dir_template_;
-  private $dir_cache_;
-  private $dir_data_;
+  private $log_dir_;
+  private $template_dir_;
+  private $cache_dir_;
+  private $data_dir_;
   private $path_themes_;
   private $theme_;
         
   // 模板里的变量名称映射
   private $_refCONFIG;
   private $_refAPPS;
-  private $_refTHEMES;    
   private $_refDICT;
 
   function __construct() {
     //! 初始化应用程序环境
-    $this->_refTHEMES  = array();
     $this->_refAPPS = array();
     $this->_refDICT = array();
     $this->databases_ = array();
@@ -50,7 +48,6 @@ class CLASS_APPLICATION {
     $this->root_ = $args['root'];
     $this->path_ = $args['path'];
     $this->host_ = $args['host'];
-
     $this->module_ = $args['module'];  
     $this->action_ = $args['action'];  
     $this->inajax_ = $args['inajax'];
@@ -59,33 +56,21 @@ class CLASS_APPLICATION {
     $this->_refAPPS['path']  = $this->path_;
     $this->_refAPPS['app']   = $this->host_.$this->path_;
     $this->_refAPPS['module']= $this->_refAPPS['app'] .'?'. 'mod='. $this->module_;
-    $this->_refAPPS['host']  = &$this->host_;
+    $this->_refAPPS['host']  = $this->host_;
     // 导入配置数据
     $this->_refCONFIG = require_file($this->root_.'/config.php');
     // 初始化资源和主题路径
-    // 导入设置
-    $paths = &$args['settings'];
-    if(is_array($paths)) {
-      $this->dir_template_ = $this->root_.
-        (empty($paths['templates']) ? '/templates' : $paths['templates']);
-      $this->dir_cache_ = $this->root_.
-        (empty($paths['cache_dir']) ? '/cache' : $paths['cache_dir']);
-      $this->dir_data_ = $this->root_.
-        (empty($paths['data_dir']) ? '/data' : $paths['data_dir']);
-      $this->path_themes_ = 
-        empty($paths['theme_dir']) ? '/themes' : $paths['theme_dir'];
-      $this->theme_ = 
-        empty($paths['theme_current']) ? '/default' : $paths['theme_current'];
-    }
+    $paths = $args['settings'];
+    $this->cache_dir_    = $this->root_.get_default_value($paths['cache_dir'], '/cache');
+    $this->data_dir_     = $this->root_.get_default_value($paths['data_dir'], '/data');
+    $this->theme_        = get_default_value($paths['theme_current'], '/default');
+    $this->theme_dir_    = get_default_value($paths['theme_dir'], '/themes');
+    $this->theme_path_   = $this->theme_dir_.$this->theme_; 
+    $this->template_dir_ = $this->root_.get_default_value($paths['templates'], '/templates').$this->theme_;
 
-    // 初始化当前使用皮肤
-    if(isset($_COOKIE['theme'])) {
-      $this->theme_ = $_COOKIE['theme'];
-    } else {
-      $_COOKIE['theme'] = $this->theme_;
-    }
-    // 取消了js,images,css这些目录，直接使用theme目录
-    $this->_refTHEMES['path'] = ($this->path_ == '/'?'':$this->path_).$this->path_themes_.$this->theme_; 
+    // 注册app模板变量
+    $this->_refAPPS['theme']  = $this->theme_path_;
+
     // 导入包含文件
     $this->requireFiles($this->root_.'/includes.required.php');
   }
@@ -131,12 +116,11 @@ class CLASS_APPLICATION {
   function getAppPath()      { return $this->path_; }
   function getUrlApp()       { return $this->_refAPPS['app'];}
   function getUrlModule()    { return $this->_refAPPS['module'];}
-  function getAppLogDir()    { return $this->dir_log_; }
-  function getTemplatesDir() { return $this->dir_template_; }
-  function getDataDir()      { return $this->dir_data_; }
-  function getCacheDir()     { return $this->dir_cache_; }
+  function getAppLogDir()    { return $this->log_dir_; }
+  function getTemplatesDir() { return $this->template_dir_; }
+  function getDataDir()      { return $this->data_dir_; }
+  function getCacheDir()     { return $this->cache_dir_; }
   function getTheme()        { return $this->theme_; }
-  function getDefaultTheme() { return '/default'; }
   function inAjax()          { return $this->inajax_; }
 
   function& getCONFIG($segName=null) {
@@ -238,9 +222,9 @@ class CLASS_APPLICATION {
     
   function getAPPS($name)   { return $this->_refAPPS[$name]; }
   function getTHEMES($name) { return $this->_refTHEMES[$name]; }
-  function& getRefAPPS()    { return $this->_refAPPS; }
-  function& getRefTHEMES()  { return $this->_refTHEMES; }
-  function& getRefCONFIG()  { return $this->_refCONFIG; }
+  function getRefAPPS()    { return $this->_refAPPS; }
+  function getRefTHEMES()  { return $this->_refTHEMES; }
+  function getRefCONFIG()  { return $this->_refCONFIG; }
 }
 
 ?>

@@ -287,4 +287,6 @@ function fmtdatetime2cn($timestamp) {
     return strftime("%Y年%m月%d日 %H:%M:%S", $timestamp);
 }
 
+function get_default_value($new_value, $default_value) { return empty($new_value) ? $default_value : $new_value; }
+
 ?>

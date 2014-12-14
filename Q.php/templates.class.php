@@ -27,19 +27,19 @@
     直接打印。
 ----------------------------------------------------------------------*/
 
-class CLASS_TEMPLATES {
-
+class CLASS_TEMPLATES
+{
   protected $theApp;
   // 模板路径
-  private $tplDir;
+  private $tpl_dir_;
   // 模板缓冲目录
   private $tpl_cache_dir_;    
   // 字典
   private $dict;
   // 命名数据缓存
-  private $cache_data_;
+  private $data_cache_;
   // 预处理模板变量缓冲    
-  private $tplvarscache;    
+  private $vars_cache_;    
   // 模板文件
   private $tpl_file_;
   // 缓存文件
@@ -51,32 +51,21 @@ class CLASS_TEMPLATES {
 
   // 构造函数
   function __construct($theApp) {    
-    if(!is_object($theApp)) {
-      trigger_error("theApp parameter is invalid.", E_USER_ERROR);
-    }
-
-    $this->tplvarscache = array();
+    $this->vars_cache_ = array();
+    $this->data_cache_ = array();
+    $this->tpl_file_ = null;
+    $this->tags = array();
     $this->theApp = $theApp;
-
-    // 应用程序根目录
-    $appRoot = $theApp->getAppRoot();
-        
-    //  模板和缓冲路径
     $this->tpl_dir_  = $theApp->getTemplatesDir();  
     $this->tpl_cache_dir_ = $theApp->getCacheDir();
 
     if(!file_exists($this->tpl_dir_))
       createfolders($this->tpl_dir_);
-
     if(!file_exists($this->tpl_cache_dir_)) 
       createfolders($this->tpl_cache_dir_);
         
-    $this->tpl_file_ = null;
-    $this->tags = array();
     $this->dict = array();
-    // 载入字典
     $theApp->add_dictionary($this);
-    $this->cache_data_ = array();
   }
   
   function CLASS_TEMPLATES($theApp) { $this->__construct($theApp); }
@@ -101,9 +90,8 @@ class CLASS_TEMPLATES {
       $cfg_file = new CLASS_CONFIG_FILE($this->tpl_tags_file_);
       $config = $cfg_file->config();
       
-      foreach($this->tags as $name => $ui_object) {
+      foreach($this->tags as $name => $ui_object) 
         $config[$name] = $ui_object->serialize();
-      }
       // 保存tags
       $cfg_file->save();
 
@@ -112,8 +100,6 @@ class CLASS_TEMPLATES {
       fwrite($f, $template_html, strlen($template_html));
       fclose($f);
     }
-
-
 
     // 初始化标签
     //@require
@@ -125,14 +111,11 @@ class CLASS_TEMPLATES {
     }
   }
 
-  function display() {
-    $this->_render($this->tpl_cache_file_);
-  }
+  function display() { $this->_render($this->tpl_cache_file_);  }
 
   // 渲染视图模式下, {$xxx:yyy}不能在< php ? >代码里面使用，
   //如果需要则使用parse
-  function render($view) 
-  {
+  function render($view) {
     $this->load($view);
     $this->display();
   }
@@ -178,25 +161,15 @@ class CLASS_TEMPLATES {
   }
 
   function parse_string($template_html) {
-    $phplabel = false;
-    if(!empty($template_html)) {
-      // 编译模板内容
-      $template_html = $this->compile($template_html, $phplabel);
-    }
-
-    return $template_html;
+    return $this->compile($template_html, false);
   }
 
   function _render($php_file  ) {
-    if(!file_exists($php_file)) {
-      return false;
-    }
     // 导入应用程序和全局变量到当前符号表
     $theApp = $this->theApp;
     extract($this->theApp->getRefAPPS(), EXTR_PREFIX_ALL, 'app');
-    extract($this->theApp->getRefTHEMES(), EXTR_PREFIX_ALL, 'themes');
     extract($this->theApp->getRefCONFIG(), EXTR_PREFIX_ALL, 'cfg');
-    extract($this->tplvarscache, EXTR_PREFIX_ALL, 'fields');
+    extract($this->vars_cache_, EXTR_PREFIX_ALL, 'fields');
     extract($this->tags, EXTR_PREFIX_ALL, 'html_tags');
     extract($_GET, EXTR_PREFIX_ALL, 'get');
     extract($_POST, EXTR_PREFIX_ALL, 'post');
@@ -205,11 +178,8 @@ class CLASS_TEMPLATES {
 
   function load_template($view) {
     $this->tpl_file_ = $this->tpl_dir_.'/'.$view.'.htm';
-    //$cache_file = $this->tpl_cache_dir_.'/'.$view.'.php';
     // 输出html流
-    $template_html = $this->readtemplate($view);
-
-    return $template_html;
+    return $this->readtemplate($view);
   }
 
   // 编译模板，根据$phplable参数生成两种类型的缓存文件
@@ -234,7 +204,7 @@ class CLASS_TEMPLATES {
     );
     //$content = $this->complie_php_vars($content);
     $content = preg_replace_callback(
-      '/\{\$+(globals|themes|fields|v|cfg|get|post|app):(\w+)((\.\w+)*)(\s+\w+="[^"]*")*\s*\/?\}/is', 
+      '/\{\$+(var|cfg|get|post|app):(\w+)((\.\w+)*)(\s+\w+="[^"]*")*\s*\/?\}/is', 
       array($this, $phplabel?'compile_vars':'compile_values'),
       $content
     );
@@ -244,7 +214,7 @@ class CLASS_TEMPLATES {
 
   function complie_php_vars($content) {
     return preg_replace_callback(
-        '/\{\$+(globals|themes|fields|v|cfg|get|post|app):(\w+)((\.\w+)*)(\s+\w+="[^"]*")*\s*\/?\}/is', 
+        '/\{\$+(var|cfg|get|post|app):(\w+)((\.\w+)*)(\s+\w+="[^"]*")*\s*\/?\}/is', 
         array($this, 'compile_values'),
         $content
     );
@@ -400,7 +370,6 @@ class CLASS_TEMPLATES {
     // 必须返回空
     return $this->import($matches[1], $matches[2]);
   }
-
  
   // 处理模板指令
   function import($func, $attrstr) {
@@ -425,9 +394,9 @@ class CLASS_TEMPLATES {
     $this->tags[$id] = $tag_object;
     
     // 返回标签id
-    return '<?=$html_tags_'.$id.'?>';
+    return '<'.'?=$html_tags_'.$id.'?'.'>';
   }
-
+   
   function complie_html_tag_value($matches) {
     $tagName = $matches[2];
     $tag = $matches[0];
@@ -436,20 +405,6 @@ class CLASS_TEMPLATES {
     
     return $tag_object->__toString();
   }
-
-  function dump2template($record) {
-    if(is_array($record)) {
-      foreach($record as $key => $value) {
-        $this->push($key, $value);
-      }
-    }
-  }
-    
-  // 将变量存入模板变量缓冲
-  function push($key, $value) { $this->tplvarscache[$key] = $value; }
-    
-  // 查询模板变量缓冲
-  function query($key) { return $this->tplvarscache[$key]; }
 
   // dict指令
   function dict($attrs) {
@@ -491,79 +446,29 @@ class CLASS_TEMPLATES {
     
   // 字典查询，如果查到则把值输出到$value，并返回true
   function query_dictionary($dicName, &$value) {
-    if((!key_exists($dicName, $this->dict)) 
-      || (!is_array($this->dict[$dicName])) ) 
-    {
+    if((!key_exists($dicName, $this->dict)) || (!is_array($this->dict[$dicName])) ) 
       return false;
-    }
         
     $value = $this->dict[$dicName];
     return true;
   }
 
   // 获取指定id的标签
-  function tag($id) {
-    return $this->tags[$id];
-  }
+  function tag($id)                { return $this->tags[$id]; }
+  function app($varname)           { return $this->theApp->getAPPS($varname);   } 
+  function fields($varname)        { return $this->query($varname); }  
+  function cfg($name)              { return $this->theApp->getCONFIG($name);    }    
+  function get($name)              { return $_GET[$name]; }    
+  function post($name)             { return $_POST[$name];}
 
-  function push_data($name, $data) {
-    if(empty($name)) {
-      trigger_error("name is empty", E_USER_ERROR);
-    }
+  function getApp()                { return $this->theApp; }
+  function push_data($name, $data) { $this->data_cache_[$name] = $data; }
+  function get_data($name)         { return $this->data_cache_[$name]; }
+  function push($key, $value) { $this->vars_cache_[$key] = $value; }
+  function query($key) { return $this->vars_cache_[$key]; }
 
-    if(isset($this->cache_data_[$name])) {
-      trigger_error("name:{$name} is exists.", E_USER_ERROR);
-    }
-
-    $this->cache_data_[$name] = $data;
-  }
-
-  function get_data($name) {
-    if(empty($name)) {
-       trigger_error("name is empty", E_USER_ERROR);
-    } 
+  function dump2template($record) { foreach($record as $key => $value) { $this->push($key, $value); } }
     
-    if(array_key_exists($name, $this->cache_data_)) { 
-      return $this->cache_data_[$name]; 
-    }
-    
-    return array();
-  }
-      
-  // 读取全局变量    
-  function globals($varname) { return $GLOBALS[$varname]; }    
-    
-  // 资源    
-  function themes($varname) {    
-    return $this->theApp->getTHEMES($varname);    
-  }    
-    
-  function app($varname) {    
-    return $this->theApp->getAPPS($varname);    
-  }  
-    
-  // 读取模板变量缓冲的数据 v将替代fields名称  
-  function fields($varname) {    return $this->query($varname); }  
-  function v($varname) {    return $this->query($varname); }  
-    
-  // 读取配置数据    
-  function cfg($name) {    
-    return $this->theApp->getCONFIG($name);    
-  }    
-    
-    // 读取查询字符    
-  function get($name) {    
-    return $_GET[$name];    
-  }    
-    
-  function post($name) {    
-    return $_POST[$name];    
-  }
-
-  function getApp() {
-    return $this->theApp;
-  }
-
   // 创建标签缓冲
   function create_object($tag_name) {
     $instance = null;

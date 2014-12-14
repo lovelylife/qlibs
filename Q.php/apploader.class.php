@@ -63,16 +63,10 @@ class CLASS_APPLOADER {
   function checkAppRequired($appRoot, &$args) {
     $appRequiredFile = $appRoot.'/app.required.php';
     if(!file_exists($appRequiredFile)) {
-      // 已经不再支持应用程序文件修复，可以使用command工具修复
-      //if(!copy(_QROOT.'/app_templates/app.required.php', $appRequiredFile)) {
-      //  //writelog("restore file error.");
-      //    trigger_error('restore file error.', E_USER_ERROR);
-      //}
       trigger_error("fatal error, file \"app.required.php\" is not found.", E_USER_ERROR);
     }
         
     $paths = require_file($appRequiredFile);
-        
     foreach($paths as $key => $value) {
       if(!key_exists($key, $args) && preg_match('/_dir$/i', $key)) {
         $dirName = $appRoot.$value;
