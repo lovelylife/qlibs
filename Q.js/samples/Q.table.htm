@@ -1,0 +1,89 @@
+<!DOCTYPE>
+<html>
+<head>
+    <title>Q.table | Q.js</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <!-- 使用QLib控件是必须包含样式表 -->
+  <link type="text/css" rel="stylesheet" href="../ui.css" />
+  <!--  
+  提示：src="{QLib目录}/Q.js" 
+  根据实际存放路径， 测试代码都是在QLib目录的samples文件夹下，所以这里用的是"../Q.js" 
+  -->
+    <script type="text/javascript" src="../Q.js">
+  <!--
+  // 需要加载额外库时
+  import utils.stl;
+  import utils.xml;
+  import ui.contextmenu;
+  import ui.table;
+  -->
+  </script>
+
+  <script>
+  <!--
+  var g_table = null;
+  Q.Ready(function() {
+    // 提示对话框
+    Q.$('btnOpenMessageBox').onclick = function() {
+      alert('test');
+    }
+
+    var columns = [
+    { name: 'url', title: '地址', align:'center', width: 140, isHTML: true, renderer : function(record) {return record['name'];}, },
+    { name: 'date', title: '日期', align:'center', width: 140, isHTML: true, renderer : function(record) {return record['date'];}, },
+    ];
+    
+    var store = new Q.store({
+      datasource: [
+        {name: 'abc', date: '2014-12-11'},
+        {name: 'abc', date: '2014-12-11'},
+        {name: 'abc', date: '2014-12-11'},
+        {name: 'abc', date: '2014-12-11'},
+        {name: 'abc', date: '2014-12-11'},
+        {name: 'abc', date: '2014-12-11'},
+        {name: 'abc', date: '2014-12-11'},
+        {name: 'abc', date: '2014-12-11'},
+        {name: 'abc', date: '2014-12-11'},
+        {name: 'abc', date: '2014-12-11'},
+        {name: 'abc', date: '2014-12-11'},
+        {name: 'abc', date: '2014-12-11'},
+        {name: 'abc', date: '2014-12-11'},
+        {name: 'abc', date: '2014-12-11'},
+        {name: 'abc', date: '2014-12-11'},
+        {name: 'abc', date: '2014-12-11'},
+        {name: 'abc', date: '2014-12-11'},
+        {name: 'abc', date: '2014-12-11'},
+        {name: 'abc', date: '2014-12-11'},
+      ] 
+    });
+    //init Q.table
+    g_table = new Q.table({ 
+      title: 'Q.table标题栏',
+      wstyle: 'WS_TITLEBAR',
+      container: Q.$('table_container'),
+      columns: columns,  
+      store: store,
+    });
+
+    //g_table.append();
+
+  });
+  -->
+  </script>
+</head>
+<body onselectstart="return false;" style="height: 100%;overflow:hidden;-moz-user-select:none;-webkit-user-select: none;">
+
+<p>提示对话框</p>
+<button id="btnOpenMessageBox">MessageBox</button>
+
+<br>
+<div id='debug_window' style='width:100%;height: 100px;overflow: auto;'>
+
+</div>
+
+<div id="table_container" style="width: 800px; height: 400px;">
+
+</div>
+
+</body>
+</html>
