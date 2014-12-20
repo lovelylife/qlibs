@@ -1,8 +1,10 @@
-/*-----------------------------------------------------------------
- $ javascript dragging
- $ author: Q
- $ date: 2014-10-22
--------------------------------------------------------------------*/
+
+/*-------------------------------------------------------
+ * draging.js
+ * date: 2012-10-08
+ * author: Q
+ * powered by wayixia.com
+---------------------------------------------------------*/
 
 Q.draging = Q.extend({
   hCaptureWnd : null,
@@ -73,7 +75,7 @@ Q.draging = Q.extend({
     var _this = this;
     evt = evt || window.event;
     if(evt.button == Q.RBUTTON){ return; } // 屏蔽右键拖动
-    var target_wnd = drag_handle = evt.target || evt.srcElement; // 获取鼠标悬停所在的对象句柄
+    var target_wnd = drag_handle = _this.nn6 ? evt.target : evt.srcElement; // 获取鼠标悬停所在的对象句柄
     
     while(target_wnd && !_this.is_dragable(target_wnd) && (target_wnd != document.body)) {
       target_wnd = target_wnd.parentNode;

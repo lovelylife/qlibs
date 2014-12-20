@@ -143,9 +143,8 @@
     var arr = (element.className+" "+new_class).trim().split(/\s+/);
     var class_name = '';
     var collections = {};
-    for(var i=0; i<arr.length; i++) { 
+    for(var i=0; i<arr.length; i++) 
       collections[arr[i]] = 0;
-    }
     for(var key in collections) 
       class_name += key + ' ';
     element.className = class_name.trim();
@@ -159,18 +158,36 @@
     for(var i=0;i < arr.length; i++) {
       var remove = false;
       for(var j=0; j< arr2.length; j++) {
-        if(arr[i] == arr2[j]) {
+        if(arr[i] == arr2[j])
           remove = true;
-        }
       }
-      if(!remove) {
+      if(!remove)
         arr3.push(arr[i]);
+    }    
+    element.className = arr3.join(' ');
+    return element;
+  }
+
+  Q.hasClass = function(element, class_name) {
+    var class_names = element.className.split(/\s+/);
+    for(var i=0;i < class_names.length; i++) {
+      if(class_names[i] == class_name) {
+        return true;
       }
     }
-    
-    element.className = arr3.join(' ');
 
-    return element;
+    return false;
+  }
+
+  // default locale_text
+  Q.locale_text = function(lang, default_value) {
+    return default_value;
+  }
+  
+  Q.set_locale_text = function(fn) {
+    if(typeof fn == 'function') {
+      Q.locale_text = fn;
+    }
   }
 
   // 获取element的绝对位置

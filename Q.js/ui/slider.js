@@ -1,9 +1,8 @@
 ﻿/*-------------------------------------------------------
-  UI library
-  function: select 美化
-  date: 2008-06-12
-  author: lovelylife
-  the component can be used as UI.components[id]
+ * slider.js
+ * date: 2012-11-08
+ * author: Q
+ * powered by wayixia.com
 ---------------------------------------------------------*/
 
 function find_item(root, cmp) {

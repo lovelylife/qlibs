@@ -1,12 +1,8 @@
 /*--------------------------------------------------------------------------------
- $ 文档：wndx.js
- $ 功能：封装的窗口api和相关定义
- $ 日期：2007-10-09 15:47
- $ 更新：2014-11-22 23:47
- $ 作者：LovelyLife
- $ 邮件：Life.qm@gmail.com
- $ 版权: 请勿擅自修改版权和作者
- $ powered by Javascript经典专区[http://jshtml.com] All rights reservered.
+ $ wndx.js
+ $ update：2014-11-22 23:47
+ $ author：Q
+ $ 2014@http://wayixia.com.
 ----------------------------------------------------------------------------------*/
 
 // global const variables definition
@@ -960,15 +956,18 @@ __init__: function(config) {
   config.on_ok = config.on_ok || function() { return true; };
   if( typeof config.on_ok == 'function' ) {
     this.on_ok = config.on_ok;
-    config.buttons.push({text: ' 是 ', onclick: Q.bind_handler(this, function() { this.on_ok() && this.end_dialog(CONST.IDOK); })})   
+    config.buttons.push({text: Q.locale_text('qYes', ' 是 '), 
+      onclick: Q.bind_handler(this, function() { this.on_ok() && this.end_dialog(CONST.IDOK); })})   
   }
   if( typeof config.on_no == 'function' ) {
     this.on_no = config.on_no;
-    config.buttons.push({text: ' 否 ', style:'syscancelbtn', onclick: Q.bind_handler(this, function() { this.on_no() && this.end_dialog(CONST.IDNO); })})   
+    config.buttons.push({text: Q.locale_text('qNo', ' 否 '), style:'syscancelbtn', 
+      onclick: Q.bind_handler(this, function() { this.on_no() && this.end_dialog(CONST.IDNO); })})   
   }
   if( typeof config.on_cancel == 'function' ) {
     this.on_cancel = config.on_cancel;
-    config.buttons.push({text: ' 取消 ', style:'syscancelbtn', onclick: Q.bind_handler(this, function() { this.on_cancel() && this.end_dialog(CONST.IDCANCEL); })})   
+    config.buttons.push({text: Q.locale_text('qCancel', ' 取消 '), style:'syscancelbtn', 
+      onclick: Q.bind_handler(this, function() { this.on_cancel() && this.end_dialog(CONST.IDCANCEL); })})   
   }
   Q.Dialog.prototype.__init__.call(this, config);
   this.domodal();
