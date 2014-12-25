@@ -571,4 +571,15 @@ position:relative;
 .q-slider.y { background: transparent url(images/slider/slider-y.png) repeat-y center top; width: 30px;}
 .q-slider .q-thumb { position: absolute; background: transparent url(images/slider/slider.thumb.png) repeat-x left top; height:30px;}
 
+/* ui class */
+.q-checkbox {
+  padding-left: 20px;
+  padding-right: 5px;
+  cursor: default;
+  background : transparent url(images/checkbox/unchecked.gif) no-repeat 0 center;
+}
+
+.q-checkbox.checked {
+  background : transparent url(images/checkbox/checked.gif) no-repeat 0 center;
+}
 
