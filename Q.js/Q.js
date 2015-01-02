@@ -169,7 +169,7 @@
   }
 
   Q.hasClass = function(element, class_name) {
-    var class_names = element.className.split(/\s+/);
+    var class_names = (element.className+" ").split(/\s+/);
     for(var i=0;i < class_names.length; i++) {
       if(class_names[i] == class_name) {
         return true;

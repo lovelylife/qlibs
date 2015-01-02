@@ -6,7 +6,7 @@
 
 /* globals */
 
-html { margin: 0px; padding: 0px; height: 100%; border:none; }
+.q-window * { margin: 0px; padding: 0px;  border:none; }
 
 .alpha_0 {filter:alpha(opacity=0); -moz-opacity:0.0;-khtml-opacity: 0.0;opacity: 0.0;}
 .alpha_1 {filter:alpha(opacity=10);-moz-opacity:0.1;-khtml-opacity: 0.1;opacity: 0.1;}
@@ -25,72 +25,53 @@ html { margin: 0px; padding: 0px; height: 100%; border:none; }
  $ window style
 --------------------------------------------------------*/
 
-.clsWindows { 
-  position:absolute; 
-  -webkit-box-shadow: 0px 5px 30px #505050; 
-  box-shadow: 0px 5px 30px #505050;
-  filter:progid:DXImageTransform.Microsoft.Shadow(color=#CCCCCC, Strength=3, Direction=135);
-  background:#fff; 
-  overflow:hidden; 
-  margin:0 auto; 
-  padding:0; 
-  cursor:default; 
-  min-width: 200px;
-  border:1px outset #CCC;
-  z-index:10000;
-  outline: 0;
+.q-window { position:absolute; background:#fff; overflow:hidden; margin:0 auto; cursor:default; min-width: 200px; border:1px outset #CCC; z-index:10000; outline: 0; -webkit-box-shadow: 0px 5px 30px #505050; box-shadow: 0px 5px 30px #505050; filter:progid:DXImageTransform.Microsoft.Shadow(color=#CCCCCC, Strength=3, Direction=135);}
+
+.q-window .q-title { position:relative; margin:0; padding:0; height:30px; line-height:30px; background: #6d84C4; font-size:14px; color:white; white-space:nowrap; border-width: 0px; -khtml-user-select: none; -moz-user-select: none;
 }
 
-.clsWindows .clsActiveTitle {
-  position:relative; 
-  margin:0; 
-  padding:0;
-  height:30px;
-  line-height:30px; 
-  background: #6d84C4; 
-  font-size:14px; 
-  color:white; 
-  white-space:nowrap; 
-  border:0px solid #666; 
-  border-bottom-width: 0;
-  -khtml-user-select: none;
-  -moz-user-select: none;
+/* title bar attibute */
+.q-window.q-attr-inactive-title .q-title { background: #999999; }
+.q-window.q-attr-no-title .q-title { display: none; }
+
+
+/* icon attribute */
+.q-window .q-icon { position: absolute; width:16px; height:16px; left:6px; top: 7px; border-width:0;}
+.q-window.q-attr-no-icon .q-icon { display: none;}
+
+/* title content attribute */
+.q-window .q-title-content{ position: absolute; left: 27px; right:70px; height:30px; overflow:hidden; text-overflow:ellipsis; color:white;cursor: default;}
+.q-window.q-attr-no-icon .q-title-content { left: 6px;}
+
+/* title ctrl buttons */
+.q-window .q-title button {float:right; background: transparent url(images/wnd/wnd.png) 0 0 no-repeat; outline: 0; width:16px; height:16px; margin:7px 0 0 0;}
+.q-window .q-title button:hover   { background-color: #6175af; }
+.q-window .q-title button.q-min   { background-position: 0 0}
+.q-window .q-title button.q-max   { background-position: -16px 0}
+.q-window .q-title button.q-normal{ background-position: -32px 0}
+.q-window .q-title button.q-close { background-position: -46px 0}
+.q-window .q-title button.q-padding{ background: none; width: 5px;}
+
+.q-window.q-attr-no-min .q-title button.q-min,
+.q-window.q-attr-no-max .q-title button.q-max,
+.q-window.q-attr-no-normal .q-title button.q-normal,
+.q-window.q-attr-no-close .q-title button.q-close,
+.q-window.q-attr-fixed .q-title button.q-max,
+.q-window.q-attr-fixed .q-title button.q-normal
+{
+  display: none;
 }
 
-.clsWindows .clsNoActiveTitle {
-  position:relative; 
-  margin:0; 
-  padding:0;
-  height:30px;
-  line-height:30px; 
-  background: #999999; 
-  font-size:14px; 
-  color:white; 
-  white-space:nowrap;
-  border-width: 0; 
-  cursor: default;
-  -khtml-user-select: none;
-  -moz-user-select: none;
-}
+/* q-window's mask */
+.q-window-mask {position:absolute; background: #000000; display:; left:0;top:0;right:0;bottom:0;}
 
-.clsTitleContent{ margin-right:70px; height:30px; overflow:hidden; text-indent: 5px; text-overflow:ellipsis; color:white;cursor: default;}
-.clsTitleCtrlBar{ position:absolute; width:65px; overflow:hidden; height:30px; top:0; right:5px; text-align:right; /*background:#fd3500;*/}
-.clsTitleCtrlBar button {background: transparent url(images/wnd/wnd.png) 0 0 no-repeat;	border-width:0;	outline: 0; width:16px;height: 16px;padding:0; margin:7px 0 0 0; font-size: 12px;}
-.clsTitleCtrlBar button:hover { background-color: #6175af; }
-.clsTitleCtrlBar button.min { background-position: 0 0}
-.clsTitleCtrlBar button.max { background-position: -16px 0}
-.clsTitleCtrlBar button.normal { background-position: -32px 0}
-.clsTitleCtrlBar button.close { background-position: -46px 0}
+/* q-window's cient area */
+.q-window .q-window-client { overflow: hidden; position:absolute; left:0; top:30px; right:0; bottom:0;margin:0;padding:0;}
+.q-window.q-attr-no-title .q-window-client { top:0px; }
 
-
-
-.clsIcon {float:left; width:15px; height:18px; margin-left:6px; margin-right:3px;margin-top: 6px;border-width:0;}
-.clsMaskWindow {position:absolute; background: #000000; display:; left:0;top:0;right:0;bottom:0;}
-.clsClientArea {overflow: hidden; position:absolute; left:0; top:30px; right:0; bottom:0;margin:0;padding:0;}
-.clsClientArea .clsWithBottom {overflow: hidden; position:absolute; left:0; top:30px; right:0; bottom:30;margin:0;padding:0; background: #FF0;}
-.clsBottomBar {position: absolute; bottom: 0; left:0; right:0;height:30px; line-height:30px; text-align:right;background: #F1F1F1;border-top: 1px solid #e0e0e0; }
-.clsDragWindow {position:absolute;display:none;background:blue;cursor:default;}
-
+/* bottom bar attribute */
+.q-window .q-bottom-bar {position: absolute; bottom: 0; left:0; right:0;height:30px; line-height:30px; text-align:right;background: #F1F1F1;border-top: 1px solid #e0e0e0; display: none;}
+.q-window.q-attr-with-bottom .q-bottom-bar {display: block;}
 
 /*------------------------------------------------------
  $ context menu style
@@ -160,6 +141,12 @@ html { margin: 0px; padding: 0px; height: 100%; border:none; }
 
 .bottomLine { 
 	border-bottom: 1px solid #CCC; 
+}
+
+.sysbtn:active,
+.syscancelbtn:active
+{
+  outline:0;background-image:none;-webkit-box-shadow:inset 0 3px 5px rgba(0, 0, 0, 0.225);box-shadow:inset 0 3px 5px rgba(0, 0, 0, 0.225);
 }
 
 /* simple tree  */

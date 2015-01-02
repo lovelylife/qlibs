@@ -5,31 +5,48 @@
  $ 2014@http://wayixia.com.
 ----------------------------------------------------------------------------------*/
 
+/*
 // global const variables definition
 var CONST = {
   SW_SHOW:           0x0001,
   SW_HIDE:           0x0000,
 
 // window style
-  STYLE_TITLE:     0x00000001,
+  STYLE_TITLE:     "title",
   STYLE_MENU :     0x00000002,
   STYLE_TOOLBAR :  0x00000004,
   STYLE_STATUS:    0x00000008,
   STYLE_FIXED:     0x00000010,
 
 // size status
-  STYLE_MAX :      0x00000020,
-  STYLE_MIN :      0x00000040,
-  STYLE_CLOSE :    0x00000080,
+  STYLE_MAX :      "max",
+  STYLE_MIN :      "min",
+  STYLE_CLOSE :    "max",
 
-  STYLE_ICON  :    0x00000100,
-  STYLE_WITHBOTTOM :  0x00000200,
+  STYLE_ICON  :    "icon",
+  STYLE_WITHBOTTOM :  "with-bottom",
   
-// size text
-  SIZE_CLOSE:    'close',
-  SIZE_MIN:      'min',
-  SIZE_MAX:      'max',
-  SIZE_NORMAL:   'normal',
+
+};
+
+CONST.STYLE_DEFAULT = CONST.STYLE_TITLE|CONST.STYLE_ICON|CONST.STYLE_MAX|CONST.STYLE_MIN|CONST.STYLE_CLOSE;
+*/
+
+var CONST = {
+  no_title    : "q-attr-no-title",
+  no_icon     : "q-attr-no-icon",
+  no_min      : "q-attr-no-min",
+  no_max      : "q-attr-no-max",
+  no_close    : "q-attr-no-close",
+  with_bottom : "q-attr-with-bottom",
+  fixed       : "q-attr-fixed",
+  inactive_title : "q-attr-inactive-title",
+
+  // size text
+  SIZE_CLOSE:    "close",
+  SIZE_MIN:      "min",
+  SIZE_MAX:      "max",
+  SIZE_NORMAL:   "normal",
   SIZE_RESIZE :  3,
   SIZE_DRAGING:  4,
   SIZE_RESIZING: 5,
@@ -39,12 +56,11 @@ var CONST = {
   IDCANCEL :          '0',
   IDOK     :          '1',
   IDNO     :          '2',
-};
+}
 
-CONST.STYLE_DEFAULT = CONST.STYLE_TITLE|CONST.STYLE_ICON|CONST.STYLE_MAX|CONST.STYLE_MIN|CONST.STYLE_CLOSE;
 
 var __GLOBALS = {};
-__GLOBALS.MIN_HEIGHT = 32;
+__GLOBALS.MIN_HEIGHT = 30;
 __GLOBALS.MIN_WIDTH  = 100;
 __GLOBALS.Z_INDEX    = 10000;
 __GLOBALS.count      = 0;
@@ -98,8 +114,7 @@ erase_window : function(wndNode) { this.wnds_map.erase(wndNode); },
 -------------------------------------------------------------------*/
 // check the statement wether be null
 function $IsNull(statement) { return  (statement == null); }
-function $IsStyle(cs, style) { return ((cs & style) == style); }
-function $IsWithStyle(style, wstyle) { return ((style & wstyle) == style); }
+function $IsStyle(wndNode, style) { return Q.hasClass(wndNode, style); }
 
 
 /*-----------------------------------------------------------------
@@ -121,10 +136,10 @@ function invoke_hook(hwnd, message_id) {
 
 function $IsDesktopWindow(wndNode) { return (__GLOBALS.desktop == wndNode); }
 function $IsWindow(wndNode)        { return (!$IsNull(wndNode)) && (wndNode.nodeType == Q.ELEMENT_NODE) && wndNode.getAttribute('__QWindow__');}
-function $IsMaxWindow(wndNode)     { return ($IsStyle($GetWindowStyle(wndNode), CONST.STYLE_MAX) && (CONST.SIZE_MAX == $GetWindowStatus(wndNode))); }
+function $IsMaxWindow(wndNode)     { return ($IsStyle(wndNode, CONST.STYLE_MAX) && (CONST.SIZE_MAX == $GetWindowStatus(wndNode))); }
 function $BindWindowMessage(wndNode, messageid, parameters) {
   return function() {
-    wndNode.wnd_proc(wndNode, messageid, parameters);
+    return wndNode.wnd_proc(wndNode, messageid, parameters);
   }
 } 
 
@@ -143,7 +158,7 @@ function $MaskWindow(wndNode, bmask) {
 function $CreateMaskLayer(wndNode) {
   wndNode.layer_mask = document.createElement('DIV');
   wndNode.layer_mask.body_style = document.body.currentStyle.overflow;
-  wndNode.layer_mask.className = 'clsMaskWindow alpha_1';
+  wndNode.layer_mask.className = 'q-window-mask alpha_1';
   wndNode.appendChild(wndNode.layer_mask);
   wndNode.layer_mask.style.display = 'none';
   wndNode.layer_mask.onmousedown = Q.bind_handler(wndNode, function(evt) { 
@@ -156,11 +171,11 @@ function $CreateMaskLayer(wndNode) {
   wndNode.layer_mask.onselectstart = function() { return false; }
 }
 
-function $ShowWindow(wndNode, ws)  {
-  if( ws == CONST.SW_SHOW ){
+function $ShowWindow(wndNode, visible)  {
+  if( visible ){
     wndNode.style.display = '';
     $BindWindowMessage(wndNode, MESSAGE.ACTIVATE)();
-  } else if( ws == CONST.SW_HIDE ) {
+  } else {
     wndNode.style.display = 'none';
     $MaskWindow(wndNode, false);
   }
@@ -197,20 +212,22 @@ function $ActivateWindow(wndNode, zindex) {
   $SetWindowActive(wndNode, true);
 }
 
-function $SetWindowActive(wndNode, IsActive){
-  var style;
-  style = (IsActive) ? 'clsActiveTitle' : 'clsNoActiveTitle';
-  
+function $SetWindowActive(wndNode, IsActive) {
   var active_child = wndNode;
   while(active_child) {
-    $GetTitle(active_child).className = style;
+    if(IsActive) {
+      Q.removeClass(active_child, CONST.inactive_title);
+    } else {
+      Q.addClass(active_child, CONST.inactive_title);
+    }
     active_child = $GetActiveChild(active_child);
   }
 }
 
 function $MaxizeWindow(wndNode){
-  var ws = $GetWindowStyle(wndNode);
-  if( $GetWindowStatus(wndNode) == CONST.SIZE_MAX ) { return; };
+  if( $GetWindowStatus(wndNode) == CONST.SIZE_MAX ) 
+    return; 
+
   var parent_container = $GetContainerWindow(wndNode);
   var width, height;
   if( parent_container == document.body ) {
@@ -219,32 +236,34 @@ function $MaxizeWindow(wndNode){
   } else if( $IsWindow(parent_container) ) {
     width  = Math.max($GetClient(parent_container).clientWidth, $GetClient(parent_container).scrollWidth);
     height = Math.max($GetClient(parent_container).clientHeight, $GetClient(parent_container).scrollHeight);
-  } else {  return;  }
-  $ChangeCtrlButton(wndNode, CONST.SIZE_MAX, CONST.SIZE_NORMAL);
+  } else { 
+    return;  
+  }
+  $ChangeCtrlButton(wndNode, CONST.SIZE_MAX, "q-normal");
   $SetWindowPosition(wndNode, 0, 0, width, height);
   $SetWindowStatus(wndNode, CONST.SIZE_MAX);
+  Q.drag.deattach(wndNode);
 }
 
 function $RestoreWindow(wndNode){
-  if( !$IsWindow(wndNode) ) {  return; }  
-  $ChangeCtrlButton(wndNode, CONST.SIZE_MAX, CONST.SIZE_MAX);
+  $ChangeCtrlButton(wndNode, CONST.SIZE_MAX, "q-max");
   $MoveTo(wndNode, wndNode.rleft, wndNode.rtop);
   $ResizeTo(wndNode, wndNode.rwidth, wndNode.rheight);
   $SetWindowStatus(wndNode, CONST.SIZE_NORMAL);
 }
 
-function $MinimizeWindow(wndNode){
-  if( $GetWindowStatus(wndNode) == CONST.SIZE_NIN )
+function $MinimizeWindow(wndNode) {
+  if($GetWindowStatus(wndNode) == CONST.SIZE_MAX) 
     return;
-  var ws = $GetWindowStyle(wndNode);
-  if( $IsStyle(ws, CONST.STYLE_FIXED)) { return; }
-  //wndNode.width = 0;
-  //wndNode.style.width = 0;
-  var width, height;
-  var pos = Q.absPosition(wndNode);  
-  $ResizeTo(wndNode, pos.right-pos.left, $GetTitle(wndNode).offsetHeight);
-  $ChangeCtrlButton(wndNode, CONST.SIZE_MAX, CONST.SIZE_MAX);
-  $SetWindowStatus(wndNode, CONST.SIZE_MIN);
+  
+  if( wndNode.minizing ) {    
+    $ResizeTo(wndNode, wndNode.nWidth, wndNode.minizie_height);
+    wndNode.minizing = false;
+  } else {
+    wndNode.minizie_height = wndNode.nHeight;
+    $ResizeTo(wndNode, wndNode.nWidth, $GetTitle(wndNode).offsetHeight);
+    wndNode.minizing = true;
+  }
 }
 
 function $FitWindow(wndNode) {
@@ -252,13 +271,12 @@ function $FitWindow(wndNode) {
   var oldOverFlow = client.style.overflow;
   client.style.overflow = 'visible';
     
-  var ws = $GetWindowStyle(wndNode);
   var lastHeight = client.scrollHeight;
-  if( $IsStyle(ws, CONST.STYLE_TITLE)) {
+  if( !$IsStyle(wndNode, CONST.no_title)) {
     lastHeight = lastHeight + $GetTitle(wndNode).offsetHeight;
   }
     
-  if( $IsStyle(ws, CONST.STYLE_WITHBOTTOM)) {
+  if( $IsStyle(wndNode, CONST.with_bottom)) {
     lastHeight = lastHeight + ($GetBottomBar(wndNode).offsetHeight);
   }
     
@@ -271,7 +289,6 @@ function $FitWindow(wndNode) {
 -------------------------------------------------------------------*/
 
 function $SetWindowPosition(wndNode, left, top, width, height) {
-    $SaveRectForWindow(wndNode);
     $MoveTo(wndNode, left, top);
     $ResizeTo(wndNode, width, height);
 }
@@ -279,15 +296,6 @@ function $SetWindowPosition(wndNode, left, top, width, height) {
 function $SetWindowTitle(wndNode, title){
   wndNode.title_text = title;
   wndNode.hTitle.hTitleContent.innerText = title;
-}
-
-function $SaveRectForWindow(wndNode) {
-    if( $GetWindowStatus(wndNode) == CONST.SIZE_NORMAL ) {
-      wndNode.rtop    = parseInt(wndNode.style.top, 10);
-      wndNode.rleft   = parseInt(wndNode.style.left, 10);
-      wndNode.rwidth  = wndNode.offsetWidth;
-      wndNode.rheight = wndNode.offsetHeight;
-    }
 }
 
 function $SetActiveChild(wndNode, child)   { wndNode.active_child = child;  }
@@ -312,7 +320,7 @@ function $GetTitleContent(wndNode) { return wndNode.hTitleContent; }
 function $GetTitle(wndNode)        { return wndNode.hTitle;      }
 function $GetBottomBar(wndNode)    { return wndNode.hBottomBar;  }
 function $GetWindowStatus(wndNode) { return wndNode.status_type; }
-function $GetWindowStyle(wndNode)  { return wndNode.wstyle;      }
+function $GetWindowStyle(wndNode)  { return wndNode.className;   }
 function $GetClient(wndNode)       { return wndNode.hClientArea; }
 
 function $GetWindowZIndex(wndNode){
@@ -350,6 +358,10 @@ function $GetTopZIndexWindow(){
 }
 
 function $MoveTo(wndNode, x, y){
+  // save pos before moving
+  wndNode.rtop  = wndNode.nTop;
+  wndNode.rleft = wndNode.nLeft;
+
   wndNode.nTop = y;
   wndNode.nLeft = x;
   wndNode.style.top = wndNode.nTop + 'px';
@@ -360,28 +372,17 @@ function $ResizeTo(wndNode, width, height){
   if(typeof(wndNode.onresize) == 'function') {
     wndNode.onresize();
   }
+  // save size before resize
+  wndNode.rwidth = wndNode.nWidth;
+  wndNode.rheight= wndNode.nHeight;
    
-  width = parseInt(width,10);
-  height = parseInt(height, 10);
+  width = Math.max(parseInt(width,10) - 0, __GLOBALS.MIN_WIDTH);
+  height = Math.max(parseInt(height, 10), __GLOBALS.MIN_HEIGHT);
   
   wndNode.nWidth = width;
   wndNode.nHeight = height;
   wndNode.style.width = width + 'px';
   wndNode.style.height = height + 'px';
-
-  //var client = $GetClient(wndNode);  // 重画客户区
-  //var ws = $GetWindowStyle(wndNode);
-  //var lastHeight = height;
-  
-  //if( $IsStyle(ws, CONST.STYLE_TITLE)) {
-  //  lastHeight = lastHeight - $GetTitle(wndNode).offsetHeight;
-  //}
-
-  //if( $IsStyle(ws, CONST.STYLE_WITHBOTTOM)) {
-  //  lastHeight = lastHeight - ($GetBottomBar(wndNode).offsetHeight);
-  //}
-  //client.style.height = Math.max(lastHeight - 0, __GLOBALS.MIN_HEIGHT)+'px';
-  //client.style.width = Math.max(width - 0, __GLOBALS.MIN_WIDTH) + 'px';
 }
 
 function $GetWindowClientHeight() {
@@ -400,53 +401,14 @@ function $GetWindowClientHeight() {
 }
 
 function $CenterWindow(wndNode) {
-  var left = (document.body.clientWidth - wndNode.nWidth ) / 2;
-//  var top =  (document.body.clientHeight - wndNode.nHeight ) / 2;
   var si = Q.scrollInfo();
+  var left = si.l +(document.body.clientWidth - wndNode.nWidth ) / 2;
   var top =  si.t + (($GetWindowClientHeight() - wndNode.nHeight ) / 2);
   $MoveTo(wndNode, left, top);
 }
 
-function $SetWindowStyle(wndNode, ws){ 
-  wndNode.wstyle = ws;
-  if($IsStyle(ws, CONST.STYLE_FIXED)) {
-    
-  }
- 
-  /* 
-  if($IsStyle(ws, CONST.STYLE_TITLE)) {
-    wndNode.hTitle.style.display='';
-  } else {
-    wndNode.hTitle.style.display='none';
-  }
-  */
-  if($IsStyle(ws, CONST.STYLE_MAX)) {  
-    $GetMaxCtrlButton(wndNode).style.display='';
-  } else {
-    $GetMaxCtrlButton(wndNode).style.display='none';
-  }
-  
-  if($IsStyle(ws, CONST.STYLE_MIN)) {
-    $GetMinCtrlButton(wndNode).style.display='';
-  } else {
-    $GetMinCtrlButton(wndNode).style.display='none';
-  }
-   
-  if( $IsStyle(ws, CONST.STYLE_WITHBOTTOM) ) {
-    $GetClient(wndNode).className = "clsClientArea clsWithBottom"
-    wndNode.hBottomBar.style.display = '';
-  } else {
-    $GetClient(wndNode).className = "clsClientArea"
-    wndNode.hBottomBar.style.display = 'none';
-  }
-    
-  if($IsStyle(ws, CONST.STYLE_CLOSE)) {
-    //wndNode.hTitle.style.display=''; 
-  } else {
-    //wndNode.hTitle.style.display=''; 
-  }
-
-  return wndNode.wstyle; 
+function $SetWindowStyle(wndNode, ws) {
+  Q.addClass(wndNode, ws);
 }
 
 var MESSAGE = {
@@ -469,9 +431,7 @@ function $DefaultWindowProc(hwnd, msg, data) {
     break;
   case MESSAGE.MAX:
     Q.printf('DefaultWindowProc MESSAGE.MAX');
-    if(!$IsStyle($GetWindowStyle(hwnd), CONST.STYLE_MAX))
-      return;
-    if(hwnd.status_type != CONST.SIZE_MAX) { 
+    if($GetWindowStatus(hwnd) != CONST.SIZE_MAX) { 
       $MaxizeWindow(hwnd); 
     } else { 
       $RestoreWindow(hwnd); 
@@ -515,6 +475,8 @@ function $DefaultWindowProc(hwnd, msg, data) {
 
 
   invoke_hook(hwnd, msg);
+
+  return false;
 }
 
 function $SetWindowProc(wndNode, new_window_proc) {
@@ -546,41 +508,55 @@ function $ChangeCtrlButton(wndNode, type, dsttype){
 
 function $CreateWindowTitlebar(hwnd)  {
   var hTitle = document.createElement('DIV');
-  hTitle.className = 'clsActiveTitle';
+  hTitle.className = 'q-title';
   hTitle.onselectstart = function() { return false; };
-  hTitle.ondblclick    = function() { Q.printf('WINDOW title dblclick'); $BindWindowMessage(hwnd, MESSAGE.MAX)(); }
+  hTitle.onclick = (function(btn, wnd) {
+    return function() {
+      if($IsStyle(wnd, CONST.fixed))
+        return;
+      if(btn.clickonce) {
+        $BindWindowMessage(hwnd, MESSAGE.MAX)(); 
+        btn.clickonce = false;
+      } else {
+        btn.clickonce = true;
+      }
+      setTimeout(function() { btn.clickonce = false; }, 300);
+    };
+  })(hTitle, hwnd);
+  //hTitle.ondblclick    = function() { Q.printf('WINDOW title dblclick');  }
 
   hTitle.hIcon = document.createElement('IMG');
-  hTitle.hIcon.className = 'clsIcon';
+  hTitle.hIcon.className = 'q-icon';
   hTitle.appendChild(hTitle.hIcon);
    
   hTitle.hTitleContent = document.createElement('DIV');
-  hTitle.hTitleContent.className = 'clsTitleContent';
+  hTitle.hTitleContent.className = 'q-title-content';
   hTitle.appendChild(hTitle.hTitleContent);
-  
-  hTitle.hTitleCtrlBar = document.createElement('DIV');
-  hTitle.hTitleCtrlBar.className = 'clsTitleCtrlBar';
-  hTitle.appendChild(hTitle.hTitleCtrlBar);
-  
-  hTitle.hMin = $CreateCtrlButton('min');
-  hTitle.hMax = $CreateCtrlButton('max');
-  hTitle.hClose = $CreateCtrlButton('close');
+ 
+  hTitle.hMin = $CreateCtrlButton('q-min');
+  hTitle.hMax = $CreateCtrlButton('q-max');
+  hTitle.hClose = $CreateCtrlButton('q-close');
+  hTitle.hPadding= $CreateCtrlButton('q-padding');
 
   hTitle.hMin.onclick = $BindWindowMessage(hwnd, MESSAGE.MIN);
-  hTitle.hMax.onclick = $BindWindowMessage(hwnd, MESSAGE.MAX);
-  hTitle.hClose.onclick = $BindWindowMessage(hwnd, MESSAGE.CLOSE);
+  hTitle.hMax.onclick = $BindWindowMessage(hwnd, MESSAGE.MAX); 
+  hTitle.hClose.onclick = $BindWindowMessage(hwnd, MESSAGE.CLOSE); 
   
-  hTitle.hTitleCtrlBar.appendChild(hTitle.hMin);
-  hTitle.hTitleCtrlBar.appendChild(hTitle.hMax);
-  hTitle.hTitleCtrlBar.appendChild(hTitle.hClose);
+  hTitle.appendChild(hTitle.hPadding);
+  hTitle.appendChild(hTitle.hClose);
+  hTitle.appendChild(hTitle.hMax);
+  hTitle.appendChild(hTitle.hMin);
 
   hwnd.hTitle = hTitle;
   hwnd.appendChild(hTitle);
 }
 
 
-function $CreateWindow(parent_wnd, title, ws, pos_left, pos_top, width, height, app){
-  var wstyle = ws || CONST.STYLE_DEFAULT;
+function $CreateWindow(parent_wnd, title, wstyle, pos_left, pos_top, width, height, app){
+  if(wstyle!=undefined) 
+    wstyle = (wstyle+"").replace(/\|+/g, " ");
+  else
+    wstyle = "";
   var container      = null;
   var container_wnd  = null;
   if( !$IsWindow(parent_wnd) ) 
@@ -593,7 +569,6 @@ function $CreateWindow(parent_wnd, title, ws, pos_left, pos_top, width, height, 
   var hwnd = document.createElement('DIV');
   // user data
   hwnd.setAttribute('__QWindow__', true);  // 设置QWindow标记，用于$IsWindow方法
-  hwnd.wstyle       = ws || CONST.STYLE_DEFAULT;  // 窗口样式
   hwnd.parent_wnd   = parent_wnd;
   hwnd.container_wnd = container_wnd;
   hwnd.modal_next   = null;
@@ -607,7 +582,7 @@ function $CreateWindow(parent_wnd, title, ws, pos_left, pos_top, width, height, 
   hwnd.app.add_window(hwnd); 
 
   // dom attributes
-  hwnd.className = 'clsWindows';
+  hwnd.className = 'q-window';
   hwnd.style.display = 'none';
   hwnd.style.zIndex = __GLOBALS.Z_INDEX;
 
@@ -620,10 +595,10 @@ function $CreateWindow(parent_wnd, title, ws, pos_left, pos_top, width, height, 
   if(isNaN(height)) 
     height = 300;
 
-  hwnd.nTop    = hwnd.rtop = pos_top;
-  hwnd.nLeft   = hwnd.rleft = pos_left;
-  hwnd.nWidth  = hwnd.rwidth = width;
-  hwnd.nHeight = hwnd.rheight = height;
+  hwnd.rtop   = hwnd.nTop   = pos_top;
+  hwnd.rleft  = hwnd.nLeft  = pos_left;
+  hwnd.rwidth = hwnd.nWidth = width;
+  hwnd.rheight= hwnd.nHeight = height;
   
   hwnd.style.top    = pos_top + 'px'; 
   hwnd.style.left   = pos_left + 'px';
@@ -638,7 +613,6 @@ function $CreateWindow(parent_wnd, title, ws, pos_left, pos_top, width, height, 
     $MakeResizable(hwnd);
   //}
   
-  $SaveRectForWindow(hwnd);
   Q.addEvent(hwnd, 'mousedown', $BindWindowMessage(hwnd, MESSAGE.ACTIVATE));
 
   // initial title bar
@@ -646,25 +620,28 @@ function $CreateWindow(parent_wnd, title, ws, pos_left, pos_top, width, height, 
   $SetWindowTitle(hwnd, hwnd.title_text);
 
   hwnd.hClientArea = document.createElement('DIV');
-  hwnd.hClientArea.className = 'clsClientArea';
+  hwnd.hClientArea.className = 'q-window-client';
   hwnd.appendChild(hwnd.hClientArea);
   
   // bottom bar
   hwnd.hBottomBar = document.createElement('DIV');
-  hwnd.hBottomBar.className = 'clsBottomBar';
+  hwnd.hBottomBar.className = 'q-bottom-bar';
   hwnd.appendChild(hwnd.hBottomBar);
 
   // mask window
   $CreateMaskLayer(hwnd);
   
-  $SetWindowStyle(hwnd, ws);
+  $SetWindowStyle(hwnd, wstyle);
   $BindWindowMessage(hwnd, MESSAGE.CREATE)();
   
   // render 
   container.appendChild(hwnd);
   Q.drag.attach_object(hwnd, {
     objects : [hwnd.hTitle, hwnd.hTitle.hTitleCtrlBar, hwnd.hTitle.hTitleContent],
-    onmove: Q.bind_handler(hwnd, function(x, y) { $MoveTo(this, x, y); }),
+    onmove: Q.bind_handler(hwnd, function(x, y) {
+      if($GetWindowStatus(this) != CONST.SIZE_MAX) 
+        $MoveTo(this, x, y);
+    }),
   });
   
   return hwnd;
@@ -729,7 +706,7 @@ function $MakeResizable(obj) {
     }
   }
 
-  function mouseup(evt){
+  function mouseup(evt) {
     evt = evt || window.event;
     var status = $GetWindowStatus(obj);
     if( ( status != CONST.SIZE_MAX ) && ( status == CONST.SIZE_RESIZING ) && ( evt.button == Q.LBUTTON ) )
@@ -747,7 +724,7 @@ function $MakeResizable(obj) {
     evt = evt || window.event;
     var srcElement = evt.srcElement || evt.target;
     var status = $GetWindowStatus(obj);
-    if(( status & CONST.SIZE_MAX ) || ( $IsStyle($GetWindowStyle(obj), CONST.STYLE_FIXED) ) || (status == CONST.SIZE_MIN))
+    if(( status & CONST.SIZE_MAX ) || ( $IsStyle(obj, CONST.fixed) ) || (status == CONST.SIZE_MIN))
     {
       //Q.printf('wrong status');
       return;  
@@ -826,8 +803,6 @@ __init__ : function(config) {
   var parent_wnd= $GetDesktopWindow();
   if(config.parent instanceof Q.Window) 
     parent_wnd = config.parent.wnd() || $GetDesktopWindow();
-
-  config.wstyle = config.wstyle || CONST.STYLE_DEFAULT;
   this.hwnd = $CreateWindow(parent_wnd, title, config.wstyle, left, top, width, height);  
   this.set_content(config.content);
 },
@@ -845,7 +820,7 @@ set_content : function(HTMLContent) {
     $GetClient(this.hwnd).innerHTML = HTMLContent;
   }
 },
-show : function(isVisible) { $ShowWindow(this.hwnd, (!!isVisible)?CONST.SW_SHOW:CONST.SW_HIDE); },
+show : function(isVisible) { $ShowWindow(this.hwnd, isVisible) },
 center : function()        { $CenterWindow(this.hwnd); },
 adjust : function()        { $FitWindow(this.hwnd); },
 });
@@ -859,16 +834,14 @@ Q.Dialog = Q.Window.extend({
 old_window_proc : null,
 __init__ : function(config) {
   config = config || {};
-  config.wstyle = config.wstyle || CONST.STYLE_DEFAULT;
-  config.wstyle |= CONST.STYLE_FIXED;
-  config.wstyle |= CONST.STYLE_CLOSE;
-  config.wstyle &= ~CONST.STYLE_MAX;
-  config.wstyle &= ~CONST.STYLE_MIN;
-  config.wstyle &= ~CONST.STYLE_ICON;
+  config.wstyle = config.wstyle;
+  config.wstyle += "|" + CONST.fixed;
+  config.wstyle += "|" +CONST.no_min;
+  config.wstyle += "|" +CONST.no_max;
   this.on_close = config.on_close || function() {};
   var buttons = [];
   if(config.buttons instanceof Array) {
-    config.wstyle |= CONST.STYLE_WITHBOTTOM;
+    config.wstyle +="|" + CONST.with_bottom;
     buttons = config.buttons;
   } 
   Q.Window.prototype.__init__.call(this, config);
@@ -905,7 +878,7 @@ add_bottom_button : function(text, className, lpfunc) {
   var _this = this;
   var ws = $GetWindowStyle(this.hwnd);
   
-  if((!$IsStyle(ws, CONST.STYLE_WITHBOTTOM)) || $IsNull($GetBottomBar(this.hwnd))) {
+  if((!$IsStyle(this.hwnd, CONST.with_bottom)) || $IsNull($GetBottomBar(this.hwnd))) {
     return false;
   }
   var btn = document.createElement('button');

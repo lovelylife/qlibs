@@ -14,6 +14,7 @@
   // 需要加载额外库时
   import utils.stl;
   import utils.xml;
+  import ui.drag;
   import ui.contextmenu;
   import ui.wndx-1-0-2;
   -->
@@ -25,8 +26,8 @@
   var g_test_dialog;
   var g_multi_window;
   Q.Ready(function() {
-    Q.debug(true);
-    Q.setdebug(Q.$('debug_window'));
+    //Q.debug(true);
+    //Q.setdebug(Q.$('debug_window'));
     // 提示对话框
     Q.$('btnOpenMessageBox').onclick = function() {
       g_test_dialog = new Q.Dialog({
@@ -39,10 +40,11 @@
     }
 
     Q.$('btnOpenWindow').onclick = function() {
-      g_test_window = new Q.Window({width:480, height:370});
+      //g_test_window = new Q.Window({width:480, height:370, wstyle: "q-attr-no-icon|q-attr-with-bottom|q-attr-fixed|q-attr-no-max|q-attr-no-min"});
+      g_test_window = new Q.Window({width:480, height:370, wstyle: "q-attr-no-icon|q-attr-wit1h-bottom|q-attr-fixed"});
       g_test_window.show(true);
-      g_test_window.set_content("test flash");
-      g_test_window.adjust();
+      g_test_window.set_content(Q.$('progress'));
+      //g_test_window.adjust();
       g_test_window.center();
     }
   
@@ -61,7 +63,7 @@
     }
 
     Q.$('test-domodal').onclick = function() {
-      Q.MessageBox({
+      new Q.MessageBox({
         parent: g_test_dialog,
         title: "test",
         content: 'test-domodal',
@@ -95,7 +97,7 @@
 
 </div>
 
-<div style="background: red; height: 40px; line-height: 40px; ">
+<div id="progress" style="background: red; height: 40px; line-height: 40px; ">
   <button style="margin: 12px 0 0 0; padding:0; background:none; height: 16px;border-width:0;background:blue;">test</button>
 </div>
 
