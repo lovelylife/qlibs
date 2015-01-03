@@ -59,6 +59,16 @@ class CLASS_APPLICATION {
     $this->_refAPPS['host']  = $this->host_;
     // 导入配置数据
     $this->_refCONFIG = require_file($this->root_.'/config.php');
+    // url rewrite
+    $url_rewrite = $this->Config("site.url_rewrite");
+    //print_r($url_rewrite);
+    if(is_array($url_rewrite)) {
+      if(isset($url_rewrite[$this->module_])) {
+        $this->_refAPPS['module']= $this->_refAPPS['app'].$url_rewrite[$this->module_];
+      
+      }
+    }
+
     // 初始化资源和主题路径
     $paths = $args['settings'];
     $this->cache_dir_    = $this->root_.get_default_value($paths['cache_dir'], '/cache');
@@ -79,7 +89,7 @@ class CLASS_APPLICATION {
   function appMain($args) {
     // 初始化环境
     $this->initialize($args);
-    
+
     // 初始化默认模块
     $default_module_file = $this->getAppRoot().'/modules/default.class.php';
     $module_file = $this->getAppRoot().'/modules/'.$this->module_.'.class.php';
@@ -191,14 +201,7 @@ class CLASS_APPLICATION {
     //'dbname' => '',
     //'lang' => '',
     //'prefix' => 'ch_',
-    return createdb($dbcfgs['type'], array(
-            'host' => $dbcfgs['host'], 
-            'user' => $dbcfgs['user'], 
-            'pswd' => $dbcfgs['pwd'], 
-            'name' => $dbcfgs['dbname'], 
-            'prefix' => $dbcfgs['prefix'],
-            'lang' => $dbcfgs['lang']
-    ));
+    return createdb($dbcfgs['type'], $dbcfgs);
   }
 
   private function requireFiles($cfgfile) {

@@ -18,6 +18,7 @@ define('MAGIC_QUOTES_GPC', get_magic_quotes_gpc());
 include(_QROOT."/config.php");
 // 导入系统常用函数库
 include(_QROOT."/function.php");
+
 // check session path
 {
   $session_path = session_save_path();
@@ -42,7 +43,7 @@ include(_QROOT."/function.php");
 }
 
 //　session start
-session_start();
+//session_start();
 
 // register_global setting
 if(ini_get('register_globals')) {

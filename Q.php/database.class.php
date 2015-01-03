@@ -106,21 +106,21 @@ class CLASS_DB_MYSQL extends CLASS_DB_BASE {
 	
 	private $db_host;	// mysql服务器地址，一般为localhost
 	private $db_user;	// 数据库用户名
-	private $db_pswd;	// 数据库密码
+	private $db_pwd;	// 数据库密码
 	private $db_name;	// 连接的数据库
-    private $db_lang;
-    private $db_prefix;
+  private $db_lang;
+  private $db_prefix;
 	private $err;
 	
-	function __construct($dbhost, $dbuser, $dbpswd, $dbname, $dbprefix, $lang) {
+	function __construct($host, $user, $psd, $dbname, $prefix, $lang) {
 		parent::__construct();
-		$this->db_host = $dbhost;
-		$this->db_user = $dbuser;
-		$this->db_pswd = $dbpswd;
+		$this->db_host = $host;
+		$this->db_user = $user;
+		$this->db_pwd  = $pwd;
 		$this->db_name = $dbname;
-        $this->db_prefix = $dbprefix;
-        $this->db_lang = $lang;
-		$this->connect($this->db_host,$this->db_user,$this->db_pswd);
+    $this->db_prefix = $prefix;
+    $this->db_lang = $lang;
+		$this->connect($this->db_host,$this->db_user,$this->db_pwd);
 	}
  	
  	// 构造函数
@@ -512,8 +512,8 @@ function createdb($dbtype, $dbparams) {
 	}
 	return(new $classname($dbparams['host'], 
         $dbparams['user'], 
-        $dbparams['pswd'], 
-        $dbparams['name'], 
+        $dbparams['pwd'], 
+        $dbparams['dbname'], 
         $dbparams['prefix'],
         $dbparams['lang']
     ));

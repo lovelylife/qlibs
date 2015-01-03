@@ -37,7 +37,7 @@ Q.draging = Q.extend({
     obj.q_drag_objects = new Q.LIST();
     obj.q_onmove = config.onmove || function(x, y) {
       var obj = this;    
-      Q.printf('x: ' + x + '; y:' + y + ';');
+      // Q.printf('x: ' + x + '; y:' + y + ';');
       obj.style.left = x + 'px'; 
       obj.style.top  = y + 'px'; 
     };
@@ -75,7 +75,7 @@ Q.draging = Q.extend({
     var _this = this;
     evt = evt || window.event;
     if(evt.button == Q.RBUTTON){ return; } // 屏蔽右键拖动
-    var target_wnd = drag_handle = _this.nn6 ? evt.target : evt.srcElement; // 获取鼠标悬停所在的对象句柄
+    var target_wnd = drag_handle = Q.isNS6() ? evt.target : evt.srcElement; // 获取鼠标悬停所在的对象句柄
     
     while(target_wnd && !_this.is_dragable(target_wnd) && (target_wnd != document.body)) {
       target_wnd = target_wnd.parentNode;

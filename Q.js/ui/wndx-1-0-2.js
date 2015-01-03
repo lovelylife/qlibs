@@ -1,37 +1,11 @@
 /*--------------------------------------------------------------------------------
  $ wndx.js
- $ update：2014-11-22 23:47
+ $ update：2015-1-2 15:27
  $ author：Q
  $ 2014@http://wayixia.com.
 ----------------------------------------------------------------------------------*/
 
-/*
 // global const variables definition
-var CONST = {
-  SW_SHOW:           0x0001,
-  SW_HIDE:           0x0000,
-
-// window style
-  STYLE_TITLE:     "title",
-  STYLE_MENU :     0x00000002,
-  STYLE_TOOLBAR :  0x00000004,
-  STYLE_STATUS:    0x00000008,
-  STYLE_FIXED:     0x00000010,
-
-// size status
-  STYLE_MAX :      "max",
-  STYLE_MIN :      "min",
-  STYLE_CLOSE :    "max",
-
-  STYLE_ICON  :    "icon",
-  STYLE_WITHBOTTOM :  "with-bottom",
-  
-
-};
-
-CONST.STYLE_DEFAULT = CONST.STYLE_TITLE|CONST.STYLE_ICON|CONST.STYLE_MAX|CONST.STYLE_MIN|CONST.STYLE_CLOSE;
-*/
-
 var CONST = {
   no_title    : "q-attr-no-title",
   no_icon     : "q-attr-no-icon",
@@ -116,7 +90,6 @@ erase_window : function(wndNode) { this.wnds_map.erase(wndNode); },
 function $IsNull(statement) { return  (statement == null); }
 function $IsStyle(wndNode, style) { return Q.hasClass(wndNode, style); }
 
-
 /*-----------------------------------------------------------------
   windows APIs
 -------------------------------------------------------------------*/
@@ -139,7 +112,11 @@ function $IsWindow(wndNode)        { return (!$IsNull(wndNode)) && (wndNode.node
 function $IsMaxWindow(wndNode)     { return ($IsStyle(wndNode, CONST.STYLE_MAX) && (CONST.SIZE_MAX == $GetWindowStatus(wndNode))); }
 function $BindWindowMessage(wndNode, messageid, parameters) {
   return function() {
-    return wndNode.wnd_proc(wndNode, messageid, parameters);
+    if(wndNode != $GetDesktopWindow()) {
+      return wndNode.wnd_proc(wndNode, messageid, parameters);
+    } else {
+      return false;
+    }
   }
 } 
 
@@ -242,7 +219,6 @@ function $MaxizeWindow(wndNode){
   $ChangeCtrlButton(wndNode, CONST.SIZE_MAX, "q-normal");
   $SetWindowPosition(wndNode, 0, 0, width, height);
   $SetWindowStatus(wndNode, CONST.SIZE_MAX);
-  Q.drag.deattach(wndNode);
 }
 
 function $RestoreWindow(wndNode){
@@ -301,6 +277,68 @@ function $SetWindowTitle(wndNode, title){
 function $SetActiveChild(wndNode, child)   { wndNode.active_child = child;  }
 function $SetWindowStatus(wndNode, status) { wndNode.status_type  = status; }
 function $SetWindowZIndex(wndNode, zIndex) { if( isNaN(parseInt(zIndex)) ) { return; } wndNode.style.zIndex = zIndex; }
+function $SetWindowStyle(wndNode, ws)    { Q.addClass(wndNode, ws); }
+function $RemoveWindowStyle(wndNode, ws) { Q.removeClass(wndNode, ws); }
+
+function $MoveTo(wndNode, x, y){
+  // save pos before moving
+  wndNode.rtop  = wndNode.nTop;
+  wndNode.rleft = wndNode.nLeft;
+
+  wndNode.nTop = y;
+  wndNode.nLeft = x;
+  wndNode.style.top = wndNode.nTop + 'px';
+  wndNode.style.left = wndNode.nLeft + 'px';
+}
+
+function $ResizeTo(wndNode, width, height){
+  if(typeof(wndNode.onresize) == 'function') {
+    wndNode.onresize();
+  }
+  // save size before resize
+  wndNode.rwidth = wndNode.nWidth;
+  wndNode.rheight= wndNode.nHeight;
+   
+  width = Math.max(parseInt(width,10) - 0, __GLOBALS.MIN_WIDTH);
+  height = Math.max(parseInt(height, 10), __GLOBALS.MIN_HEIGHT);
+  
+  wndNode.nWidth = width;
+  wndNode.nHeight = height;
+  wndNode.style.width = width + 'px';
+  wndNode.style.height = height + 'px';
+}
+
+function $GetWindowClientHeight() {
+  var myHeight = 0;
+  if (typeof(window.innerHeight) == 'number') {
+    //Non-IE
+    myHeight = window.innerHeight;
+  } else if (document.documentElement && document.documentElement.clientHeight) {
+    //IE 6+ in 'standards compliant mode'
+    myHeight = document.documentElement.clientHeight;
+  } else if (document.body && document.body.clientHeight) {
+    //IE 4 compatible
+    myHeight = document.body.clientHeight;
+  }
+  return myHeight;
+}
+
+function $CenterWindow(wndNode) {
+  var si = Q.scrollInfo();
+  var left = si.l +(document.body.clientWidth - wndNode.nWidth ) / 2;
+  var top =  si.t + (($GetWindowClientHeight() - wndNode.nHeight ) / 2);
+  $MoveTo(wndNode, left, top);
+}
+
+function $SetWindowProc(wndNode, new_window_proc) {
+  if(typeof new_window_proc == 'function') {
+    var old_wnd_proc = wndNode.wnd_proc;
+    wndNode.wnd_proc = new_window_proc;
+    return old_wnd_proc;
+  }
+  return null;
+}
+
 
 /*-----------------------------------------------------------------
   windows APIs Get Methods
@@ -357,59 +395,7 @@ function $GetTopZIndexWindow(){
   return top_wnd;
 }
 
-function $MoveTo(wndNode, x, y){
-  // save pos before moving
-  wndNode.rtop  = wndNode.nTop;
-  wndNode.rleft = wndNode.nLeft;
 
-  wndNode.nTop = y;
-  wndNode.nLeft = x;
-  wndNode.style.top = wndNode.nTop + 'px';
-  wndNode.style.left = wndNode.nLeft + 'px';
-}
-
-function $ResizeTo(wndNode, width, height){
-  if(typeof(wndNode.onresize) == 'function') {
-    wndNode.onresize();
-  }
-  // save size before resize
-  wndNode.rwidth = wndNode.nWidth;
-  wndNode.rheight= wndNode.nHeight;
-   
-  width = Math.max(parseInt(width,10) - 0, __GLOBALS.MIN_WIDTH);
-  height = Math.max(parseInt(height, 10), __GLOBALS.MIN_HEIGHT);
-  
-  wndNode.nWidth = width;
-  wndNode.nHeight = height;
-  wndNode.style.width = width + 'px';
-  wndNode.style.height = height + 'px';
-}
-
-function $GetWindowClientHeight() {
-  var myHeight = 0;
-  if (typeof(window.innerHeight) == 'number') {
-    //Non-IE
-    myHeight = window.innerHeight;
-  } else if (document.documentElement && document.documentElement.clientHeight) {
-    //IE 6+ in 'standards compliant mode'
-    myHeight = document.documentElement.clientHeight;
-  } else if (document.body && document.body.clientHeight) {
-    //IE 4 compatible
-    myHeight = document.body.clientHeight;
-  }
-  return myHeight;
-}
-
-function $CenterWindow(wndNode) {
-  var si = Q.scrollInfo();
-  var left = si.l +(document.body.clientWidth - wndNode.nWidth ) / 2;
-  var top =  si.t + (($GetWindowClientHeight() - wndNode.nHeight ) / 2);
-  $MoveTo(wndNode, left, top);
-}
-
-function $SetWindowStyle(wndNode, ws) {
-  Q.addClass(wndNode, ws);
-}
 
 var MESSAGE = {
   CREATE: 0,
@@ -479,15 +465,6 @@ function $DefaultWindowProc(hwnd, msg, data) {
   return false;
 }
 
-function $SetWindowProc(wndNode, new_window_proc) {
-  if(typeof new_window_proc == 'function') {
-    var old_wnd_proc = wndNode.wnd_proc;
-    wndNode.wnd_proc = new_window_proc;
-    return old_wnd_proc;
-  }
-
-  return null;
-}
 
 function $CreateCtrlButton(type) {
   var btn = document.createElement('button');  
@@ -525,7 +502,7 @@ function $CreateWindowTitlebar(hwnd)  {
   })(hTitle, hwnd);
   //hTitle.ondblclick    = function() { Q.printf('WINDOW title dblclick');  }
 
-  hTitle.hIcon = document.createElement('IMG');
+  hTitle.hIcon = document.createElement('div');
   hTitle.hIcon.className = 'q-icon';
   hTitle.appendChild(hTitle.hIcon);
    

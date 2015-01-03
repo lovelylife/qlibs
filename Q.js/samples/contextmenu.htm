@@ -19,14 +19,23 @@
 
   <script>
   <!--
-  
+
   // 全局菜单实例 class_menu
   var g_menu = null;
 
   Q.Ready(function() 
   {
     // 初始化菜单
-    g_menu = new class_menu();
+    g_menu = new class_menu({
+      style: "new-style", 
+      on_popup: function(popup) {
+        if(popup) {
+          Q.$('btnMenu').style.background = "red";
+        } else {
+          Q.$('btnMenu').style.background = "blue";
+        }
+      }
+    });
     
     var m1 = new class_menuitem({
       text: "菜单一",
@@ -36,14 +45,14 @@
     });
 
     var m2 = new class_menuitem({
-      text: "菜单二", 
+      text: "菜单二asdfdddddddd", 
       callback : function(menuitem) {
         
       }
     });
 
     var m3 = new class_menuitem({type: MENU_SEPERATOR, text: ""});
-    var m4 = new class_menuitem({text: "子菜单"});
+    var m4 = new class_menuitem({text: "子菜单ssssssssssssssssssssssssssssssssssssssssssssssss"});
     g_menu.addMenuItem(m1);
     g_menu.addMenuItem(m2);
     g_menu.addMenuItem(m3);
@@ -66,12 +75,19 @@
     m4.addSubMenuItem(m41);
     m4.addSubMenuItem(m42);
 
+   var m421 = new class_menuitem({
+      text: "子菜单二asdfasdfasdf", 
+      callback : function(menuitem) {
+        alert('您点击的是子菜单二！');
+      }
+    });
+
+    m42.addSubMenuItem(m421);
+
     g_menu.hide();
 
-    // 获得"显示菜单"按钮对象
-    var oBtnMenu = Q.$('btnMenu');
     // 添加单击事件
-    oBtnMenu.onclick = function() {
+    Q.$('btnMenu').onclick = function() {
       g_menu.showElement(this);
     }
 
@@ -81,8 +97,28 @@
   </script>
 </head>
 <body>
+<br>
+<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="btnMenu">显示菜单</button>
 
-<button id="btnMenu">显示菜单</button>
+<hr>
+<!--div class="q-contextmenu" ondragstart="return false;">
+  <li class="q-item">
+    <div class="q-item-title"><button class="q-item-icon">&nbsp;</button>菜单一</div>
+  </li>
+  <li class="q-item">
+    <div class="q-item-title"><button class="q-item-icon">&nbsp;</button>菜单二</div>
+  </li>
+  <li class="q-item-seperator">
+    <div class="q-line"></div>
+  </li>
+  <li class="q-item q-more">
+    <div class="q-item-title"><button class="q-item-icon">&nbsp;</button>子菜单xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+      &nbsp;&nbsp;&nbsp;
+      
+    </div>
+  </li>
+</div-->
 
 </body>
 </html>
