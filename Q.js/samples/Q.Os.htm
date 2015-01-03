@@ -1,3 +1,4 @@
+
 <!DOCTYPE>
 <html>
 <head>
@@ -7,14 +8,41 @@
   <link type="text/css" rel="stylesheet" href="../ui.css" />
   <style>
   .skin-default {}
-  #task-bar { position:fixed; bottom: 0; height: 35px; left:0; right:0; background: #FFFF00 url(../images/task-bar2.png) -150px -2px; z-index:9999999999999999; }
+  #task-bar { position:fixed; bottom: 0; height: 35px; left:0; right:0; background: rgba(17,17,17,0.5); z-index:9999999999999999; }
+  #task-bar #task-start { position: absolute; left:0; top:0; width: 80px; height: 35px; line-height: 35px; color:#FFF; text-align:center; cursor: default; }
+  #task-bar #task-start:hover {
+    background: #F90;
+  }
+
+  #task-bar #task-start:active, 
+  #task-bar #task-start.q-active
+  { 
+    background: #F60;
+  }
+
+  #task-bar #task-list {
+    position: absolute;
+    left: 80px;
+    top: 0;
+  }
   #task-bar #task-list button { background: none; border:0px; margin:0; padding: 0 15px;;line-height:35px; max-width: 150px; text-overflow: ellipsis;overflow:hidden; outline:0;}
   #task-bar #task-list button.item { color:#000;}
   #task-bar #task-list button.item:hover, 
   #task-bar #task-list button.selected-item { background: #FF9900; color:#FFF;}
+  
+  .desktop-icon {
+    position: absolute;
+  }
+
+  .q-contextmenu.os-start-menu {
+    border-width: 0;
+    box-shadow:0 1px 15px rgba(0,0,0,.2);
+    -moz-box-shadow:0 1px 15px rgba(0,0,0,.2);
+    -webkit-box-shadow:0 1px 15px rgba(0,0,0,.2);
+    min-width: 200px;
+    z-index: 910000;
+  }
   </style>
-
-
   <!--  
   提示：src="{QLib目录}/Q.js" 
   根据实际存放路径， 测试代码都是在QLib目录的samples文件夹下，所以这里用的是"../Q.js" 
@@ -32,13 +60,142 @@
 
   <script>
   <!--
-  var g_test_window;
+  // 全局菜单实例 class_menu
+  var g_os_start_menu;
+  var g_os_setting;
   var g_test_dialog;
   var g_multi_window;
   var g_task_items = [];
+  var wayixia_images_box = null;
+
+
   Q.Ready(function() {
-    //Q.debug(true);
-    Q.setdebug(Q.$('debug_window'));
+    // 
+    // 重置可显示区域
+    Q.client_size = function() {
+      var max_width = document.body.clientWidth;
+      var max_height = document.body.clientHeight;
+      if( document.documentElement.clientWidth) 
+        max_width = document.documentElement.clientWidth;
+      if( document.documentElement.clientHeight) 
+        max_height = document.documentElement.clientHeight;
+      max_height = max_height - Q.$('task-bar').offsetHeight;
+      return  {width: max_width, height: max_height}
+    } 
+
+    g_os_start_menu = new class_menu({
+      style: "os-start-menu", 
+      on_popup: function(popup) {
+        if(popup) {
+          Q.addClass(Q.$('task-start'), "q-active");
+        } else {
+          Q.removeClass(Q.$('task-start'), "q-active");
+        }
+      }
+    }); 
+    var m1 = new class_menuitem({
+      text: "系统设置",
+      callback : function(menuitem) {
+        g_os_setting = new Q.Window({title: "系统设置", width:480, height:370});
+        g_os_setting.set_content("test flash");
+        g_os_setting.show(true);
+        g_os_setting.center(); 
+      }
+    });
+
+    var m2 = new class_menuitem({text: "程序", popup_style: "os-start-menu"});
+    var m3 = new class_menuitem({type: MENU_SEPERATOR, text: ""});
+    var m4 = new class_menuitem({
+      text: "注销", 
+      callback : function(menuitem) {
+        
+      }
+    });
+    g_os_start_menu.addMenuItem(m1);
+    g_os_start_menu.addMenuItem(m2);
+    g_os_start_menu.addMenuItem(m3);
+    g_os_start_menu.addMenuItem(m4);
+
+    var m21 = new class_menuitem({
+      text: "wayixia-cms",
+      callback : function(menuitem) {
+        
+      }
+    });
+
+    var m22 = new class_menuitem({
+      text: "wayixia-chrome", 
+      callback : function(menuitem) {
+        alert('您点击的是子菜单二！');
+      }
+    });
+    
+    m2.addSubMenuItem(m21);
+    m2.addSubMenuItem(m22);
+
+    g_os_start_menu.hide();
+    
+
+    Q.$('task-start').onclick = function() {
+      g_os_start_menu.showElement(this);      
+    }
+
+    // register window hooks
+    register_hook(function(hwnd, message_id) {
+      if(message_id == MESSAGE.CREATE) {
+        var button = document.createElement('button');
+        button.className = "item";
+        button.innerText = $GetTitleText(hwnd);  
+        button.bind_data = hwnd;  
+        button.onclick = function(wnd, btn){ 
+          return function() {
+            var nodes = Q.$('task-list').childNodes;
+            for(var i=0; i < nodes.length; i++) {
+              var item = nodes[i];
+              item.className = "item";
+            }
+            btn.className = "selected-item";
+            $BindWindowMessage(wnd, MESSAGE.ACTIVATE)();
+          }; 
+        }(hwnd, button);
+        Q.$('task-list').appendChild(button);
+      } if(message_id == MESSAGE.ACTIVATE) {
+        var nodes = Q.$('task-list').childNodes;
+        for(var i=0; i < nodes.length; i++) {
+          var item = nodes[i];
+          if(item.bind_data == hwnd) {
+            item.className="selected-item";
+          } else {
+            item.className = "item";
+          }
+        }
+      } if(message_id == MESSAGE.CLOSE) {
+        var nodes = Q.$('task-list').childNodes;
+        for(var i=0; i < nodes.length; i++) {
+          var item = nodes[i];
+          if(item.bind_data == hwnd) {
+            item.onclick = null;
+            item.parentNode.removeChild(item);
+          }
+          //item.className = "item";
+        }
+      }
+    });
+
+    return;
+    Q.drag.attach_object('btnRefreshTaskBar', {
+      objects:[],
+      self: true, 
+      onmove : function(x, y) {
+        this.style.left = x + 'px'; 
+        this.style.top = y + 'px'; 
+      }
+    });
+    Q.drag.attach_object('btnClear', {self: true});
+    Q.drag.attach_object('btnOpenWindow', {self: true});
+    Q.drag.attach_object('btnOpenMultiWindow', {self: true});
+    Q.drag.attach_object('btnOpenMessageBox', {self: true});
+
     // 提示对话框
     Q.$('btnOpenMessageBox').onclick = function() {
       g_test_dialog = new Q.Dialog({
@@ -94,116 +251,37 @@
       });
     }
 
-    register_hook(function(hwnd, message_id) {
-      if(message_id == MESSAGE.CREATE) {
-        var button = document.createElement('button');
-        button.className = "item";
-        button.innerText = $GetTitleText(hwnd);  
-        button.bind_data = hwnd;  
-        button.onclick = function(wnd, btn){ 
-          return function() {
-            var nodes = Q.$('task-list').childNodes;
-            for(var i=0; i < nodes.length; i++) {
-              var item = nodes[i];
-              item.className = "item";
-            }
-            btn.className = "selected-item";
-            $BindWindowMessage(wnd, MESSAGE.ACTIVATE)();
-          }; 
-        }(hwnd, button);
-        Q.$('task-list').appendChild(button);
-      } if(message_id == MESSAGE.ACTIVATE) {
-        var nodes = Q.$('task-list').childNodes;
-        for(var i=0; i < nodes.length; i++) {
-          var item = nodes[i];
-          if(item.bind_data == hwnd) {
-            item.className="selected-item";
-          } else {
-            item.className = "item";
-          }
-        }
-      } if(message_id == MESSAGE.CLOSE) {
-        var nodes = Q.$('task-list').childNodes;
-        for(var i=0; i < nodes.length; i++) {
-          var item = nodes[i];
-          if(item.bind_data == hwnd) {
-            item.onclick = null;
-            item.parentNode.removeChild(item);
-          }
-          //item.className = "item";
-        }
-      }
-    });
+    
   });
   -->
   </script>
 </head>
-<body onselectstart="return false;" style=" background: transparent url(../images/bg.jpg) center center;height: 100%;overflow:hidden;-moz-user-select:none;-webkit-user-select: none;">
-
-<p></p>
-<button id="btnRefreshTaskBar">RefreshTaskBar</button>
-<button id="btnClear">Clear</button>
-<button id="btnOpenWindow">Window</button>
-<button id="btnOpenMultiWindow">MultiWindow</button>
-<button id="btnOpenMessageBox">MessageBox</button>
-<!-- wndx template -->
-<embed id="flash" style="display:none;" pluginspage='http://www.macromedia.com/go/getflashplayer' src='http://you.video.sina.com.cn/api/sinawebApi/outplayrefer.php/vid=3685396_1292548084_ah21RiZsBjPK+l1lHz2stqkP7KQNt6nki2O2vlasJQZdQ0/XM5GaZNUC4yDQFokbpWFOQpA6dvcg/s.swf' type='application/x-shockwave-flash' name='sinaplayer' allowFullScreen='true' allowScriptAccess='always' width='480' height='370' wmode='transparent'></embed>
-
-<button id="test-domodal" style="display:none;">DoModal</button>
-<!-- wndx template -->
-<br>
-
-<div id='debug_window' style='width:100%;height: 300px;overflow: auto;'>
-
+<body onselectstart="return false;" style="background: #f7f5f5 url(http://s1.wayixia.com/64e05114-553c-4b34-97b5-a7f1082e1698) no-repeat;height: 100%;overflow:hidden;-moz-user-select:none;-webkit-user-select: none;">
+<div id="wayixia-overlay">
+  <div id="wayixia-container">
+    <div id="wayixia-list"></div>
+    <div id="wayixia-progress">
+      <h4>  正在加载中...  </h4>
+      <div id="wayixia-progress-bar">
+        <div id="wayixia-progress-bar-thumb"></div>
+      </div>
+      <div id="x-ctrl-loadding" class="q-slider x" style="display:none;width: 100px; margin-top: 10px;">
+        <div class="q-thumb" style="height:16px; width: 16px;margin:7px 0;"></div> 
+      </div>
+    </div>
+    <div id="dummy-div" style="height: 0px;"></div>
+  </div>
 </div>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<!--div style="background: red; height: 40px; line-height: 40px; ">
-  <button style="margin: 12px 0 0 0; padding:0; background:none; height: 16px;border-width:0;background:blue;">test</button>
-</div-->
-
 
 <div class="skin-default" id="task-bar">
+  <div id="task-start">START</div> 
   <div id="task-list">
   </div> 
 </div>
 
 </body>
 </html>
+
+
+
+
