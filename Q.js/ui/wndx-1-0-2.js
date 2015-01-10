@@ -48,7 +48,7 @@ Q.Ready(function() {
   __GLOBALS.desktop.wnds   = new Q.LIST();  // popups windows
   __GLOBALS.desktop.active_child = null;
   __GLOBALS.explorer = new Q.UIApplication();
-  $CreateMaskLayer(__GLOBALS.desktop);
+  $CreateMaskLayer(__GLOBALS.desktop, "q-top-mask");
 }, true);
 
 
@@ -132,10 +132,12 @@ function $MaskWindow(wndNode, bmask) {
   }
   $GetMask(wndNode).style.display=(!!bmask)?'':'none'; 
 }
-function $CreateMaskLayer(wndNode) {
+function $CreateMaskLayer(wndNode, extra_style) {
   wndNode.layer_mask = document.createElement('DIV');
   wndNode.layer_mask.body_style = document.body.currentStyle.overflow;
   wndNode.layer_mask.className = 'q-window-mask alpha_1';
+  if(extra_style)
+    Q.addClass(wndNode.layer_mask, extra_style);
   wndNode.appendChild(wndNode.layer_mask);
   wndNode.layer_mask.style.display = 'none';
   wndNode.layer_mask.onmousedown = Q.bind_handler(wndNode, function(evt) { 
@@ -920,7 +922,7 @@ __init__: function(config) {
       onclick: Q.bind_handler(this, function() { this.on_cancel() && this.end_dialog(CONST.IDCANCEL); })})   
   }
   Q.Dialog.prototype.__init__.call(this, config);
-  this.domodal();
+  this.domodal(config.parent);
   this.adjust();
   this.center();
 }

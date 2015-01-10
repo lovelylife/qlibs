@@ -261,6 +261,34 @@
     return js;
   };
 
+  Q.load_module = function(src, oncomplete) {
+    var header = document.getElementsByTagName("head")[0];
+    var s = document.createElement("script");  
+    s.type = "text/javascript";
+    s.src = src;
+    // 对于IE浏览器，使用readystatechange事件判断是否载入成功  
+    // 对于其他浏览器，使用onload事件判断载入是否成功  
+    s.done = false;
+    s.onload = s.onreadystatechange = (function() {
+      if( !this.done && (!this.readyState || this.readyState == "loaded" || this.readyState == "complete"))
+      {
+        this.done = true;
+        oncomplete(true);
+        this.onload = this.onreadystatechange = null; // Handle memory leak in IE
+        header.removeChild( this );
+      }
+    });
+    
+    s.onerror = (function() { 
+      // Handle memory leak in IE
+      this.onload = this.onreadystatechange = null;
+      header.removeChild(this); 
+      oncomplete(false);
+    });
+        
+    // 获取head结点，并将<script>插入到其中  
+    header.appendChild(s);
+  }
   // Javascript Loader
   function jsloader() {
     var scripts = document.getElementsByTagName("script");  
@@ -301,33 +329,9 @@
     if(re2.test(url)) {
       url = RegExp.$1 + '';
       url = url.replace(/\./g, '/')+'.js';
-      // 创建script结点,并将其属性设为外联JavaScript文件  
-      var s = document.createElement("script");  
-      s.type = "text/javascript";
-      s.src = _libdir+'/'+url;
-
-      // 对于IE浏览器，使用readystatechange事件判断是否载入成功  
-      // 对于其他浏览器，使用onload事件判断载入是否成功  
-      s.done = false;
-      s.onload = s.onreadystatechange = (function() {
-        if( !this.done && (!this.readyState || this.readyState == "loaded" || this.readyState == "complete"))
-        {
-          this.done = true;
-          async_load_js(header, ar);
-          // Handle memory leak in IE
-          this.onload = this.onreadystatechange = null;
-          header.removeChild( this );
-        }
-      });
-      s.onerror = (function() { 
-        // Handle memory leak in IE
-        this.onload = this.onreadystatechange = null;
-        header.removeChild(this); 
+      Q.load_module(_libdir+'/'+url, function(isok) {
         async_load_js(header, ar);
       });
-        
-      // 获取head结点，并将<script>插入到其中  
-      header.appendChild(s);
     } else {
       async_load_js(header, ar);
     }

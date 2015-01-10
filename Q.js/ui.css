@@ -25,7 +25,7 @@
  $ window style
 --------------------------------------------------------*/
 
-.q-window { position:absolute; background:#fff; overflow:hidden; margin:0 auto; cursor:default; min-width: 200px; border:1px outset #CCC; z-index:10000; outline: 0; -webkit-box-shadow: 0px 5px 30px #505050; box-shadow: 0px 5px 30px #505050; filter:progid:DXImageTransform.Microsoft.Shadow(color=#CCCCCC, Strength=3, Direction=135);}
+.q-window { position:absolute; background:#fff; overflow:hidden; margin:0 auto; cursor:default; min-width: 200px; border:1px outset #CCC; z-index:100; outline: 0; -webkit-box-shadow: 0px 5px 30px #505050; box-shadow: 0px 5px 30px #505050; filter:progid:DXImageTransform.Microsoft.Shadow(color=#CCCCCC, Strength=3, Direction=135);}
 
 .q-window .q-title { position:relative; margin:0; padding:0; height:30px; line-height:30px; background: #6d84C4; font-size:14px; color:white; white-space:nowrap; border-width: 0px; -khtml-user-select: none; -moz-user-select: none;
 }
@@ -64,7 +64,9 @@
 
 /* q-window's mask */
 .q-window-mask {position:absolute; background: #000000; display:; left:0;top:0;right:0;bottom:0;}
-
+.q-window-mask.q-top-mask {
+  z-index: 100000;
+}
 /* q-window's cient area */
 .q-window .q-window-client { overflow: hidden; position:absolute; left:0; top:30px; right:0; bottom:0;margin:0;padding:0;}
 .q-window.q-attr-no-title .q-window-client { top:0px; }

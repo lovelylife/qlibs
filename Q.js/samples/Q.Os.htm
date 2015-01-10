@@ -2,257 +2,60 @@
 <!DOCTYPE>
 <html>
 <head>
-  <title>Q.os | QLib | Powered By PHPKIND</title>
-  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-  <!-- 使用QLib控件是必须包含样式表 -->
-  <link type="text/css" rel="stylesheet" href="../ui.css" />
-  <style>
-  .skin-default {}
-  #task-bar { position:fixed; bottom: 0; height: 35px; left:0; right:0; background: rgba(17,17,17,0.5); z-index:9999999999999999; }
-  #task-bar #task-start { position: absolute; left:0; top:0; width: 80px; height: 35px; line-height: 35px; color:#FFF; text-align:center; cursor: default; }
-  #task-bar #task-start:hover {
-    background: #F90;
-  }
+<title>Q.os | QLib | Powered By Q.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<!-- 使用QLib控件是必须包含样式表 -->
+<link type="text/css" rel="stylesheet" href="../ui.css" />
+<link type="text/css" rel="stylesheet" href="../ui.os.css" />
+<!--  
+提示：src="{QLib目录}/Q.js" 
+根据实际存放路径， 测试代码都是在QLib目录的samples文件夹下，所以这里用的是"../Q.js" 
+-->
+<script type="text/javascript" src="../Q.js">
+<!--
+// 需要加载额外库时
+import utils.stl;
+import utils.xml;
+import ui.contextmenu;
+import ui.drag;
+import ui.wndx-1-0-2;
+import ui.os;
+-->
+</script>
 
-  #task-bar #task-start:active, 
-  #task-bar #task-start.q-active
-  { 
-    background: #F60;
-  }
+<script>
+<!--
 
-  #task-bar #task-list {
-    position: absolute;
-    left: 80px;
-    top: 0;
-  }
-  #task-bar #task-list button { background: none; border:0px; margin:0; padding: 0 15px;;line-height:35px; max-width: 150px; text-overflow: ellipsis;overflow:hidden; outline:0;}
-  #task-bar #task-list button.item { color:#000;}
-  #task-bar #task-list button.item:hover, 
-  #task-bar #task-list button.selected-item { background: #FF9900; color:#FFF;}
-  
-  .desktop-icon {
-    position: absolute;
-  }
-
-  .q-contextmenu.os-start-menu {
-    border-width: 0;
-    box-shadow:0 1px 15px rgba(0,0,0,.2);
-    -moz-box-shadow:0 1px 15px rgba(0,0,0,.2);
-    -webkit-box-shadow:0 1px 15px rgba(0,0,0,.2);
-    min-width: 200px;
-    z-index: 910000;
-  }
-  </style>
-  <!--  
-  提示：src="{QLib目录}/Q.js" 
-  根据实际存放路径， 测试代码都是在QLib目录的samples文件夹下，所以这里用的是"../Q.js" 
-  -->
-  <script type="text/javascript" src="../Q.js">
-  <!--
-  // 需要加载额外库时
-  import utils.stl;
-  import utils.xml;
-  import ui.contextmenu;
-  import ui.drag;
-  import ui.wndx-1-0-2;
-  -->
-  </script>
-
-  <script>
-  <!--
-  // 全局菜单实例 class_menu
-  var g_os_start_menu;
-  var g_os_setting;
-  var g_test_dialog;
-  var g_multi_window;
-  var g_task_items = [];
-  var wayixia_images_box = null;
+var installed_applications = [
+  {name: "MP3播放", src: "mp3player/app.js", ui:"mp3player/ui.htm"},
+  {name: "挖一下", src: "wayixia.js", ui: ""},
+];
 
 
-  Q.Ready(function() {
-    // 
-    // 重置可显示区域
-    Q.client_size = function() {
-      var max_width = document.body.clientWidth;
-      var max_height = document.body.clientHeight;
-      if( document.documentElement.clientWidth) 
-        max_width = document.documentElement.clientWidth;
-      if( document.documentElement.clientHeight) 
-        max_height = document.documentElement.clientHeight;
-      max_height = max_height - Q.$('task-bar').offsetHeight;
-      return  {width: max_width, height: max_height}
-    } 
-
-    g_os_start_menu = new class_menu({
-      style: "os-start-menu", 
-      on_popup: function(popup) {
-        if(popup) {
-          Q.addClass(Q.$('task-start'), "q-active");
-        } else {
-          Q.removeClass(Q.$('task-start'), "q-active");
-        }
-      }
-    }); 
-    var m1 = new class_menuitem({
-      text: "系统设置",
-      callback : function(menuitem) {
-        g_os_setting = new Q.Window({title: "系统设置", width:480, height:370});
-        g_os_setting.set_content("test flash");
-        g_os_setting.show(true);
-        g_os_setting.center(); 
-      }
-    });
-
-    var m2 = new class_menuitem({text: "程序", popup_style: "os-start-menu"});
-    var m3 = new class_menuitem({type: MENU_SEPERATOR, text: ""});
-    var m4 = new class_menuitem({
-      text: "注销", 
-      callback : function(menuitem) {
-        
-      }
-    });
-    g_os_start_menu.addMenuItem(m1);
-    g_os_start_menu.addMenuItem(m2);
-    g_os_start_menu.addMenuItem(m3);
-    g_os_start_menu.addMenuItem(m4);
-
-    var m21 = new class_menuitem({
-      text: "wayixia-cms",
-      callback : function(menuitem) {
-        
-      }
-    });
-
-    var m22 = new class_menuitem({
-      text: "wayixia-chrome", 
-      callback : function(menuitem) {
-        alert('您点击的是子菜单二！');
-      }
-    });
-    
-    m2.addSubMenuItem(m21);
-    m2.addSubMenuItem(m22);
-
-    g_os_start_menu.hide();
-    
-
-    Q.$('task-start').onclick = function() {
-      g_os_start_menu.showElement(this);      
-    }
-
-    // register window hooks
-    register_hook(function(hwnd, message_id) {
-      if(message_id == MESSAGE.CREATE) {
-        var button = document.createElement('button');
-        button.className = "item";
-        button.innerText = $GetTitleText(hwnd);  
-        button.bind_data = hwnd;  
-        button.onclick = function(wnd, btn){ 
-          return function() {
-            var nodes = Q.$('task-list').childNodes;
-            for(var i=0; i < nodes.length; i++) {
-              var item = nodes[i];
-              item.className = "item";
-            }
-            btn.className = "selected-item";
-            $BindWindowMessage(wnd, MESSAGE.ACTIVATE)();
-          }; 
-        }(hwnd, button);
-        Q.$('task-list').appendChild(button);
-      } if(message_id == MESSAGE.ACTIVATE) {
-        var nodes = Q.$('task-list').childNodes;
-        for(var i=0; i < nodes.length; i++) {
-          var item = nodes[i];
-          if(item.bind_data == hwnd) {
-            item.className="selected-item";
-          } else {
-            item.className = "item";
-          }
-        }
-      } if(message_id == MESSAGE.CLOSE) {
-        var nodes = Q.$('task-list').childNodes;
-        for(var i=0; i < nodes.length; i++) {
-          var item = nodes[i];
-          if(item.bind_data == hwnd) {
-            item.onclick = null;
-            item.parentNode.removeChild(item);
-          }
-          //item.className = "item";
-        }
-      }
-    });
-
-    return;
-    Q.drag.attach_object('btnRefreshTaskBar', {
-      objects:[],
-      self: true, 
-      onmove : function(x, y) {
-        this.style.left = x + 'px'; 
-        this.style.top = y + 'px'; 
-      }
-    });
-    Q.drag.attach_object('btnClear', {self: true});
-    Q.drag.attach_object('btnOpenWindow', {self: true});
-    Q.drag.attach_object('btnOpenMultiWindow', {self: true});
-    Q.drag.attach_object('btnOpenMessageBox', {self: true});
-
-    // 提示对话框
-    Q.$('btnOpenMessageBox').onclick = function() {
-      g_test_dialog = new Q.Dialog({
-        title: "提示窗口提示窗口提示窗口提示窗口提示窗口提示窗口提示窗口提示窗口提示窗口提示窗口提示窗口提示窗口提示窗口提示窗口提示窗口提示窗口",
-        content: Q.$('test-domodal'),
-        onok : function() { return true; }
+Q.Ready(function() {
+  new Q.os({
+    window_list_bar: Q.$("q-task-list"),
+    task_bar: Q.$("q-task-bar"),
+    start_button: Q.$("q-start-button"),
+    apps : installed_applications,
+    on_logout: function() {
+      var box = new Q.MessageBox({
+        parent: $GetDesktopWindow(),
+        title: "Simple.OS",
+        wstyle: "simpleos",
+        content: "Are you sure to logout",
+        on_ok : function() {
+          setTimeout(function() {
+            location.href="{$app:module}&action=logout";}, 1000);
+          return true;
+        },
+        on_no: function() {  return true; }
       });
-
-      g_test_dialog.domodal($GetDesktopWindow());
+      //Q.$("wndx-logout").style.visibility = "visible";
+     box.set_zindex(100001); 
     }
-
-    Q.$('btnOpenWindow').onclick = function() {
-      g_test_window = new Q.Window({width:480, height:370});
-      g_test_window.show(true);
-      g_test_window.set_content("test flash");
-      g_test_window.adjust();
-      g_test_window.center();
-    }
-  
-    Q.$('btnOpenMultiWindow').onclick = function() {
-      g_multi_window = new Q.Window({title: "multiwindow 1", width:480, height:370});
-      g_multi_window.show(true);
-      g_multi_window.center();
-      
-      var sub1 = new Q.Window({title: "child 1", width: 100, height:100, parent: g_multi_window, wstyle: CONST.STYLE_CHILD})
-      var sub2 = new Q.Window({title: "child 2", width: 100, height:100, parent: g_multi_window, wstyle: CONST.STYLE_CHILD})
-      var sub3 = new Q.Window({title: "child popup", width: 100, height:100, parent: g_multi_window})
-    
-      sub1.show(true);
-      sub2.show(true);
-      sub3.show(true);
-    }
-
-    Q.$('test-domodal').onclick = function() {
-      new Q.MessageBox({
-        parent: g_test_dialog,
-        title: "test",
-        content: 'test-domodal',
-        onok : function() { return true; }
-      });
-    }
-
-    Q.$('btnClear').onclick=function() {
-      Q.$('debug_window').innerHTML = '';
-    }
-    
-    Q.$('btnRefreshTaskBar').onclick=function() {
-      Q.$('task-list').innerHTML = "";
-      // intialize task bar 
-      __GLOBALS.desktop.wnds.each(function(item) {
-        Q.$('task-list').innerHTML += "<button class=\"item\">"+$GetTitleText(item)+"</button>";
-        return true;
-      });
-    }
-
-    
   });
+});
   -->
   </script>
 </head>
@@ -260,22 +63,13 @@
 <div id="wayixia-overlay">
   <div id="wayixia-container">
     <div id="wayixia-list"></div>
-    <div id="wayixia-progress">
-      <h4>  正在加载中...  </h4>
-      <div id="wayixia-progress-bar">
-        <div id="wayixia-progress-bar-thumb"></div>
-      </div>
-      <div id="x-ctrl-loadding" class="q-slider x" style="display:none;width: 100px; margin-top: 10px;">
-        <div class="q-thumb" style="height:16px; width: 16px;margin:7px 0;"></div> 
-      </div>
-    </div>
     <div id="dummy-div" style="height: 0px;"></div>
   </div>
 </div>
 
-<div class="skin-default" id="task-bar">
-  <div id="task-start">START</div> 
-  <div id="task-list">
+<div id="q-task-bar">
+  <div id="q-start-button">START</div> 
+  <div id="q-task-list">
   </div> 
 </div>
 

@@ -52,11 +52,12 @@ __init__ : function(json) {
   // construct dom
   _this.hwnd = document.createElement('LI');
   _this.titlewnd = document.createElement('DIV');
-  _this.hwnd.className = 'q-item';
   _this.hwnd.appendChild(_this.titlewnd);
   if(json.type == MENU_SEPERATOR) {
+    _this.hwnd.className = 'q-item-seperator';
     _this.titlewnd.className = "q-line"
   } else {
+    _this.hwnd.className = 'q-item';
     _this.titlewnd.className = "q-item-title";
     _this.iconwnd = document.createElement("button");
     _this.iconwnd.className = "q-item-icon";
