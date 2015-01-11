@@ -34,14 +34,37 @@ template: function(id) {
 
   return null;
 },
+
+bind_css : function() {
+  // get ui style
+  var doc = this.ui_iframe.contentDocument || this.ui_iframe.contentWindow.document;
+  var sheet =doc.styleSheets[0];
+  if(!sheet) // no <style>
+    return;
+  var cssText = sheet.ownerNode.innerHTML;
+  var style=document.createElement("style");
+	style.setAttribute("type", "text/css");
+	if(style.styleSheet){// IE
+		style.styleSheet.cssText = cssText;
+	} else {// w3c
+		var textNode = doc.createTextNode(cssText);
+		style.appendChild(textNode);
+	}
+
+	var heads = document.getElementsByTagName("head");
+	if(heads.length)
+		heads[0].appendChild(style);
+	else
+		document.documentElement.appendChild(style);
+},
+
 })
 
 
 
-// 全局菜单实例 class_menu
+
 var g_os_start_menu;
 var g_os_setting;
-var g_multi_window;
 var g_task_items = [];
 var app_classes = {};
 

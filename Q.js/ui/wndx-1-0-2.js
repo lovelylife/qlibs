@@ -763,6 +763,27 @@ function $MakeResizable(obj) {
   }
 }
 
+
+// 用于获取指定q:id属性的元素
+function qid(p, q_id) {
+  function find_item(e) {
+    var r = null;
+    for (var i = 0; i < e.childNodes.length; i ++) {
+      var c = e.childNodes[i];
+      if(c.nodeType === Q.ELEMENT_NODE) {
+        if(c.getAttribute("q:id") == q_id) {
+          r = c;
+          break;
+        } else {
+          r = find_item(c);
+        }
+      }
+    }
+    return r;
+  }
+  return find_item(p);
+}
+
 /*-----------------------------------------------------------------
  $ class Q.Window
  $ dialog base class
@@ -802,6 +823,9 @@ set_content : function(HTMLContent) {
 show : function(isVisible) { $ShowWindow(this.hwnd, isVisible) },
 center : function()        { $CenterWindow(this.hwnd); },
 adjust : function()        { $FitWindow(this.hwnd); },
+item: function(q_id) {
+  return qid($GetClient(this.hwnd), q_id);
+},
 });
 
 /*-----------------------------------------------------------------

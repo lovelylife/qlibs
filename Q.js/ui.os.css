@@ -37,7 +37,7 @@
   -moz-box-shadow:0 1px 15px rgba(0,0,0,.2);
   -webkit-box-shadow:0 1px 15px rgba(0,0,0,.2);
   min-width: 200px;
-  background-image: url({$app:theme}/os/images/menuleft.png);
+  background-image: url(images/contextmenu/menuleft.gif);
   background-repeat: repeat-y;
   background-position: left top;
   z-index: 910000;
