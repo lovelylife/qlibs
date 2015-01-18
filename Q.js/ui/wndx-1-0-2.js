@@ -176,7 +176,7 @@ RootWindow (__GLOBALS.desktop)
 function $ActivateWindow(wndNode, zindex) {
   if(!$IsWindow(wndNode))
     return;
-  Q.printf("active window " + $GetTitleText(wndNode));
+  //Q.printf("active window " + $GetTitleText(wndNode));
   var defined_zindex = 0;
   if(!isNaN(zindex)) 
     defined_zindex = zindex;
@@ -194,6 +194,8 @@ function $ActivateWindow(wndNode, zindex) {
 function $SetWindowActive(wndNode, IsActive) {
   var active_child = wndNode;
   while(active_child) {
+    if(active_child.on_activate)
+      active_child.on_activate(IsActive);
     if(IsActive) {
       Q.removeClass(active_child, CONST.inactive_title);
     } else {
@@ -277,10 +279,12 @@ function $SetWindowTitle(wndNode, title){
 }
 
 function $SetActiveChild(wndNode, child)   { wndNode.active_child = child;  }
-function $SetWindowStatus(wndNode, status) { wndNode.status_type  = status; }
 function $SetWindowZIndex(wndNode, zIndex) { if( isNaN(parseInt(zIndex)) ) { return; } wndNode.style.zIndex = zIndex; }
 function $SetWindowStyle(wndNode, ws)    { Q.addClass(wndNode, ws); }
 function $RemoveWindowStyle(wndNode, ws) { Q.removeClass(wndNode, ws); }
+function $SetWindowStatus(wndNode, status) { 
+  wndNode.status_type  = status; 
+}
 
 function $MoveTo(wndNode, x, y){
   // save pos before moving
@@ -293,10 +297,7 @@ function $MoveTo(wndNode, x, y){
   wndNode.style.left = wndNode.nLeft + 'px';
 }
 
-function $ResizeTo(wndNode, width, height){
-  if(typeof(wndNode.onresize) == 'function') {
-    wndNode.onresize();
-  }
+function $ResizeTo(wndNode, width, height) {
   // save size before resize
   wndNode.rwidth = wndNode.nWidth;
   wndNode.rheight= wndNode.nHeight;
@@ -308,6 +309,9 @@ function $ResizeTo(wndNode, width, height){
   wndNode.nHeight = height;
   wndNode.style.width = width + 'px';
   wndNode.style.height = height + 'px';
+  
+  if(typeof(wndNode.on_size) == 'function') 
+    wndNode.on_size(width, height);
 }
 
 function $GetWindowClientHeight() {
@@ -411,14 +415,14 @@ var MESSAGE = {
 function $DefaultWindowProc(hwnd, msg, data) {
   switch(msg) {
   case MESSAGE.CREATE:
-    Q.printf('DefaultWindowProc MESSAGE.CREATE');
+    //Q.printf('DefaultWindowProc MESSAGE.CREATE');
     break;  
   case MESSAGE.MIN:
-    Q.printf('DefaultWindowProc MESSAGE.MIN');
+    //Q.printf('DefaultWindowProc MESSAGE.MIN');
     $MinimizeWindow(hwnd);
     break;
   case MESSAGE.MAX:
-    Q.printf('DefaultWindowProc MESSAGE.MAX');
+    //Q.printf('DefaultWindowProc MESSAGE.MAX');
     if($GetWindowStatus(hwnd) != CONST.SIZE_MAX) { 
       $MaxizeWindow(hwnd); 
     } else { 
@@ -426,13 +430,13 @@ function $DefaultWindowProc(hwnd, msg, data) {
     }
     break;
   case MESSAGE.CLOSE:
-    Q.printf('DefaultWindowProc MESSAGE.CLOSE');
+    //Q.printf('DefaultWindowProc MESSAGE.CLOSE');
     $DestroyWindow(hwnd);
     break;  
   
   case MESSAGE.ACTIVATE:
     {
-      Q.printf('DefaultWindowProc MESSAGE.ACTIVATE -> ' + $GetTitleText(hwnd));
+      //Q.printf('DefaultWindowProc MESSAGE.ACTIVATE -> ' + $GetTitleText(hwnd));
       var top_wnd = $GetTopZIndexWindow($GetDesktopWindow());
       var top_zindex = $GetWindowZIndex(top_wnd);
       var t = hwnd;
@@ -617,9 +621,19 @@ function $CreateWindow(parent_wnd, title, wstyle, pos_left, pos_top, width, heig
   container.appendChild(hwnd);
   Q.drag.attach_object(hwnd, {
     objects : [hwnd.hTitle, hwnd.hTitle.hTitleCtrlBar, hwnd.hTitle.hTitleContent],
+    onmove_begin: Q.bind_handler(hwnd, function(x, y) {
+      if($GetWindowStatus(this) != CONST.SIZE_MAX) 
+        if(hwnd.on_move_begin)
+          hwnd.on_move_begin(x, y);
+    }),
     onmove: Q.bind_handler(hwnd, function(x, y) {
       if($GetWindowStatus(this) != CONST.SIZE_MAX) 
         $MoveTo(this, x, y);
+    }),
+    onmove_end: Q.bind_handler(hwnd, function(x, y) {
+      if($GetWindowStatus(this) != CONST.SIZE_MAX) 
+        if(hwnd.on_move_end)
+          hwnd.on_move_end(x, y);
     }),
   });
   
@@ -673,10 +687,10 @@ function $MakeResizable(obj) {
   function mousedown(evt){
     evt = evt || window.event;
     var status = $GetWindowStatus(obj);
-    //Q.printf('mousedown out' + status);
+    Q.printf('mousedown out' + status);
     if( (status != CONST.SIZE_MAX) && (evt.button == Q.LBUTTON) && obj.style.cursor)
     {
-      //Q.printf('mousedown in' + status);
+      Q.printf('mousedown in' + status);
       $SetWindowStatus(obj, CONST.SIZE_RESIZING);
       if(obj.setCapture)
         obj.setCapture();
@@ -690,7 +704,7 @@ function $MakeResizable(obj) {
     var status = $GetWindowStatus(obj);
     if( ( status != CONST.SIZE_MAX ) && ( status == CONST.SIZE_RESIZING ) && ( evt.button == Q.LBUTTON ) )
     {
-      //Q.printf('mouseup in '+status);
+      Q.printf('mouseup in '+status);
       $SetWindowStatus(obj, CONST.SIZE_NORMAL);
       if(obj.releaseCapture)
         obj.releaseCapture();
@@ -742,7 +756,7 @@ function $MakeResizable(obj) {
       var current_style_left = parseInt(c.left, 10);
       var current_style_top  = parseInt(c.top, 10);
 
-      //Q.printf('x='+x+';y='+y+';w='+w+';h='+h);
+      Q.printf('x='+x+';y='+y+';w='+w+';h='+h);
       // 计算鼠标样式
       cur=y<d?'n':h-y<d?'s':'';
       cur+=x<d?'w':w-x<d?'e':'';
@@ -775,7 +789,8 @@ function qid(p, q_id) {
           r = c;
           break;
         } else {
-          r = find_item(c);
+          if(r = find_item(c))
+            break;
         }
       }
     }
@@ -803,14 +818,19 @@ __init__ : function(config) {
   var parent_wnd= $GetDesktopWindow();
   if(config.parent instanceof Q.Window) 
     parent_wnd = config.parent.wnd() || $GetDesktopWindow();
-  this.hwnd = $CreateWindow(parent_wnd, title, config.wstyle, left, top, width, height);  
+  this.hwnd = $CreateWindow(parent_wnd, title, config.wstyle, left, top, width, height, config.app);
   this.set_content(config.content);
+  this.hwnd.on_size     = Q.bind_handler(this, config.on_size || function(w, h) {});
+  this.hwnd.on_activate = Q.bind_handler(this, config.on_activate || function(activate) {});
+  this.hwnd.on_move_begin = Q.bind_handler(this, config.on_move_begin || function(x,y) {});
+  this.hwnd.on_move     = Q.bind_handler(this, config.on_move || function(x, y) {});
+  this.hwnd.on_move_end = Q.bind_handler(this, config.on_move_end || function(x, y) {});
+  Q.bind_handler(this, config.on_create || function() {})();
 },
 
 wnd : function() { return this.hwnd; },
 set_window_proc : function(new_window_proc) { return $SetWindowProc(this.hwnd, new_window_proc); },
 set_zindex : function(zIndex) { $SetWindowZIndex(this.hwnd, zIndex); },
-
 set_content : function(HTMLContent) {
   HTMLContent = HTMLContent || "";
   if(HTMLContent && HTMLContent.nodeType == Q.ELEMENT_NODE) {
@@ -893,7 +913,7 @@ add_bottom_button : function(text, className, lpfunc) {
 },
 
 domodal : function(wndNode) {
-  Q.printf('domodal window');
+  //Q.printf('domodal window');
   if($IsNull(wndNode)) {
     wndNode = $GetActiveChild($GetDesktopWindow());
     if($IsNull(wndNode)) {

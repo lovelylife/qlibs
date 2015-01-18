@@ -272,9 +272,6 @@ var SELECT_MODE_SHIFT  = 2;
 Q.table = Q.extend({
 // 常量
 STYLE : {
-  WS_NONE      : 0x00000000,  // 最简洁样式
-  WS_TITLEBAR    : 0x00000001,
-  WS_TOOLBAR    : 0x00000002,
   WS_BORDER    : 0x00000004,
 
   WS_AUTOHEIGHT  : 0x00000008,  // 当主窗口的高度小于父窗口高度时，则父窗口自动高度，否则父窗口高度不变
@@ -313,30 +310,22 @@ wndTableHeaderRow : null,
 wndTableData : null,
 wndMoveLine : null,
 
-// 数据成员
-wstyle : null,
 columns: [],
 evtListener : {},
 store : null,
-
-// 处理选中行
-rows_selected : null,
-
-
+selected_row: null,
 __init__ : function(json) {
   var _this = this;
   json = json || {};
-  //样式解析
-  _this.wstyle = _this.STYLE['WS_NONE'];
-  _this._styleparse(json.wstyle);
+ 
+  
   _this.title = json.title;
   _this.store = json.store;
-  // 选中行的DOM元素
-  _this.rows_selected = new STRUCT_HASMAP;
   _this.columns = json.columns || [];
 
   // method overrides
   if(typeof json.row_onclick == 'function') {  _this.row_onclick = json.row_onclick; }
+  if(typeof json.row_ondblclick == 'function') {  _this.row_ondblclick = json.row_ondblclick; }
   if(typeof json.row_onmouseover == 'function') {  _this.row_onmouseover = json.row_onmouseover; }
   if(typeof json.row_onmouseout == 'function') {  _this.row_onmouseout = json.row_onmouseout; }
   if(typeof json.row_oninsert == 'function') {  _this.row_oninsert = json.row_oninsert; }
@@ -344,7 +333,7 @@ __init__ : function(json) {
   // 初始化父窗口 wndParent,用来显示jtable控件
   // 并初始化jtable视图
   _this.wndParent = Q.$(json.container);
-  _this._initview();
+  _this._initview(json);
 
   // 监听改变窗口大小事件，用户自适应父容器的宽度或者高度
   Q.addEvent(window, 'resize', 
@@ -360,7 +349,7 @@ __init__ : function(json) {
 },
 
 //  初始化表格控件视图
-_initview : function() {
+_initview : function(json) {
   var _this = this;
   _this.wnd = document.createElement('DIV');
     _this.wndTitleBar = document.createElement('DIV');
@@ -368,7 +357,7 @@ _initview : function() {
       _this.wndGroupHeader = document.createElement('DIV');
     _this.wndGroupBody = document.createElement('DIV');
     _this.wndToolbar = document.createElement('DIV');
-
+  
   //!移动法线
   _this.wndMoveLine = document.createElement('DIV');
   document.body.appendChild(_this.wndMoveLine);
@@ -381,14 +370,13 @@ _initview : function() {
   _this.wnd.appendChild(_this.wndToolbar);
 
   //! 设置UI样式
-  _this.wnd.className = 'jtable_hwnd';
-    _this.wndTitleBar.className = 'jtable_titlebar';
-    _this.wndFrame.className = 'jtable_frame';
-      _this.wndGroupHeader.className = 'jtable_group_header';
-    _this.wndGroupBody.className = 'jtable_group_body';
-    _this.wndToolbar.className = 'jtable_toolbar';
-  _this.wndMoveLine.className = 'jtable_moveline';
-  _this.wndMoveLine.style.display = 'none';
+  _this.wnd.className = "q-table";
+    _this.wndTitleBar.className = "q-table-titlebar";
+    _this.wndFrame.className = "q-table-frame";
+      _this.wndGroupHeader.className = "q-group-header";
+    _this.wndGroupBody.className = "q-group-body";
+    _this.wndToolbar.className = "q-table-toolbar";
+  _this.wndMoveLine.className = "q-table-moveline";
   
   _this.wndTitleBar.innerText = _this.title;
   // 在浏览器中渲染控件视图
@@ -401,6 +389,14 @@ _initview : function() {
   _this.wndTableHeaderRow = _this.wndGroupHeader.firstChild.insertRow(-1);
   _this.wndTableData = _this.wndGroupBody.firstChild;
 
+  //init style
+   if(json.wstyle) {
+     var wstyle = (json.wstyle+"").replace(/\|+/g, " ");
+     Q.addClass(this.wnd, wstyle);
+   }
+   if(!Q.hasClass(this.wnd, "q-attr-toolbar"))
+     this.wndToolbar.style.display = "none";
+
   // 加载jtable的列
   _this.loadColumns();
 
@@ -408,8 +404,6 @@ _initview : function() {
   _this.wndGroupHeader.onselectstart = function(evt) {return false;};
   _this.wndGroupBody.onscroll = function() { _this._sync_scroll(); };
   _this.wndGroupBody.onselectstart = function() { return false; };
-
-  _this.updateView();  
 },
 
 // 更新控件视图
@@ -419,17 +413,13 @@ autosize : function() {
   var fullHeight = parseInt(_this.wndParent.offsetHeight, 10);
   var fullWidth  = parseInt(_this.wndParent.offsetWidth, 10);
   var currentstyle = CurrentStyle(_this.wnd);
-  //alert(currentstyle['borderTopWidth']);
-    
   frame_height = fullHeight 
     - _this.wndTitleBar.offsetHeight 
     - _this.wndToolbar.offsetHeight
     - parseInt(currentstyle['borderTopWidth'],10)
     - parseInt(currentstyle['borderBottomWidth'],10);
-  //alert(frame_height)
   _this.wndFrame.style.height = frame_height+'px';
   _this.wndGroupBody.style.height = (frame_height - _this.wndGroupHeader.offsetHeight)+'px';
-  // alert(_this.wndGroupBody.scrollWidth);
   _this.wndGroupHeader.style.width = _this.wndGroupBody.scrollWidth + 'px';
 },  
 
@@ -439,46 +429,12 @@ _sync_scroll : function() {
   this.sync_scroll();
 },
 
-// 解析样式 将形如"WS_X1 | WS_X2"字符串解析成STYLE['WS_X1']...
-_styleparse : function(sStyle) {
-  var _this = this;
-  sStyle += '';
-  var arr = sStyle.split(/\s*\|\s*/i);
-  for(var i=0; i < arr.length; i++) {
-    var s = _this.STYLE[arr[i]];
-    if(s) {
-      _this.wstyle += s;
-    }
-  }
+set_style: function(wstyle) {
+  Q.addClass(this.wnd, wstyle);
 },
 
-setStyle : function(ws) {
-  var _this = this;
-  _this.updateView();
-},
-
-updateView : function() {
-  var _this = this;
-  var showTitleBar = _this.isStyle('WS_TITLEBAR') ? '':'none';
-  _this.wndTitleBar.style.display = showTitleBar;
-
-  var showToolBar = _this.isStyle('WS_TOOLBAR') ? '':'none';
-  _this.wndToolbar.style.display = showToolBar;
-},
-
-isStyle : function(ws) {
-  ws = this.STYLE[ws];
-  if(!ws) { return false; }
-  return ((this.wstyle & ws) == ws);
-},
-
-isCheckBoxStyle : function() {
-  return this.isStyle('WS_CHECKBOX');
-},
-
-// 支持多选样式，可以同时选择多行
-isMultiSelect : function() {
-  return this.isCheckBoxStyle() || this.isStyle('WS_MULTISELECT');
+remove_style: function() {
+  Q.removeClass(this.wnd, wstyle);
 },
 
 append : function(nIndex, record) {
@@ -486,8 +442,19 @@ append : function(nIndex, record) {
   var ROW = _this.wndTableData.insertRow(-1);
   ROW.onmouseover = function() { return _this._rows_onmouseover(this); };
   ROW.onmouseout  = function() { return _this._rows_onmouseout(this);  };
-  ROW.onclick     = function() { return _this._rows_onclick(this);  };
-  // ROW.onmousedown = function() { if(!_this.rows_onmousedown(this)) {event.returnValue = false; return false}; }
+  ROW.onclick     = (function(r, t) { return function(evt) {
+          if(r.clickonce) {
+            r.clickonce = false;
+            clearTimeout(r.t);
+            t._rows_ondblclick(r);
+          } else {
+            r.clickonce = true;
+            r.t = setTimeout((function(b) { return function() { 
+              b.clickonce = false; t._rows_onclick(r); 
+            }})(r), 200);
+          }
+          return false;
+        }})(ROW, _this);
   ROW.setAttribute('dataIndex', record['dataIndex']);  // 设置数据索引
   ROW.data = record;
   var len = _this.wndTableHeaderRow.cells.length;
@@ -520,7 +487,7 @@ _create_cell : function(nRow, nCol, json) {
   // 根据json对象创建多样化的TD单元格
   var _this = this;
   var DIV = document.createElement('DIV');
-  DIV.className = 'jtable_cdata';
+  DIV.className = "q-table-cdata";
   if(json.className) {
     DIV.className += ' ' + json.className;
   }
@@ -535,16 +502,9 @@ _create_cell : function(nRow, nCol, json) {
   
 loadData : function(datasrc, bClearOldData) {
   var _this = this;
-  // 清楚选中数据
-  _this.rows_selected.clear();
-  if(_this.isCheckBoxStyle()) {
-    _this.rows_checked.clear();
-    _this.wndTableHeaderRow.cells[0].childNodes[0].childNodes[0].childNodes[0].checked = false;  
-  }
-
   _this.store.load_json(datasrc, !!bClearOldData);
   if(!!bClearOldData) {
-    _this.wndTableData.removeChild(_this.wndTableData.firstChild);
+    _this.wndTableData.innerHTML = ""; //removeChild(_this.wndTableData.firstChild);
   }
 },
 
@@ -571,7 +531,7 @@ insertcolumn : function(arrIndex, json) {
   json.isHidden = !!json.isHidden;
   TD.style.display = json.isHidden ? 'none' : '';
   TD.setAttribute('_index', arrIndex);
-  TD.innerHTML = '<DIV align="'+json.align+'" class="jtable_column_header" style="width:'+json.width+'px;"><a HideFocus>'
+  TD.innerHTML = '<DIV align="'+json.align+'" class="q-column-header" style="width:'+json.width+'px;"><a HideFocus>'
           +json.title+'</a></DIV>';
   
   TD.firstChild.onclick = function() { _this._column_click(this.parentNode.cellIndex); };
@@ -661,23 +621,16 @@ _init_cell : function(container, nItem, nCol, json) {},
 // 处理鼠标单击事件，处理之后传递给外部接口_rows_onclick
 _rows_onclick : function(row) {
   var _this = this;
-  if(!_this.row_is_enabled(row)) {
+  if(!this.row_is_enabled(row))
     return false;
-  }
-
-  var dataIndex = row.getAttribute('dataIndex');
   
   // 不支持多选
-  if(!_this.isMultiSelect()) {
-    if(!_this.row_is_selected(row)) {
-      _this.rows_selected.each(function(rowNode, key) {
-        _this.row_set_selected(rowNode, false);
-      });
-      _this.row_set_selected(row, true);
-    } else {
-      _this.row_set_selected(row, false);  
-    }
-    
+  if(!Q.hasClass(this.wnd, "q-attr-multiselect")) {
+    if(row == this.selected_row)
+      return false;
+    this.row_set_selected(row, true);
+    this.row_set_selected(this.selected_row, false);
+    this.selected_row = row;
   } else {
     if(_this.select_mode == SELECT_MODE_CTRL) { // CTRL键按下时
       _this.row_set_selected(row,!_this.row_is_selected(row));  
@@ -691,12 +644,18 @@ _rows_onclick : function(row) {
   }
   _this.row_onclick(row);
 },
+
+_rows_ondblclick : function(row) {
+  if(!this.row_is_enabled(row)) {
+    return false;
+  }
+  this.row_ondblclick(row);
+},
   
 // 处理鼠标滑过事件，处理之后传递给外部接口row_onmouseover
 _rows_onmouseover : function(row) {
   var _this = this;
   if(_this.row_is_enabled(row)) {
-    var dataIndex = parseInt(row.getAttribute('dataIndex'), 10);
     if(!_this.row_is_selected(row)) {
       _this.row_onmouseover(row);
     }
@@ -707,7 +666,6 @@ _rows_onmouseover : function(row) {
 // 处理鼠标离开事件，处理之后传递给外部接口row_onmouseout  
 _rows_onmouseout : function(row) {
   var _this = this;
-  var dataIndex = parseInt(row.getAttribute('dataIndex'), 10);
   if(_this.row_is_enabled(row)) {
     if(!_this.row_is_selected(row)) {
       _this.row_onmouseout(row);
@@ -727,8 +685,6 @@ rows_each : function(callback) {
     callback(_this.wndTableData.rows[i]);
   }
 },
-
-row_index : function(row) { return parseInt(row.getAttribute('dataIndex'),10); },
 
 row_enable : function(row, enabled) {
   var _this = this;
@@ -752,8 +708,9 @@ row_insert : function(index, record) {
   _this.autosize();
 },
 
-row_is_enabled : function(row) { return (!row.getAttribute('_disabled')); },
-row_is_selected : function(row) { return this.rows_selected.has(this.row_index(row)); },
+row_index : function(row) { return parseInt(row.getAttribute('dataIndex'),10); },
+row_is_enabled : function(row) { return row && (!row.getAttribute('_disabled')); },
+row_is_selected : function(row) { return Q.hasClass(row, "q-selected"); },
 
 // 设置选择
 rows_selected_all : function(bSelectAll) {
@@ -764,23 +721,20 @@ rows_selected_all : function(bSelectAll) {
 },  
   
 row_set_selected : function(row, bSelected) {
-  var _this = this;
-  if(_this.row_is_enabled(row)) {
-    var dataIndex = row.getAttribute('dataIndex');
+  if(this.row_is_enabled(row)) {
+    var dataIndex = this.row_index(row);
     // 设置颜色
     if(bSelected) {
-      row.style.backgroundColor = '#DFE8F6';
-      _this.rows_selected.add(dataIndex, row);
+      Q.addClass(row, "q-selected");
     } else {
-      row.style.backgroundColor = 'none';
-      _this.rows_selected.remove(dataIndex);
+      Q.removeClass(row, "q-selected");
     }      
   }  
 },
   
 get_records : function(row) {
   var _this = this;
-  var dataIndex = parseInt(_this.get_row_dataIndex(row), 10);
+  var dataIndex = parseInt(_this.row_index(row), 10);
   var store = _this.store;
   var arr = [];
   if(-1 == dataIndex) {  
@@ -798,19 +752,6 @@ get_records : function(row) {
   }
 },
 
-get_data_store : function() {
-},
-  
-
-get_rows_selected : function() {
-  var _this = this;
-  var arr = [];
-  _this.rows_selected.each(function(node, key){
-    arr.push(_this.rows_selected.item(key));
-  });
-  return arr;
-},
-  
 row_index : function(row) {
   return parseInt(row.getAttribute('dataIndex'),10);  
 },

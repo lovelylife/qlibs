@@ -7,27 +7,27 @@
 ---------------------------------------------------------*/
 
 Q.draging = Q.extend({
-  hCaptureWnd : null,
+  capture_wnd : null,
   is_drag : false,
   x : 0,
   y : 0,
   begin_left : 0,
   begin_top : 0,
-  MouseDown_Hanlder : null,
-  MouseUp_Handler : null,
-  MouseMove_Handler : null,
+  mousedown_Hanlder : null,
+  mouseup_handler : null,
+  mousemove_handler : null,
   is_moved : false,
-  tmr : null,
+  timer : null,
   __init__ : function(){
     var _this = this;
 
     // 缓存时间
-    _this.MouseDown_Hanlder = function(evt) { _this._MouseDown(evt); }
-    _this.MouseUp_Handler = function(evt) { _this._MouseUp(evt); }
-    _this.MouseMove_Handler = function(evt) { _this._MouseMove(evt); }
+    _this.mousedown_hanlder = function(evt) { _this._mousedown(evt); }
+    _this.mouseup_handler = function(evt) { _this._mouseup(evt); }
+    _this.mousemove_handler = function(evt) { _this._mousemove(evt); }
 
-    Q.addEvent(document, 'mousedown', _this.MouseDown_Hanlder);
-    Q.addEvent(document, 'mouseup', _this.MouseUp_Handler);
+    Q.addEvent(document, 'mousedown', _this.mousedown_hanlder);
+    Q.addEvent(document, 'mouseup', _this.mouseup_handler);
   },
 
   attach_object : function(obj_or_id, config) {
@@ -35,9 +35,11 @@ Q.draging = Q.extend({
     var config = config || {};
     obj.setAttribute('q-drag-object', true);
     obj.q_drag_objects = new Q.LIST();
+    obj.q_onmove_begin = config.onmove_begin || function(x, y) {}
+    obj.q_onmove_end = config.onmove_end || function(x, y) {}
     obj.q_onmove = config.onmove || function(x, y) {
-      var obj = this;    
       // Q.printf('x: ' + x + '; y:' + y + ';');
+      var obj = this;    
       obj.style.left = x + 'px'; 
       obj.style.top  = y + 'px'; 
     };
@@ -71,7 +73,7 @@ Q.draging = Q.extend({
     return obj && obj.getAttribute && !!obj.getAttribute('q-drag-object'); 
   },
 
-  _MouseDown : function(evt) {
+  _mousedown : function(evt) {
     var _this = this;
     evt = evt || window.event;
     if(evt.button == Q.RBUTTON){ return; } // 屏蔽右键拖动
@@ -83,41 +85,45 @@ Q.draging = Q.extend({
 
     //if(target_wnd && (!$IsMaxWindow(target_wnd)) && $IsDragObject(target_wnd, oDragHandle)) {
     if(target_wnd && _this.is_drag_handler(target_wnd, drag_handle)) {
-      _this.hCaptureWnd = target_wnd; 
+      _this.capture_wnd = target_wnd;
       _this.is_drag = true; 
       _this.x = evt.clientX;
       _this.y = evt.clientY; 
       
       _this.begin_left = target_wnd.offsetLeft;  
-      _this.begin_top = target_wnd.offsetTop; 
-      // 添加MouseMove事件
-      _this.tmr = setTimeout(function() { Q.addEvent(document, 'mousemove', _this.MouseMove_Handler);  }, 100);
+      _this.begin_top = target_wnd.offsetTop;
+      if(_this.capture_wnd.q_onmove_begin)
+        _this.capture_wnd.q_onmove_begin(_this.x, _this.y);
+      // 添加mousemove事件
+      _this.timer = setTimeout(function() { Q.addEvent(document, 'mousemove', _this.mousemove_handler);  }, 100);
       return false; 
     }
   },
     
-  _MouseMove : function(evt){
+  _mousemove : function(evt){
     var _this = this;
     _this.is_moved = true;
     evt = evt || window.event
     if (_this.is_drag) {
       var x = evt.clientX-_this.x;
       var y = evt.clientY-_this.y;
-      if(_this.hCaptureWnd.style.zoom) {
-        _this.hCaptureWnd.q_onmove(_this.begin_left+(x/_this.hCaptureWnd.style.zoom), _this.begin_top+(y/_this.hCaptureWnd.style.zoom));
+      if(_this.capture_wnd.style.zoom) {
+        _this.capture_wnd.q_onmove(_this.begin_left+(x/_this.capture_wnd.style.zoom), _this.begin_top+(y/_this.capture_wnd.style.zoom));
       } else {
-        _this.hCaptureWnd.q_onmove(_this.begin_left+x, _this.begin_top+y);
+        _this.capture_wnd.q_onmove(_this.begin_left+x, _this.begin_top+y);
       }
       return false; 
     }
   },
 
-  _MouseUp : function(evt) {
+  _mouseup : function(evt) {
     var _this = this;
-    clearTimeout(_this.tmr);
+    clearTimeout(_this.timer);
     if(_this.is_drag ) {
       _this.is_drag=false;
-      Q.removeEvent(document,'mousemove',_this.MouseMove_Handler);
+      Q.removeEvent(document,'mousemove',_this.mousemove_handler);
+      if(_this.capture_wnd.q_onmove_end)
+        _this.capture_wnd.q_onmove_end(_this.x, _this.y);
     }
     _this.is_moved=false;
   },
