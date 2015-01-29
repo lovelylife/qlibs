@@ -82,7 +82,7 @@ __init__ : function(json) {
   this.skin = json.skin;
 
   // 重置可显示区域
-  Q.client_size = function() {
+  Q.workspace = function() {
     var max_width = document.body.clientWidth;
     var max_height = document.body.clientHeight;
     if( document.documentElement.clientWidth) 

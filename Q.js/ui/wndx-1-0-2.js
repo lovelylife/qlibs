@@ -212,8 +212,9 @@ function $MaxizeWindow(wndNode){
   var parent_container = $GetContainerWindow(wndNode);
   var width, height;
   if( parent_container == document.body ) {
-    width = Math.max(document.body.clientWidth, document.body.scrollWidth);
-    height = Math.max(document.body.clientHeight, document.body.scrollHeight);
+    var workspace = Q.workspace();
+    width  = workspace.width;   //Math.max(document.body.clientWidth, document.body.scrollWidth);
+    height = workspace.height; //Math.max(document.body.clientHeight, document.body.scrollHeight);
   } else if( $IsWindow(parent_container) ) {
     width  = Math.max($GetClient(parent_container).clientWidth, $GetClient(parent_container).scrollWidth);
     height = Math.max($GetClient(parent_container).clientHeight, $GetClient(parent_container).scrollHeight);
@@ -842,6 +843,7 @@ set_content : function(HTMLContent) {
 },
 show : function(isVisible) { $ShowWindow(this.hwnd, isVisible) },
 center : function()        { $CenterWindow(this.hwnd); },
+activate : function()      { $BindWindowMessage(this.hwnd, MESSAGE.ACTIVATE)(); },
 adjust : function()        { $FitWindow(this.hwnd); },
 item: function(q_id) {
   return qid($GetClient(this.hwnd), q_id);

@@ -289,4 +289,32 @@ function fmtdatetime2cn($timestamp) {
 
 function get_default_value($new_value, $default_value) { return empty($new_value) ? $default_value : $new_value; }
 
+function q_encrypt($input, $key) {
+  $size = mcrypt_get_block_size(MCRYPT_RIJNDAEL_128, MCRYPT_MODE_ECB);
+  $input = q_pkcs5_pad($input, $size);
+  $td = mcrypt_module_open(MCRYPT_RIJNDAEL_128, "", MCRYPT_MODE_ECB, "");
+  $iv = mcrypt_create_iv(mcrypt_enc_get_iv_size($td), MCRYPT_RAND);
+  mcrypt_generic_init($td, $key, $iv);
+  $data = mcrypt_generic($td, $input);
+  mcrypt_generic_deinit($td);
+  mcrypt_module_close($td);
+  $data = base64_encode($data);
+
+  return $data;
+}
+ 
+function q_pkcs5_pad($text, $blocksize) {
+  $pad = $blocksize - (strlen($text) % $blocksize);
+  return $text . str_repeat(chr($pad), $pad);
+}
+ 
+function q_decrypt($sStr, $sKey) {
+  $decrypted= mcrypt_decrypt(MCRYPT_RIJNDAEL_128, $sKey, base64_decode($sStr), MCRYPT_MODE_ECB);
+	$dec_s = strlen($decrypted);
+	$padding = ord($decrypted[$dec_s-1]);
+	$decrypted = substr($decrypted, 0, -$padding);
+
+  return $decrypted;
+}	
+
 ?>

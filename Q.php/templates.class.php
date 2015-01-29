@@ -169,7 +169,7 @@ class CLASS_TEMPLATES
     $theApp = $this->theApp;
     extract($this->theApp->getRefAPPS(), EXTR_PREFIX_ALL, 'app');
     extract($this->theApp->getRefCONFIG(), EXTR_PREFIX_ALL, 'cfg');
-    extract($this->vars_cache_, EXTR_PREFIX_ALL, 'fields');
+    extract($this->vars_cache_, EXTR_PREFIX_ALL, 'var');
     extract($this->tags, EXTR_PREFIX_ALL, 'html_tags');
     extract($_GET, EXTR_PREFIX_ALL, 'get');
     extract($_POST, EXTR_PREFIX_ALL, 'post');

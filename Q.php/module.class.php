@@ -98,4 +98,23 @@ class CLASS_MODULE {
   }
 }
 
+class CLASS_RPC 
+  extends CLASS_MODULE
+{
+  function CLASS_RPC() {
+    parent::__construct(); 
+  }
+
+  function doAjax($action) {
+    //print_r($_POST);
+    $method=$action;
+    $args = $_POST["data"];
+    if(is_callable(array($this, $method))) {
+      return call_user_func_array(array($this, $method), $args);
+    } else {
+      return parent::doAjax($action);
+    } 
+  }
+}
+
 ?>

@@ -12,7 +12,7 @@ var MENU_ITEM = 0;
 var MENU_ITEM_CHECKBOX = 1;
 var MENU_ITEM_RADIO = 3;
 
-Q.client_size = function() {
+Q.workspace = function() {
  var max_height = document.body.clientHeight;
   if( document.documentElement.clientHeight) {
     max_height = document.documentElement.clientHeight;
@@ -155,11 +155,11 @@ showPopup : function() {
     return; 
   Q.addClass(this.hwnd, "q-active");
   this.subwnd.style.display = '';
-  var client_size = Q.client_size();
+  var workspace = Q.workspace();
   Q.printf("subwnd width -> " + this.subwnd.offsetWidth + ":" + "subwnd height -> " + this.subwnd.offsetHeight)
   var pos = Q.absPosition(this.hwnd);
   var x =0, y = 0;
-  if(pos.top+pos.height+this.subwnd.offsetHeight > client_size.height ) {
+  if(pos.top+pos.height+this.subwnd.offsetHeight > workspace.height ) {
     Q.printf("height overflow bottom, top: " + pos.top + ", height: " + pos.height + ", popup height: " + this.subwnd.offsetHeight);
     y = pos.top+pos.height-this.subwnd.offsetHeight;
     if(y < 0)  {
@@ -169,7 +169,7 @@ showPopup : function() {
   } else {
     y = pos.top;    
   }
-  if((this.subwnd.offsetWidth + pos.left+pos.width) > client_size.width) {
+  if((this.subwnd.offsetWidth + pos.left+pos.width) > workspace.width) {
     x = pos.left - this.subwnd.offsetWidth; 
     if(x < 0) 
       x = 0;
@@ -287,15 +287,15 @@ showElement : function(element, isClosed) {
       node.style.width = (_this.hwnd.offsetWidth - 2) + 'px';
     }
   }
-  var client_size = Q.client_size();
+  var workspace = Q.workspace();
   var pos = Q.absPosition(element);
   var left =0, top = 0;
-  if(pos.top+pos.height+_this.hwnd.offsetHeight > client_size.height ) {
+  if(pos.top+pos.height+_this.hwnd.offsetHeight > workspace.height ) {
     top = pos.top-_this.hwnd.offsetHeight;
   } else {
     top = pos.top + pos.height;
   }
-  if(_this.hwnd.offsetWidth + pos.left > client_size.width) {
+  if(_this.hwnd.offsetWidth + pos.left > workspace.width) {
     left = pos.left+pos.width - _this.hwnd.offsetWidth;  
   } else {
     left = pos.left;  
