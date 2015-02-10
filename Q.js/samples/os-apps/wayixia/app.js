@@ -14,14 +14,23 @@ __init__: function(json) {
     alert("load template [wnd-x-icons] failed.")
     return;
   }
-  var d = new Q.Window({ wstyle: "simpleos",  title: "wayixia",  content: content, on_close: function() { delete d; d=0; } });
+  var d = new Q.Window({ wstyle: "simpleos",  title: "wayixia",  content: content, 
+    on_close: function() { 
+      delete d; d=0; 
+      _this.__exit__(); 
+    } 
+  });
   d.show(true);
   d.center();
 
-  alert(d.item("abc"));
+  //alert(d.item("abc"));
   // init action
   //d.get("list-ctrl");
-}
+},
+
+__active__ : function() {
+
+},
 
 }));
 

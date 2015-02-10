@@ -66,15 +66,18 @@ bind_css : function() {
 var g_os_start_menu;
 var g_os_setting;
 var g_task_items = [];
-var app_classes = {};
+var g_app_classes = {};
+var g_single_instances = {};  // name -> instance 
 
 Q.os = Q.extend({
+apps: null,
 window_list_bar: null,
 task_bar: null,
 start_button: null,
 skin: "",
 __init__ : function(json) {
   json = json || {};
+  this.apps = {};
   this.on_logout = json.on_logout;
   this.window_list_bar = json.window_list_bar;
   this.task_bar = json.task_bar;
@@ -212,6 +215,13 @@ wnds_hook : function(hwnd, message_id) {
   } // end switch
 },  // function wnds_hook
 
+each_apps : function (f) {
+  for(var id in this.apps) {
+    if(!f(this.apps[id]))
+      break;
+  }
+},
+
 run_error: function (app, err) {
   var dialog = new Q.Dialog({
     wstyle: this.skin + " q-attr-with-bottom",
@@ -227,42 +237,75 @@ run_error: function (app, err) {
   dialog.center();
 },
 
+destroy_instance : function(id) {
+  console.log(this.apps);
+  console.log("appid->"+id+" to delete")
+  delete this.apps[id];
+  console.log(this.apps);
+},
+
+create_instance : function(app) { 
+  var instance = null;
+  if(app.single && app.class) {
+    this.each_apps(function(a) {
+      if(a instanceof app.class) {
+        instance = a;
+        a.__active__();
+        return false;
+      }
+      return true;
+    })
+  }
+  
+  if(!instance) {
+    var _this = this;
+    instance = new app.class({ui: app.ui_runtime});
+    instance.__exit__ = function() {
+      console.log("app "+ app.name + " is exit.");
+      _this.destroy_instance(this.id);
+      this.end();
+    }
+    this.apps[instance.id] = instance;
+  }
+ 
+  return instance;
+},
+
 // run app
 run :function (app) {
   var _this = this;
   var err = "Application [" + app.name + "] is run failed.";
-  app_class = app_classes[app.src];
-  if(app_class) {
+  if(app.class) {
     // app class have loaded
-    console.log("create app ok");
     try {
-      new app_class({ui:app.ui_runtime});
+      _this.create_instance(app);
+      console.log("create app ok");
     } catch(e) {
       _this.run_error(app, err + "<br>" + e.description);
     }
-    return;
-  }
-  window._entry = function(t) {
-    app_class = t;
-  }
-  Q.load_module(app.src, function(ok) {
-    if(!ok) {
-      _this.run_error(app, err + "<br>" + " File("+app.src+") is error.");
-    } else {
+  } else {
+    var app_class = null;
+    window._entry = function(t) { app_class = t; }
+    Q.load_module(app.src, function(ok) {
+      if(!ok) {
+        _this.run_error(app, err + "<br>" + " File("+app.src+") is error.");
+        return;
+      }
+      
       console.log("load from file and create app ok");
-      app_classes[app.src] = app_class;
+      app.class = app_class;
       // load ui
       app.ui_runtime = new Q.ui({src: app.ui, oncomplete: function(ok) {
         // init app instance
         console.log("load ui -> " + (ok?"ok":"failed"));
         try {
-          new app_class({ui:app.ui_runtime});
+          _this.create_instance(app); 
         } catch(e) {
           _this.run_error(app, err + "<br>" + e.description);
         }
-      }})
-    }
-  });
+      }});
+    })
+  };
 }
 
 });

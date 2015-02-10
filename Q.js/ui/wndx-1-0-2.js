@@ -56,6 +56,7 @@ Q.Ready(function() {
  application base class
  manage the resources, i.e Q.Window
 ---------------------------------------------------------------------------*/
+
 Q.Application = Q.extend({
 id : -1,   // application id
 __init__ : function(params) {
@@ -79,6 +80,15 @@ __init__ : function(params) {
 
 add_window   : function(wndNode) { this.wnds_map.append(wndNode); },
 erase_window : function(wndNode) { this.wnds_map.erase(wndNode); },
+end : function() {
+  // close all windows
+  this.wnds_map.each(function(wndNode) {
+    delete wndNode.app;
+    wndNode.on_close = function() { return true; }
+    $BindWindowMessage(wndNode, MESSAGE.CLOSE)();
+  });
+  Q.Application.prototype.end.call(this); 
+}
 });
 
 //  Q.Application end
@@ -270,8 +280,8 @@ function $FitWindow(wndNode) {
 -------------------------------------------------------------------*/
 
 function $SetWindowPosition(wndNode, left, top, width, height) {
-    $MoveTo(wndNode, left, top);
-    $ResizeTo(wndNode, width, height);
+  $MoveTo(wndNode, left, top);
+  $ResizeTo(wndNode, width, height);
 }
 
 function $SetWindowTitle(wndNode, title){
@@ -281,8 +291,7 @@ function $SetWindowTitle(wndNode, title){
 
 function $SetActiveChild(wndNode, child)   { wndNode.active_child = child;  }
 function $SetWindowZIndex(wndNode, zIndex) { if( isNaN(parseInt(zIndex)) ) { return; } wndNode.style.zIndex = zIndex; }
-function $SetWindowStyle(wndNode, ws)    { Q.addClass(wndNode, ws); }
-function $RemoveWindowStyle(wndNode, ws) { Q.removeClass(wndNode, ws); }
+function $RemoveWindowStyle(wndNode, ws)   { Q.removeClass(wndNode, ws); }
 function $SetWindowStatus(wndNode, status) { 
   wndNode.status_type  = status; 
 }
@@ -432,7 +441,10 @@ function $DefaultWindowProc(hwnd, msg, data) {
     break;
   case MESSAGE.CLOSE:
     //Q.printf('DefaultWindowProc MESSAGE.CLOSE');
-    $DestroyWindow(hwnd);
+    if(hwnd.on_close && hwnd.on_close()) 
+      $DestroyWindow(hwnd);
+    else
+      $ShowWindow(hwnd, false);
     break;  
   
   case MESSAGE.ACTIVATE:
@@ -615,7 +627,7 @@ function $CreateWindow(parent_wnd, title, wstyle, pos_left, pos_top, width, heig
   // mask window
   $CreateMaskLayer(hwnd);
   
-  $SetWindowStyle(hwnd, wstyle);
+  Q.addClass(hwnd, wstyle);
   $BindWindowMessage(hwnd, MESSAGE.CREATE)();
   
   // render 
@@ -757,7 +769,7 @@ function $MakeResizable(obj) {
       var current_style_left = parseInt(c.left, 10);
       var current_style_top  = parseInt(c.top, 10);
 
-      Q.printf('x='+x+';y='+y+';w='+w+';h='+h);
+      //Q.printf('x='+x+';y='+y+';w='+w+';h='+h);
       // 计算鼠标样式
       cur=y<d?'n':h-y<d?'s':'';
       cur+=x<d?'w':w-x<d?'e':'';
@@ -826,6 +838,7 @@ __init__ : function(config) {
   this.hwnd.on_move_begin = Q.bind_handler(this, config.on_move_begin || function(x,y) {});
   this.hwnd.on_move     = Q.bind_handler(this, config.on_move || function(x, y) {});
   this.hwnd.on_move_end = Q.bind_handler(this, config.on_move_end || function(x, y) {});
+  this.hwnd.on_close    = Q.bind_handler(this, config.on_close || function() { return true; });
   Q.bind_handler(this, config.on_create || function() {})();
 },
 
@@ -841,13 +854,13 @@ set_content : function(HTMLContent) {
     $GetClient(this.hwnd).innerHTML = HTMLContent;
   }
 },
+add_style: function(ws)    { Q.addClass(this.hwnd, ws);        },
+remove_style: function(ws) { Q.removeClass(this.hwnd, ws);     },
 show : function(isVisible) { $ShowWindow(this.hwnd, isVisible) },
-center : function()        { $CenterWindow(this.hwnd); },
+center : function()        { $CenterWindow(this.hwnd);         },
 activate : function()      { $BindWindowMessage(this.hwnd, MESSAGE.ACTIVATE)(); },
 adjust : function()        { $FitWindow(this.hwnd); },
-item: function(q_id) {
-  return qid($GetClient(this.hwnd), q_id);
-},
+item: function(q_id)       { return qid($GetClient(this.hwnd), q_id); },
 });
 
 /*-----------------------------------------------------------------
@@ -863,7 +876,6 @@ __init__ : function(config) {
   config.wstyle += "|" + CONST.fixed;
   config.wstyle += "|" +CONST.no_min;
   config.wstyle += "|" +CONST.no_max;
-  this.on_close = config.on_close || function() {};
   var buttons = [];
   if(config.buttons instanceof Array) {
     config.wstyle +="|" + CONST.with_bottom;
@@ -887,7 +899,6 @@ __init__ : function(config) {
 window_proc : function(msgid, json) {
   switch(msgid) {
   case MESSAGE.CLOSE:
-    this.on_close();
     if(this.hwnd.modal_prev) {
       $MaskWindow(this.hwnd.modal_prev, false);
       this.hwnd.modal_prev.modal_next = null;
