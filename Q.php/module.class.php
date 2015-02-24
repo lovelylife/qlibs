@@ -117,4 +117,22 @@ class CLASS_RPC
   }
 }
 
+class CLASS_QMODULE
+  extends CLASS_MODULE 
+{
+  function CLASS_QMODULE() { parent::__construct(); }
+
+  function doMain($action) {
+    $method=$action;
+    if(empty($action))
+      $method = "index";
+    $args = $_GET;
+    if(is_callable(array($this, $method))) {
+      return call_user_func_array(array($this, $method), $args);
+    } else {
+      return parent::doMain($action);
+    } 
+  }
+}
+
 ?>

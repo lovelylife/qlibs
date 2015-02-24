@@ -62,12 +62,10 @@ bind_css : function() {
 
 
 
-
+var g_simple_os = null;
 var g_os_start_menu;
 var g_os_setting;
 var g_task_items = [];
-var g_app_classes = {};
-var g_single_instances = {};  // name -> instance 
 
 Q.os = Q.extend({
 apps: null,
@@ -76,6 +74,7 @@ task_bar: null,
 start_button: null,
 skin: "",
 __init__ : function(json) {
+  g_simple_os = this;
   json = json || {};
   this.apps = {};
   this.on_logout = json.on_logout;
@@ -310,5 +309,12 @@ run :function (app) {
 
 });
 
+
+function get_app(id) {
+  if(g_simple_os)
+    return g_simple_os.apps[id];
+
+  return null;
+}
 
 
