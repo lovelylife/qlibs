@@ -37,26 +37,47 @@ template: function(id) {
 
 bind_css : function() {
   // get ui style
+	var heads = document.getElementsByTagName("head");
   var doc = this.ui_iframe.contentDocument || this.ui_iframe.contentWindow.document;
-  var sheet =doc.styleSheets[0];
-  if(!sheet) // no <style>
-    return;
-  var cssText = sheet.ownerNode.innerHTML;
-  var style=document.createElement("style");
-	style.setAttribute("type", "text/css");
-	if(style.styleSheet){// IE
-		style.styleSheet.cssText = cssText;
-	} else {// w3c
-		var textNode = doc.createTextNode(cssText);
-		style.appendChild(textNode);
-	}
+  for(var i=0; i < doc.styleSheets.length; i++) {
+    var sheet =doc.styleSheets[i];
+    if(!sheet) // no <style>
+      return;
+    var style;
+    if(sheet.ownerNode.innerHTML == "" && (!!sheet.href)) {
+      // link
+      style=document.createElement("link");
+	    style.setAttribute("type", "text/css");
+	    style.setAttribute("rel", "stylesheet");
+	    style.setAttribute("href", sheet.href);
+    } else {
+      var cssText = sheet.ownerNode.innerHTML;
+      style=document.createElement("style");
+	    style.setAttribute("type", "text/css");
+	    if(style.styleSheet){// IE
+		    style.styleSheet.cssText = cssText;
+	    } else {// w3c
+		    var textNode = doc.createTextNode(cssText);
+		    style.appendChild(textNode);
+	    }
+    }
+	  if(heads.length)
+		  heads[0].appendChild(style);
+	  else
+		  document.documentElement.appendChild(style);
+  } // for
 
+},
+
+/*
+bind_style_sheet : function(style) {
 	var heads = document.getElementsByTagName("head");
 	if(heads.length)
 		heads[0].appendChild(style);
 	else
 		document.documentElement.appendChild(style);
-},
+}
+*/
 
 })
 
