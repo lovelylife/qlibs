@@ -353,18 +353,9 @@
     // 兼容ff，ie的鼠标按键值
     Q.LBUTTON  = 0;
     Q.MBUTTON  = 1;
-      
-    // 解析地址页面的查询字段
-    var querystring = location.search.toString();
-    querystring = querystring.substring(1, querystring.length);
-    var queryMap = querystring.split('&');
-    for(var i=0; i < queryMap.length; i++) {
-      var t = queryMap[i].split('=');
-      if(t.length != 2) { continue; }
-      _querystring[t[0]] = t[1];
-    }
   }
     
+  // 解析地址页面的查询字段
   var query = location.search.slice(1).split('&');
   for(var i=0; i < query.length; i++) {
     var values = query[i].split('=');
