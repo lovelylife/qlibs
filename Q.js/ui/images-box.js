@@ -85,6 +85,8 @@ select_all : function(checked) {
 set_check : function(item, checked) {
   if(!this.is_item_enabled(item))
       return;
+
+  Q.removeClass(item, "mouseover");
   if(checked == Q.hasClass(item, 'mouseselected'))
     return;
   if(checked)

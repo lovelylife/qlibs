@@ -25,7 +25,7 @@ class CLASS_APPLOADER {
     $args['root']     = $app_root;
     $args['host']     = (is_ssl()?"https://":"http://").$_SERVER["HTTP_HOST"];
     $args['module']   = $_GET['mod'];
-    $args['action']   = $_GET['action'];
+    $args['action']   = empty($_GET['action'])?"index":$_GET['action'];
     $args['inajax']   = $S_AJAX_MODE;
 
     // 初始化应用程序实例

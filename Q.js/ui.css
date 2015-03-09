@@ -74,7 +74,7 @@
 /* bottom bar attribute */
 .q-window .q-bottom-bar {position: absolute; bottom: 0; left:0; right:0;height:30px; line-height:30px; text-align:right;background: #F1F1F1;border-top: 1px solid #e0e0e0; display: none;}
 .q-window.q-attr-with-bottom .q-bottom-bar {display: block;}
-
+.q-window.q-attr-with-bottom .q-window-client { bottom: 31px; }
 /*------------------------------------------------------
  $ context menu style
 --------------------------------------------------------*/
@@ -520,12 +520,31 @@
 } 
 
 
-.q-contextmenu .checked {
+.q-contextmenu .checked { 
   background : url(images/contextmenu/checked.gif) no-repeat center center;
 }
 
 .q-contextmenu .unchecked {
   background : url(images/contextmenu/unchecked.gif) no-repeat center center;
+}
+
+.q-contextmenu.q-contextmenu-bar {
+  background-image: none;
+  border: 0;
+  height: 30px;
+}
+
+.q-contextmenu.q-contextmenu-bar .q-item {
+  width: auto;
+  
+}
+
+.q-contextmenu.q-contextmenu-bar .q-item 
+{
+  display: inline-block;
+  padding-right: 15px;
+  padding-left: 15px;
+  height: 30px;
 }
 
 /* select ui control */
@@ -694,10 +713,6 @@
 .q-images-box .q-box-item .q-box-image .image {
   max-height: 200px;
   max-width: 200px;
-  /*
-  width: auto !important;
-  height: auto !important;
-  */
 }
 
 .q-images-box .q-box-item .q-box-image a {
@@ -729,7 +744,7 @@
   position:absolute;
   left:0; top:0; right:0;bottom:0;
   opacity: 0.5;
-  background: #FFF url(images/hover-picture.png) right top no-repeat;
+  background: #FFF url(images/images-box/hover-picture.png) right top no-repeat;
 }
 
 .q-images-box .q-box-item.mouseselected .select-mask 
@@ -739,7 +754,7 @@
   position:absolute;
   left:0; top:0; right:0;bottom:0;
   opacity: 0.8;
-  background: #FFF  url(images/selected-picture.png) right top no-repeat; 
+  background: #FFF  url(images/images-box/selected-picture.png) right top no-repeat; 
   /*#CFBAAA, #FF931E*/
 }
 

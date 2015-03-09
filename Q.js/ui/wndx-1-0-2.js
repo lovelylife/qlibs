@@ -674,7 +674,8 @@ function $DestroyWindow(wndNode) {
   parent_wnds.erase(wndNode); 
   // 删除渲染节点delete dom   
   wndNode.setAttribute('__QWindow', null);
-  wndNode.parentNode.removeChild(wndNode);
+  if(wndNode.parentNode) 
+    wndNode.parentNode.removeChild(wndNode);
   wndNode = 0;
 
   // 激活相邻窗口 

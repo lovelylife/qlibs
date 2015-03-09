@@ -306,7 +306,7 @@ showElement : function(element, isClosed) {
 },
 
 hide : function() {
-  Q.printf("hide context menu");
+  //Q.printf("hide context menu");
   this.hwnd.style.display = 'none';
   Q.removeEvent(window, "blur", this._fHide);
   Q.removeEvent(document, "mousedown", this._fHide);
@@ -319,4 +319,64 @@ hide : function() {
   }
 }
 });
+
+var class_menubar = Q.extend({
+hwnd: null,
+focus: null,
+items: null,
+__init__: function(json) {
+  json = json || {};
+  this.items = new Q.LIST();
+  this.hwnd = document.createElement('DIV');
+  this.hwnd.className = "q-contextmenu q-contextmenu-bar";
+  Q.$(json.container).appendChild(this.hwnd);
+},
+
+append: function(text, menu) {
+  var item = document.createElement('button');
+  item.className = "q-item";
+  item.innerText = text;
+  item.onmousedown = (function(bar, i, m) { 
+    return function(evt) {
+      //console.log("mousedown item")
+      evt = evt || window.event;
+      var obj = Q.isNS6() ? evt.target : evt.srcElement; // 获取鼠标悬停所在的对象句柄
+      if((obj == i) && (bar.focus)) {
+        i.blur();
+        evt.returnValue = false;
+        evt.cancelBubble = true;
+        return false;
+      }
+
+      return true;
+    } 
+  })(this, item, menu);
+
+  item.onfocus = (function(bar, i, m) { 
+    return function(evt) {
+      //console.log("onfocus item")
+      bar.focus = true;
+      if(m)
+        m.showElement(i);
+    } 
+  })(this, item, menu);
+
+  item.onblur = (function(bar, m) { return function(evt) {
+    bar.focus = false;
+    if(m)
+      m.hide();
+    //console.log("kill focus -> " + bar.focus);
+  }})(this, menu);
+
+  item.onmouseover = (function(bar, i) { return function(evt) {
+    if(bar.focus)
+      i.focus();
+  }})(this, item);
+
+  this.hwnd.appendChild(item);
+  this.items.append(item);
+}
+
+})
+
 

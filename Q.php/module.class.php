@@ -124,8 +124,6 @@ class CLASS_QMODULE
 
   function doMain($action) {
     $method=$action;
-    if(empty($action))
-      $method = "index";
     $args = $_GET;
     if(is_callable(array($this, $method))) {
       return call_user_func_array(array($this, $method), $args);

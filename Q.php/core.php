@@ -20,6 +20,7 @@ include(_QROOT."/config.php");
 include(_QROOT."/function.php");
 
 // check session path
+/*
 {
   $session_path = session_save_path();
   $use_own_path = false;
@@ -41,9 +42,7 @@ include(_QROOT."/function.php");
     session_save_path($session_path);
   }
 }
-
-//　session start
-//session_start();
+*/
 
 // register_global setting
 if(ini_get('register_globals')) {
@@ -66,7 +65,6 @@ $variables_whitelist = array (
   'error_handler',
   'variables_whitelist',
   'key',
-  '_start',
 /* } */
 );
 
@@ -81,46 +79,39 @@ unset($key, $value, $variables_whitelist);
 //$_GET['test'] = 'dddddddd\'';
 // tainting detect
 
+//echo MAGIC_QUOTES_GPC;
+
 // 如果单引号转义没有开启，则自动加上'\'处理
 if(!MAGIC_QUOTES_GPC) {
-  foreach($_GET as $_key => $_value) {
+  foreach($_GET as $_key => $_value) 
     $_GET[$_key] = daddslashes($_value);
-  }
   
-  foreach($_POST as $_key => $_value) {
+  foreach($_POST as $_key => $_value) 
     $_POST[$_key] = daddslashes($_value);
-  }
   
-  foreach($_COOKIE as $_key => $_value) {
+  foreach($_COOKIE as $_key => $_value) 
     $_COOKIE[$_key] = daddslashes($_value);
-  }
 }
 
 // Ajax 模式
-$S_AJAX_MODE = false;
-if(isset($_GET['inajax'])) {
-  $S_AJAX_MODE = (strtolower($_GET['inajax']) == "true");
-}
- 
+$S_AJAX_MODE = (isset($_GET['inajax']) && (strtolower($_GET['inajax']) == "true"));
+
 // Ajax 处理
 if($S_AJAX_MODE) {
   include_once(_QROOT.'/ajax.lib.class.php');
   $data = $_POST['postdata'];
-
   // 去掉单引号转义，否则json_decode无法工作
-  if(!MAGIC_QUOTES_GPC) {
+  if(MAGIC_QUOTES_GPC) 
     $data = stripcslashes($data);
-  }
-  
   $data = urldecode($data);
   if(empty($data)) {
-    $data = '{"header":"","data":"","extra":""}';
+    $_POST = new CLASS_AJAX_PACKAGE();
+  } else {
+    $_POST = json_decode($data, true);
+    if(empty($_POST)) {
+      trigger_error('Invalid ajax package!\ndata:\n\n'.$data, E_USER_ERROR);
+    }  
   }
-  $_POST = json_decode($data, true);
-
-  if(empty($_POST)) {
-    trigger_error('Invalid ajax package!\ndata:\n\n'.urldecode($_POST["postdata"]), E_USER_ERROR);
-  }  
 }
 
 // for templates

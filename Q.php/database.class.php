@@ -38,69 +38,6 @@ class CLASS_DB_BASE {
 	}
 }
 
-
-$_mysql_cache = array(); // 记录集缓存
-
-/*
-name: _mapQueue  
-map item struct just like
-
-key => array(
-			dicname => .., 
-			func => 'callback(params)'
-		)
-...
-...
-
-*/
-global $_mapQueue;	// cache to map queue
-$_mapQueue = array();
-
-function __db_push_map($key, $dicname, $callback) {
-	global $_mapQueue;
-	$_mapQueue[$key] = array(
-		"dicname" => $dicname,
-		"func" => $callback
-	);
-}
-
-function __db_clear_map() {
-	global $_mapQueue;
-	unset($_mapQueue);
-	$_mapQueue = array();
-}
-
-// handler to map 
-function __db_handler_map(&$record) {
-
-	global $_mapQueue;
-	//print_r($_mapQueue);
-	foreach($_mapQueue as $key => $vm) {
-		
-		$keyvalue = $record[$key];
-		if(array_key_exists("dicname", $vm)) {
-			$isDic = dicQuery($vm['dicname'], $dic);
-			if($isDic) {
-				$record[$key] = $dic[$keyvalue];
-			} else {
-				if(isdebug()) {
-					//echo 'dictionary['.$vm['dicname'].'] not found!';
-				}
-			}
-		}
-		/*
-		函数功能
-		*/
-		if(array_key_exists("func", $vm) && $vm["func"] != "") {
-			$func = $vm['func'];
-			$func = str_ireplace("@this", "'".$keyvalue."'", $func);
-			$func = "\$record[\$key] = ".$func.";";
-			//print($func."<br>");
-			eval($func);
-		}	
-	}
-}
-
 // mysql
 class CLASS_DB_MYSQL extends CLASS_DB_BASE {
 	
@@ -172,7 +109,7 @@ class CLASS_DB_MYSQL extends CLASS_DB_BASE {
 		if(!is_array($fields)) { return -1;	}
 		$setUpdates = array();
 		foreach($fields as $name => $value) {
-			array_push($setUpdates, "`".$name."` = '".$value."'");
+			array_push($setUpdates, "`".$name."` = '".addslashes($value)."'");
 		}
 		$prefix = $isPrefix ? "##__" : "";
 		$sql = "UPDATE `{$prefix}".$table."` set " .implode(",", $setUpdates);
@@ -183,29 +120,6 @@ class CLASS_DB_MYSQL extends CLASS_DB_BASE {
 		$this->sql = ereg_replace("##__", $this->db_prefix, $sql);
 	}
 	
-	/*
-	function doQuery($sql, $isDoMap = false) {
-		//print($charset);
-		$this->result = $this->Execute($sql);
-		if(!$this->result) {	die("Invalid query: " . mysql_error());	}
-		$records = array();
-		
-		if($isDoMap ) {
-			while($record = $this->fetch_assoc($this->result)) {
-				__db_handler_map($record);	// 映射字典表毁掉函数处理
-				array_push($records, $record);	
-			}
-			
-		} else {
-			while($record = $this->fetch_assoc($this->result)) {
-				array_push($records, $record);
-			}
-		}
-		//$this->free_result($this->result);
-		return $records;
-	}
-	*/
-
 	function get_row($sql) {
 	  $records = array();
 	  if(!$this->get_results($sql, $records)) 
@@ -519,10 +433,4 @@ function createdb($dbtype, $dbparams) {
     ));
 }
 
-
-
-/* for example:
-$db = createdb();
-$db->connect();
-*/
 ?>
