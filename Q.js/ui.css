@@ -466,6 +466,7 @@
   -khtml-user-select: none; 
   -moz-user-select: none;
   border: 1px solid #718BB7;
+  z-index: 910000;
 }
 
 /* menu item */
@@ -529,9 +530,10 @@
 }
 
 .q-contextmenu.q-contextmenu-bar {
-  background-image: none;
+  background: none;
   border: 0;
   height: 30px;
+  margin-left: 15px;
 }
 
 .q-contextmenu.q-contextmenu-bar .q-item {
