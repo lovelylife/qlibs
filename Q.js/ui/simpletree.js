@@ -156,7 +156,7 @@ __init__ : function(json) {
   _this.Acceptable = !!json.Acceptable;
   _this.onItemAccept = json.onItemAccept || function(srcid, targid) {};
   _this.onMoveLineMove_ = Q.bind_handler(this, this.onMoveLineMove);
-
+  _this.onContextMenu = json.onContextMenu || function(nItem, evt) {};
   //! 创建容器
   _this.hwnd = document.createElement('DIV');
   _this.hwndTree = document.createElement('ul');
@@ -432,10 +432,11 @@ createNode : function(parentId, text, isopen, isshow) {
     _this.setItemSelected(this.idx);
   };
 
-  node.link.oncontextmenu = function() {
+  node.link.oncontextmenu = function(evt) {
       // this.fireEvent('onclick');
-      this.focus();
-      _this.contextmenu(this.idx);
+      _this.itemClick(this.idx);
+      _this.setItemSelected(this.idx);
+      _this.onContextMenu(this.idx, evt);
       return false;
   };
   node.link.onselectstart = function(){ return false;};
@@ -845,7 +846,6 @@ onAccept : function(srcid, targetid){
 itemClick : function(nItem) {},
 expandClick : function(nItem) {},
 itemDblClick : function(nItem) {},
-contextmenu : function(nItem) {},
 onNodeDelete : function(nItem) {},
 onItemAccept : function(srcid, targetid, dragtype) {}
 

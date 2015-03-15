@@ -203,6 +203,15 @@
     return { width : w, height : h,  left : l,  top : t  };
   };
 
+  Q.absPositionEx = function(element) {
+    var rect = element.getBoundingClientRect();
+    var l= rect.left+document.documentElement.scrollLeft;
+　　var t =rect.top+document.documentElement.scrollTop;
+    var w =rect.width;
+    var h =rect.height;
+
+    return { width : w, height : h,  left : l,  top : t  };
+  }
   // get scroll info
   Q.scrollInfo = function() {
     var t, l, w, h;

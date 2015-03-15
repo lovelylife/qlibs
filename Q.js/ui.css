@@ -533,12 +533,12 @@
   background: none;
   border: 0;
   height: 30px;
-  margin-left: 15px;
+  padding: 0px;
 }
 
 .q-contextmenu.q-contextmenu-bar .q-item {
   width: auto;
-  
+  /*background-color: transparent;*/ 
 }
 
 .q-contextmenu.q-contextmenu-bar .q-item 
@@ -547,8 +547,14 @@
   padding-right: 15px;
   padding-left: 15px;
   height: 30px;
+  outline: 0;
 }
 
+.q-contextmenu.q-contextmenu-bar .q-item:hover, 
+.q-contextmenu.q-contextmenu-bar .q-item.q-active
+{
+  background-color: #FFF;
+}
 /* select ui control */
 .qlib_ui_select {width:100px;height:24px;font-size:12px;text-overflow:ellipsis;white-space: nowrap;}
 .qlib_ui_select:hover {height:24px; background: red;font-size:12px;text-overflow:ellipsis;white-space: nowrap;}

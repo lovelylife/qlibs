@@ -99,12 +99,12 @@ __init__ : function(json) {
         return; 
       var isHideTop = true;
       if(isHideTop) 
-        _this.topMenu.hide(); 
+        _this.topMenu && _this.topMenu.hide(); 
     }
   }
   
-  _this.hwnd.oncontextmenu = function() { return false; }
-  _this.hwnd.onselectstart = function() { return false; }
+  _this.hwnd.oncontextmenu = function(evt) { return false; }
+  _this.hwnd.onselectstart = function(evt) { return false; }
 },
 
 addSubMenuItem : function(subItem) {
@@ -126,7 +126,7 @@ addSubMenuItem : function(subItem) {
       evt = evt || event;
       evt.cancelBubble = true;
     }
-    this.subwnd.oncontextmenu = function() { return false; }
+    this.subwnd.oncontextmenu = function(evt) { return false; }
   }
   
   this.subwnd.appendChild(subItem.hwnd);
@@ -156,14 +156,14 @@ showPopup : function() {
   Q.addClass(this.hwnd, "q-active");
   this.subwnd.style.display = '';
   var workspace = Q.workspace();
-  Q.printf("subwnd width -> " + this.subwnd.offsetWidth + ":" + "subwnd height -> " + this.subwnd.offsetHeight)
-  var pos = Q.absPosition(this.hwnd);
+  //Q.printf("subwnd width -> " + this.subwnd.offsetWidth + ":" + "subwnd height -> " + this.subwnd.offsetHeight)
+  var pos = Q.absPositionEx(this.hwnd);
   var x =0, y = 0;
   if(pos.top+pos.height+this.subwnd.offsetHeight > workspace.height ) {
-    Q.printf("height overflow bottom, top: " + pos.top + ", height: " + pos.height + ", popup height: " + this.subwnd.offsetHeight);
+    //Q.printf("height overflow bottom, top: " + pos.top + ", height: " + pos.height + ", popup height: " + this.subwnd.offsetHeight);
     y = pos.top+pos.height-this.subwnd.offsetHeight;
     if(y < 0)  {
-      Q.printf("height overflow top");
+      //Q.printf("height overflow top");
       y = 0;
     }
   } else {
@@ -177,9 +177,9 @@ showPopup : function() {
     x = pos.left+pos.width;
     
   }
-  
-  this.subwnd.style.left = x + 'px';
-  this.subwnd.style.top = (y) + 'px';
+  var si = Q.scrollInfo(); 
+  this.subwnd.style.left = si.l + x + 'px';
+  this.subwnd.style.top = (si.t+y) + 'px';
 },
 
 data : function() {
@@ -235,23 +235,24 @@ addMenuItem : function(item) {
   _this.items.push(item);
 },
 
-show : function(){
+show : function(evt){
   var _this = this;
   var scroll = Q.scrollInfo();
   var left = 0, top = 0;
+  evt = evt || window.event;
   _this.hwnd.style.display = '';
-  if((event.clientX + _this.hwnd.offsetWidth) > document.body.clientWidth)
-      left = event.clientX  + scroll.l - _this.hwnd.offsetWidth - 2;
+  if((evt.clientX + _this.hwnd.offsetWidth) > document.body.clientWidth)
+      left = evt.clientX  + scroll.l - _this.hwnd.offsetWidth - 2;
   else
-      left = event.clientX + scroll.l;
+      left = evt.clientX + scroll.l;
   
-  if( (event.clientY + _this.hwnd.offsetHeight) > document.body.clientHeight)
-      top = event.clientY  + scroll.t - _this.hwnd.offsetHeight - 2;
+  if( (evt.clientY + _this.hwnd.offsetHeight) > document.body.clientHeight)
+      top = evt.clientY  + scroll.t - _this.hwnd.offsetHeight - 2;
   else
-      top = event.clientY + scroll.t;
+      top = evt.clientY + scroll.t;
   
   _this.hwnd.style.left = left+'px';
-  _this.hwnd.style.top = top +'px';
+  _this.hwnd.style.top  = top +'px';
   this._fWheel = document.onmousewheel;
   document.onmousewheel = function() { return false; }
   if(!_this.isajust) {
@@ -288,7 +289,7 @@ showElement : function(element, isClosed) {
     }
   }
   var workspace = Q.workspace();
-  var pos = Q.absPosition(element);
+  var pos = Q.absPositionEx(element);
   var left =0, top = 0;
   if(pos.top+pos.height+_this.hwnd.offsetHeight > workspace.height ) {
     top = pos.top-_this.hwnd.offsetHeight;
@@ -301,8 +302,9 @@ showElement : function(element, isClosed) {
     left = pos.left;  
   }
   
-  _this.hwnd.style.left = left + 'px';
-  _this.hwnd.style.top = top + 'px';
+  var si = Q.scrollInfo();
+  _this.hwnd.style.left = si.l + left + 'px';
+  _this.hwnd.style.top = si.t + top + 'px';
 },
 
 hide : function() {
