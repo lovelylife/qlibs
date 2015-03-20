@@ -9,7 +9,12 @@ Q.images_box = Q.extend({
 hwnd: null,
 __init__ : function(json) {
   json = json || {};
-  this.hwnd = Q.$(json.container);
+  var container = Q.$(json.container);
+  this.hwnd = document.createElement('div');
+  container.appendChild(this.hwnd);
+  this.hwnd.className = "q-images-box";
+
+  Q.$(json.container);
   this.on_item_changed = json.on_item_changed || function(item, checked) {};
   this.is_item_enabled = json.is_item_enabled || function(item) { return true; };
 },
@@ -23,7 +28,7 @@ create_element: function(config, init) {
   box.className = 'q-box-item';
   box.innerHTML = '<span class="q-box-info"> \
     <span class="wh">'+config.width+'x'+config.height+'<span> </span> \
-    </span></span>';
+    </span>';
 
   this.hwnd.appendChild(box);
   var img = document.createElement('div');
@@ -97,6 +102,11 @@ set_check : function(item, checked) {
   this.on_item_changed(item, checked); 
 }, 
 
+set_style : function(new_class) {
+  Q.removeClass(this.hwnd, this.old_style);
+  this.old_style = new_class;
+  Q.addClass(this.hwnd, new_class);
+},
 //
 // Returns a function which will handle displaying information about the
 // image once the image has finished loading.

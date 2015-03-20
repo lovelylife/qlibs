@@ -152,8 +152,8 @@
   }
 
   Q.removeClass = function(element, remove_class) {
-    var arr = element.className.split(/\s+/);
-    var arr2= remove_class.split(/\s+/);
+    var arr = (element.className+'').split(/\s+/);
+    var arr2= (remove_class+'').split(/\s+/);
     var arr3= [];
     for(var i=0;i < arr.length; i++) {
       var remove = false;

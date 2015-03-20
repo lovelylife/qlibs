@@ -15,6 +15,25 @@
   padding: 1px;
 }
 
+#box-container {
+  position:relative;
+  width: 698px;
+  height: 298px;
+  background: blue;
+  padding: 1px;
+}
+
+
+.q-images-box.size_1 .q-box-item {
+  width: 100px;
+}
+.q-images-box.size_2 .q-box-item {
+  width: 200px;
+}
+.q-images-box.size_3 .q-box-item {
+  width: 300px;
+}
+
 </style>
 <!--  
 提示：src="{QLib目录}/Q.js" 
@@ -32,6 +51,41 @@ import ui.images-box;
 <script>
 <!--
 
+var g_images_box;
+
+Q.Ready(function() {
+
+    g_images_box = new Q.images_box({
+      container: Q.$('wayixia-list-2'),
+      on_item_changed : function(item, checked) {
+        if(this.selected != item) {
+          if(this.selected)
+            this.set_check(this.selected, false);
+          this.selected = item;
+        }
+      }       
+    });
+   
+    var images = [
+      'http://wayixia.com/uploads/image/64e05114-553c-4b34-97b5-a7f1082e1698.jpg',
+      'http://wayixia.com/uploads/image/3c6d55fbb2fb4316adf03a9722a4462308f7d374.jpg',
+      'http://wayixia.com/uploads/image/1347287735218.jpg',
+      'http://wayixia.com/uploads/image/1372211389301.jpg',
+      'http://wayixia.com/uploads/image/134849642946.jpg',
+    ]
+    var displays = {}
+    for(var i=0; i < images.length; i++) {
+      var src = images[i];
+       displays[src] = src;
+    }
+    g_images_box.display_images(displays, {})();
+
+    Q.$('size_1').onclick = function() { g_images_box.set_style('size_1'); }
+    Q.$('size_2').onclick = function() { g_images_box.set_style('size_2'); }
+    Q.$('size_3').onclick = function() { g_images_box.set_style('size_3'); }
+
+});
+
 -->
 </script>
 </head>
@@ -42,10 +96,24 @@ import ui.images-box;
 <br>
 
 <div id="mycontainer">
-<div class="q-images-box">
-  <div id="wayixia-list" style="visibility: visible;"><div data-url="http://wayixia.com/uploads/image/3c6d55fbb2fb4316adf03a9722a4462308f7d374.jpg" data-width="610" data-height="915" class="q-box-item"><span class="q-box-info">     <span class="wh">610x915<span> </span>     </span></span><div class="q-box-image"><a href="javscript:void(0);"><img src="http://wayixia.com/uploads/image/3c6d55fbb2fb4316adf03a9722a4462308f7d374.jpg" class="image" style="margin-top: 0px; width: 133.333333333333px; height: 200px;"></a></div><div class="select-mask"></div></div><div data-url="http://wayixia.com/uploads/image/1347287735218.jpg" data-width="1920" data-height="1080" class="q-box-item mouseover mouseselected"><span class="q-box-info">     <span class="wh">1920x1080<span> </span>     </span></span><div class="q-box-image"><a href="javscript:void(0);"><img src="http://wayixia.com/uploads/image/1347287735218.jpg" class="image" style="margin-top: 43.75px; width: 200px; height: 112.5px;"></a></div><div class="select-mask"></div></div><div data-url="http://wayixia.com/uploads/image/134849642946.jpg" data-width="1440" data-height="900" class="q-box-item mouseover mouseselected"><span class="q-box-info">     <span class="wh">1440x900<span> </span>     </span></span><div class="q-box-image"><a href="javscript:void(0);"><img src="http://wayixia.com/uploads/image/134849642946.jpg" class="image" style="margin-top: 37.5px; width: 200px; height: 125px;"></a></div><div class="select-mask"></div></div><div data-url="http://wayixia.com/uploads/image/1372211389301.jpg" data-width="1366" data-height="768" class="q-box-item"><span class="q-box-info">     <span class="wh">1366x768<span> </span>     </span></span><div class="q-box-image"><a href="javscript:void(0);"><img src="http://wayixia.com/uploads/image/1372211389301.jpg" class="image" style="margin-top: 43.7774524158126px; width: 200px; height: 112.445095168375px;"></a></div><div class="select-mask"></div></div><div data-url="http://wayixia.com/uploads/image/64e05114-553c-4b34-97b5-a7f1082e1698.jpg" data-width="1920" data-height="1200" class="q-box-item"><span class="q-box-info">     <span class="wh">1920x1200<span> </span>     </span></span><div class="q-box-image"><a href="javscript:void(0);"><img src="http://wayixia.com/uploads/image/64e05114-553c-4b34-97b5-a7f1082e1698.jpg" class="image" style="margin-top: 37.5px; width: 200px; height: 125px;"></a></div><div class="select-mask"></div></div></div>
+<div class="q-images-box" id="wayixia-list">
+    <div data-url="http://wayixia.com/uploads/image/3c6d55fbb2fb4316adf03a9722a4462308f7d374.jpg" data-width="610" data-height="915" class="q-box-item"><span class="q-box-info">    <span class="wh">610x915<span> </span>    </span> </span>
+   <div class="q-box-image"><a href="javscript:void(0);"><img src="http://wayixia.com/uploads/image/3c6d55fbb2fb4316adf03a9722a4462308f7d374.jpg" class="image" style="margin-top: 0px; width: 133.333333333333px; height: 200px;"></a></div><div class="select-mask"></div></div>
+ <div data-url="http://wayixia.com/uploads/image/1347287735218.jpg" data-width="1920" data-height="1080" class="q-box-item mouseover mouseselected"><span class="q-box-info">     <span class="wh">1920x1080<span> </span>     </span></span><div class="q-box-image"><a href="javscript:void(0);"><img src="http://wayixia.com/uploads/image/1347287735218.jpg" class="image" style="margin-top: 43.75px; width: 200px; height: 112.5px;"></a></div><div class="select-mask"></div></div>
+ <div data-url="http://wayixia.com/uploads/image/134849642946.jpg" data-width="1440" data-height="900" class="q-box-item mouseover mouseselected"><span class="q-box-info">     <span class="wh">1440x900<span> </span>     </span></span><div class="q-box-image"><a href="javscript:void(0);"><img src="http://wayixia.com/uploads/image/134849642946.jpg" class="image" style="margin-top: 37.5px; width: 200px; height: 125px;"></a></div><div class="select-mask"></div></div>
+ <div data-url="http://wayixia.com/uploads/image/1372211389301.jpg" data-width="1366" data-height="768" class="q-box-item"><span class="q-box-info">     <span class="wh">1366x768<span> </span>     </span></span><div class="q-box-image"><a href="javscript:void(0);"><img src="http://wayixia.com/uploads/image/1372211389301.jpg" class="image" style="margin-top: 43.7774524158126px; width: 200px; height: 112.445095168375px;"></a></div><div class="select-mask"></div></div>
+ <div data-url="http://wayixia.com/uploads/image/64e05114-553c-4b34-97b5-a7f1082e1698.jpg" data-width="1920" data-height="1200" class="q-box-item"><span class="q-box-info">     <span class="wh">1920x1200<span> </span>     </span></span><div class="q-box-image"><a href="javscript:void(0);"><img src="http://wayixia.com/uploads/image/64e05114-553c-4b34-97b5-a7f1082e1698.jpg" class="image" style="margin-top: 37.5px; width: 200px; height: 125px;"></a></div><div class="select-mask"></div></div></div>
 
 </div>
+<br>
+<br>
+<button id="size_1">1</button>
+<button id="size_2">2</button>
+<button id="size_3">3</button>
+<br>
+<div id="box-container">
+<div class="q-images-box">
+  <div id="wayixia-list-2" style="visibility: visible;">
 </div>
 
 <br/>
