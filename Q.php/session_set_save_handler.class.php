@@ -89,18 +89,12 @@ class QPHP_session {
   }
 }
 
-$db = createdb('mysql',
- array(
-  'type' => 'mysql',
-  'host' => 'localhost',
-  'user' => 'db-session',
-  'pwd'  => '',
-  'dbname' => 'db-session',
-  'lang' => '',
-  'prefix' => 'ch_',
-));
-
-$db = createdb('mysql', $config);
-QPHP_session::initialize($db);
+// if defind config.session.php then use self define
+$session_config = dirname(__FILE__).'/config.session.php';
+if(file_exists($session_config)) {
+  $cfg = require($session_config);
+  $db = createdb($cfg['type'], $cfg);
+  QPHP_session::initialize($db);
+} 
 
 ?>
