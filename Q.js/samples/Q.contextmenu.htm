@@ -125,14 +125,16 @@
     g_menu2.hide();
 
     g_menubar = new class_menubar({container: 'q-menubar'});
-    g_menubar.append("文件", g_menu);
-    g_menubar.append("编辑", g_menu2);
+    g_menubar.append(Q.$('menu-file'), g_menu);
+    g_menubar.append(Q.$('menu-edit'), g_menu2);
+    //g_menubar.append(Q.$('btnMenu'), g_menu2);
 
-    // 添加单击事件
     Q.$('btnMenu').onclick = function() {
       g_menu.showElement(this);
     }
-
+    Q.$('test').onmouseup = function(evt) {
+      alert(1);
+    }
   });
 
   -->
@@ -145,7 +147,7 @@
 
 <hr>
 <div class="q-contextmenu" ondragstart="return false;">
-  <li class="q-item">
+  <li class="q-item" id="test">
     <div class="q-item-title"><button class="q-item-icon">&nbsp;</button>菜单一</div>
   </li>
   <li class="q-item">
@@ -176,7 +178,8 @@
 <br>
 <br>
 <div id="q-menubar" ondragstart="return false;" style="height: 30px; width: auto;">
-  
+<button class="q-item" id="menu-file">文件</button>
+<button class="q-item" id="menu-edit">编辑</button>
 </div>
 
 <!--div class="q-contextmenu q-contextmenu-bar" style="top: 500px;" ondragstart="return false;">

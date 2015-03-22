@@ -766,3 +766,15 @@
   /*#CFBAAA, #FF931E*/
 }
 
+/*
+ * q-select
+ * */
+
+.q-select {
+  width: auto;
+  height: 25px;
+  border: 1px solid #CCC;
+  outline: 0;
+  text-align: left;
+  text-indent: 5px;
+}

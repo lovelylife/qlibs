@@ -89,18 +89,24 @@ __init__ : function(json) {
       _this.hidePopup();
     }
   
-    _this.hwnd.onmouseup = function(evt) {
-      evt = evt || event;
-      if(_this.subwnd) { 
-        return; 
+    _this.hwnd.onmouseup = (function(o, c) {
+      return function(evt) {
+        console.log('menu onmouseup');
+        evt = evt || window.event;
+        if(o.subwnd) { 
+          return; 
+        }
+        var call_back = function(e) {};
+        if((typeof c == 'function' ))
+          call_back = c;
+        if(call_back(o) == 0)
+          return false; 
+        var isHideTop = true;
+        if(isHideTop) 
+          o.topMenu && o.topMenu.hide(); 
       }
-      var callback = (typeof json.callback == 'function') ? json.callback : function(e){};
-      if(callback(_this) == 0)  
-        return; 
-      var isHideTop = true;
-      if(isHideTop) 
-        _this.topMenu && _this.topMenu.hide(); 
-    }
+    })(this, json.callback);
+    
   }
   
   _this.hwnd.oncontextmenu = function(evt) { return false; }
@@ -266,6 +272,7 @@ show : function(evt){
   }
 
   Q.addEvent(window, "blur", _this._fHide);
+  Q.addEvent(window, "resize", _this._fHide);
   Q.addEvent(document, "mouseup", _this._fHide);
 },
 
@@ -323,24 +330,17 @@ hide : function() {
 });
 
 var class_menubar = Q.extend({
-hwnd: null,
 focus: null,
 items: null,
 __init__: function(json) {
   json = json || {};
   this.items = new Q.LIST();
-  this.hwnd = document.createElement('DIV');
-  this.hwnd.className = "q-contextmenu q-contextmenu-bar";
-  Q.$(json.container).appendChild(this.hwnd);
 },
 
-append: function(text, menu) {
-  var item = document.createElement('button');
-  item.className = "q-item";
-  item.innerText = text;
+append: function(item, menu) {
   item.onmousedown = (function(bar, i, m) { 
     return function(evt) {
-      //console.log("mousedown item")
+      console.log("mousedown item")
       evt = evt || window.event;
       var obj = Q.isNS6() ? evt.target : evt.srcElement; // 获取鼠标悬停所在的对象句柄
       if((obj == i) && (bar.focus)) {
@@ -356,7 +356,7 @@ append: function(text, menu) {
 
   item.onfocus = (function(bar, i, m) { 
     return function(evt) {
-      //console.log("onfocus item")
+      console.log("onfocus item")
       bar.focus = true;
       if(m)
         m.showElement(i);
@@ -366,8 +366,8 @@ append: function(text, menu) {
   item.onblur = (function(bar, m) { return function(evt) {
     bar.focus = false;
     if(m)
-      m.hide();
-    //console.log("kill focus -> " + bar.focus);
+      setTimeout(function() { m.hide()}, 300);
+    console.log("kill focus -> " + bar.focus);
   }})(this, menu);
 
   item.onmouseover = (function(bar, i) { return function(evt) {
@@ -375,10 +375,9 @@ append: function(text, menu) {
       i.focus();
   }})(this, item);
 
-  this.hwnd.appendChild(item);
   this.items.append(item);
 }
 
-})
+});
 
 
