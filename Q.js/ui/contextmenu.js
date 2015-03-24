@@ -89,10 +89,16 @@ __init__ : function(json) {
       _this.hidePopup();
     }
   
+    _this.hwnd.onmousedown = (function(o, c) {
+      return function(evt) {
+        console.log('menu onmousedown');
+      }
+    })(this, json);
     _this.hwnd.onmouseup = (function(o, c) {
       return function(evt) {
         console.log('menu onmouseup');
         evt = evt || window.event;
+        
         if(o.subwnd) { 
           return; 
         }
@@ -100,10 +106,10 @@ __init__ : function(json) {
         if((typeof c == 'function' ))
           call_back = c;
         if(call_back(o) == 0)
-          return false; 
-        var isHideTop = true;
-        if(isHideTop) 
-          o.topMenu && o.topMenu.hide(); 
+          return false;
+          
+        o.topMenu && o.topMenu.hide();
+        return true;
       }
     })(this, json.callback);
     
@@ -130,7 +136,7 @@ addSubMenuItem : function(subItem) {
     Q.addClass(this.hwnd, 'q-more');
     this.subwnd.onmousedown = function(evt) { 
       evt = evt || event;
-      evt.cancelBubble = true;
+      //evt.cancelBubble = true;
     }
     this.subwnd.oncontextmenu = function(evt) { return false; }
   }
@@ -205,14 +211,29 @@ __init__ : function(json) {
   json = json || {};
   var _this = this;
   _this.items = [];
-  _this._fHide = Q.bind_handler(this, this.hide);
+  _this._fHide = (function(o, h) {
+    return function(evt) {
+      evt = evt || window.event;
+      var target = Q.isNS6() ? evt.target : evt.srcElement; // 获取鼠标悬停所在的对象句柄
+      while(target && (!Q.hasClass(target,"q-contextmenu")) && (target != document.body)) {
+        target = target.parentNode;
+      }
+
+      if((!target) || target == document.body)
+        h();
+      else
+      {
+        evt.returnValue = false;
+        return false;
+      }
+    }
+  })(this, Q.bind_handler(this, this.hide));  //Q.bind_handler(this, this.hide);
   if(typeof json.on_popup == 'function') {
     this._fOnPopup = json.on_popup;
   } else {
     this._fOnPopup = function(popup) {};
   }
 
-  Q.addEvent(document, 'mousedown', this._fHide);
   _this.initview(json);
 },
 
@@ -221,13 +242,6 @@ initview : function(json) {
   this.hwnd.className = 'q-contextmenu';
   document.body.appendChild(this.hwnd);
   Q.addClass(this.hwnd, json.style);
-
-  this.hwnd.onmousedown = function(evt){
-    evt = evt || window.event;
-    evt.cancelBubble = true;
-  }
-  
-  Q.addEvent(document, 'mousedown', this._fHide);
 },
 
 addMenuItem : function(item) {
@@ -276,8 +290,7 @@ show : function(evt){
 showElement : function(element, isClosed) {
   var _this = this;
   _this.hide();
-  setTimeout(function() {
-  Q.addEvent(document, "mousedown", _this._fHide);}, 100);
+  Q.addEvent(document, "mousedown", _this._fHide);
   Q.addEvent(window, "blur", this._fHide);
   this._fOnPopup(true);
   if(element.nodeType != Q.ELEMENT_NODE)  
@@ -333,7 +346,12 @@ items: null,
 __init__: function(json) {
   json = json || {};
   this.items = new Q.LIST();
-  this._hide = Q.bind_handler(this, function() {console.log('blur');this.focus = false;});
+  this._hide = Q.bind_handler(this, function() {
+    console.log('blur');
+    Q.removeEvent(document, "mousedown", this._hide);
+    Q.removeEvent(window, "blur", this._hide);
+    this.focus = false;
+  });
 },
 
 append: function(item, menu) {
@@ -343,9 +361,7 @@ append: function(item, menu) {
       console.log("mousedown item")
       evt = evt || window.event;
       if((bar.focus)) {
-        Q.removeEvent(document, "mousedown", bar._hide);
-        Q.removeEvent(window, "blur", bar._hide);
-        bar.focus = false;
+        bar._hide();
         if(m)
           m.hide();
       } else {
@@ -383,5 +399,4 @@ focus_item : function(item) {
 },
 
 });
-
 
