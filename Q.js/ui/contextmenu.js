@@ -38,7 +38,7 @@ type : -2,
 isAjust : false,
 clickHidden : true,
 items : null,
-binddata : null,
+data : null,
 isChecked : true,
 popup_style: null,
 __init__ : function(json) {
@@ -46,7 +46,7 @@ __init__ : function(json) {
   var _this = this;
   _this.items = [];
   _this.parentMenu = json.parentMenu;
-  _this.binddata = json.data;
+  _this.data = json.data;
   this.popup_style = json.popup_style;
   this.type = json.type || MENU_ITEM; 
   // construct dom
@@ -91,7 +91,7 @@ __init__ : function(json) {
   
     _this.hwnd.onmousedown = (function(o, c) {
       return function(evt) {
-        console.log('menu onmousedown');
+        Q.printf('menu onmousedown');
       }
     })(this, json);
     _this.hwnd.onmouseup = (function(o, c) {
@@ -192,7 +192,7 @@ showPopup : function() {
 },
 
 data : function() {
-  return this.binddata;  
+  return this.data;  
 },
 
 });
@@ -218,7 +218,7 @@ __init__ : function(json) {
       while(target && (!Q.hasClass(target,"q-contextmenu")) && (target != document.body)) {
         target = target.parentNode;
       }
-
+      //console.log(target);
       if((!target) || target == document.body)
         h();
       else
@@ -340,6 +340,19 @@ hide : function() {
 }
 });
 
+function fireMouseEvent(element, evtName) {
+  if( document.createEvent ) 
+  {
+     var evObj = document.createEvent('MouseEvents');
+     evObj.initEvent( evtName, true, false );
+     element.dispatchEvent(evObj);
+  }
+  else if( document.createEventObject )
+  {
+      element.fireEvent('on'+evtName);
+  }
+}
+
 var class_menubar = Q.extend({
 focus: null,
 items: null,
@@ -359,6 +372,7 @@ append: function(item, menu) {
   item.onmousedown = (function(bar, i, m) { 
     return function(evt) {
       console.log("mousedown item")
+      fireMouseEvent(document.body, 'mousedown');
       evt = evt || window.event;
       if((bar.focus)) {
         bar._hide();
@@ -372,6 +386,7 @@ append: function(item, menu) {
           m.showElement(i);
       }
       // 阻止事件冒泡
+      //evt.returnValue = false;
       evt.cancelBubble = true;
       return true;
     } 

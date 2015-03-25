@@ -101,7 +101,11 @@ Q.Ready(function() {
     */
 
 
-  g_box = new Q.dropdownlist({render: Q.$('dropdownlist')});
+  g_box = new Q.dropdownlist({render: Q.$('dropdownlist'), 
+    on_change: function(text,value) {
+      console.log(text + ":::" + value);
+    }
+  });
   g_box2 = new Q.dropdownlist({render: Q.$('wayixia-view'), wstyle: 'os-start-menu'});
 
 });
@@ -115,20 +119,17 @@ Q.Ready(function() {
 <br>
 <br>
 基于select生成
-<BR>
-<select id="dropdownlist" style="width: 300px; height: 30px;display: none;">
+<hR>
+<select id="dropdownlist" style="width: 300px; height: 30px;display: ;">
   <option value="author">作者</option>
   <option value="category">分类</option>
   <option value="color">色系</option>
-  <option value="icon">图标</option>
-  <option value="series">系列</option>
   <option value="tag" selected="selected">标签</option>
 </select>
 
-<BR>
-<select id="wayixia-view" style="width: 300px; height: 30px;display: none;">
+<select id="wayixia-view" style="width: 300px; height: 30px;display: ;">
   <option value="size_small">小图(100x100)</option>
-  <option value="size_normal">中图(200x100)</option>
+  <option value="size_normal" selected>中图(200x100)</option>
   <option value="size_large">大图(500x300)</option>
 </select>
 
