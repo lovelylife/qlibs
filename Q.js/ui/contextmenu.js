@@ -372,13 +372,13 @@ append: function(item, menu) {
   item.onmousedown = (function(bar, i, m) { 
     return function(evt) {
       console.log("mousedown item")
-      fireMouseEvent(document.body, 'mousedown');
       evt = evt || window.event;
       if((bar.focus)) {
         bar._hide();
         if(m)
           m.hide();
       } else {
+        fireMouseEvent(document.body, 'mousedown');
         bar.focus = true;
         Q.addEvent(document, "mousedown", bar._hide);
         Q.addEvent(window, "blur", bar._hide);

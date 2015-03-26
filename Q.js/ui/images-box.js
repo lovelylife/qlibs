@@ -188,6 +188,13 @@ display_images : function(accept_images, data, init) {
   }
 },
 
+check_size : function(item, min_width, min_height) {
+  var width = item.getAttribute('data-width');
+  var height = item.getAttribute('data-height');
+  item.style.display = ((width < min_width) || (height < min_height)) ? 'none':'';
+},
+
+
 copy_data : function(src_object) {
   var target_object = {}; 
   for(var name in src_object) {
