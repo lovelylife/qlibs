@@ -122,7 +122,8 @@ set_style : function(new_class) {
 
 on_item_size : function(box) {
   var img = box.inner_img;
-  var size = this.calculate(box.offsetWidth, box.offsetHeight, img.width, img.height);
+  // warning: don't use box.offsetWidth or box.offsetHeight when display is none; 
+  var size = this.calculate(parseInt(box.currentStyle.width, 10), parseInt(box.currentStyle.height, 10), img.width, img.height);
   img.style.cssText = 'margin-top:'+size.top+'px;width:'+size.width+'px;height:'+size.height+'px;'
 },
 
