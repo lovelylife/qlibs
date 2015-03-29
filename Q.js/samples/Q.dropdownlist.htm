@@ -32,7 +32,9 @@
   -moz-box-shadow:0 1px 15px rgba(0,0,0,.2);
   -webkit-box-shadow:0 1px 15px rgba(0,0,0,.2);
   min-width: 200px;
-  background-image: url(images/contextmenu/menuleft.gif);
+
+  background-color: #FFF;
+  background-image: none;
   background-repeat: repeat-y;
   background-position: left top;
   z-index: 910000;
@@ -84,28 +86,12 @@ var g_box;
 
 Q.Ready(function() {
 
-    /*
-    var images = [
-      'http://wayixia.com/uploads/image/64e05114-553c-4b34-97b5-a7f1082e1698.jpg',
-      'http://wayixia.com/uploads/image/3c6d55fbb2fb4316adf03a9722a4462308f7d374.jpg',
-      'http://wayixia.com/uploads/image/1347287735218.jpg',
-      'http://wayixia.com/uploads/image/1372211389301.jpg',
-      'http://wayixia.com/uploads/image/134849642946.jpg',
-    ]
-    var displays = {}
-    for(var i=0; i < images.length; i++) {
-      var src = images[i];
-       displays[src] = src;
-    }
-
-    */
-
-
   g_box = new Q.dropdownlist({render: Q.$('dropdownlist'), 
     on_change: function(text,value) {
       console.log(text + ":::" + value);
     }
   });
+  g_box.set_value('category');
   g_box2 = new Q.dropdownlist({render: Q.$('wayixia-view'), wstyle: 'os-start-menu'});
 
 });
@@ -124,7 +110,7 @@ Q.Ready(function() {
   <option value="author">作者</option>
   <option value="category">分类</option>
   <option value="color">色系</option>
-  <option value="tag" selected="selected">标签</option>
+  <option value="tag" selected>标签</option>
 </select>
 
 <select id="wayixia-view" style="width: 300px; height: 30px;display: ;">

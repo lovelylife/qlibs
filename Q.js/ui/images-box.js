@@ -26,29 +26,34 @@ create_element: function(config, init) {
   box.setAttribute('data-width', config.width);
   box.setAttribute('data-height', config.height);
   box.className = 'q-box-item';
+  this.hwnd.appendChild(box);
+  // init box
   box.innerHTML = '<span class="q-box-info"> \
     <span class="wh">'+config.width+'x'+config.height+'<span> </span> \
     </span>';
+  // image container
+  var img_container = document.createElement('div');
+  var a = document.createElement('a');
+  var img = document.createElement('img');
+  box.inner_img = img;
+  a.appendChild(img);
+  img_container.appendChild(a);
+  box.appendChild(img_container);
 
-  this.hwnd.appendChild(box);
-  var img = document.createElement('div');
-  box.appendChild(img);
+  // mask layer
   var mask = document.createElement('div');
   mask.className = 'select-mask';
   box.appendChild(mask);
 
-  var a = document.createElement('a');
-  img.appendChild(a);
-  var inner_img = document.createElement('img');
-  a.appendChild(inner_img);
-  box.inner_img = inner_img;
-
-  img.className = 'wayixia-image';
+  // init event
+  img_container.className = 'wayixia-image';
   a.href='javscript:void(0);';
   a.onclick=function(evt){ evt.preventDefault();};
-  inner_img.src=config.src;
-  inner_img.className = 'image';
-  inner_img.style.cssText = 'margin-top:'+config.margin_top+'px;width:'+config.size_width+'px;height:'+config.size_height+'px;'
+  // calculate size
+  var size = this.calculate(box.offsetWidth, box.offsetHeight, config.width, config.height);
+  img.src=config.src;
+  img.className = 'image';
+  img.style.cssText = 'margin-top:'+size.top+'px;width:'+size.width+'px;height:'+size.height+'px;'
   
   box.onmouseover = function() {
     if(!_this.is_item_enabled(this))
@@ -117,11 +122,12 @@ set_style : function(new_class) {
 
 on_item_size : function(box) {
   var img = box.inner_img;
+  var size = this.calculate(box.offsetWidth, box.offsetHeight, img.width, img.height);
+  img.style.cssText = 'margin-top:'+size.top+'px;width:'+size.width+'px;height:'+size.height+'px;'
+},
+
+calculate : function(max_width, max_height, img_width, img_height) {
   // filter image by size
-  var img_width = img.width;
-  var img_height = img.height;
-  var max_width = box.offsetWidth;
-  var max_height = box.offsetHeight;
   var result = max_width * img_height - max_height * img_width;
   var width = 0;
   var height = 0;
@@ -134,8 +140,8 @@ on_item_size : function(box) {
     height = max_height;
     width  = (img_width*height)/(img_height*1.0);
   }
-  var margin_top =  ((max_height-height)/2);
-  img.style.cssText = 'margin-top:'+margin_top+'px;width:'+width+'px;height:'+height+'px;';
+  
+  return { width: width, height: height, top: (max_height-height)/2 };
 },
 
 //
@@ -146,31 +152,10 @@ getImageInfoHandler : function(data, init) {
   var _this = this;
   return function() {
     var img = this;
-    // filter image by size
-    var img_width = img.width;
-    var img_height = img.height;
-    var max_width = 200;
-    var max_height = 200;
-    var result = max_width * img_height - max_height * img_width;
-    var width = 0;
-    var height = 0;
-    if(result<0) {
-      //img.width = max_width;  // 宽度
-      width  = max_width;
-      height = (max_width*img_height)/(img_width*1.0);
-    } else {
-      //img.height = max_height;
-      height = max_height;
-      width  = (img_width*height)/(img_height*1.0);
-    }
-
     var image_item = _this.copy_data(data);        
     image_item['src'] = img.src;
     image_item['width'] = img.width;
     image_item['height'] = img.height;
-    image_item['size_width'] = width;
-    image_item['size_height'] = height;
-    image_item['margin_top'] =  ((max_height-height)/2);
     _this.create_element(image_item, init);
   };
 },
