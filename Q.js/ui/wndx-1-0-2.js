@@ -140,8 +140,9 @@ function $MaskWindow(wndNode, bmask) {
       document.body.style.overflow = layer_mask.body_style;
     }
   }
-  $GetMask(wndNode).style.display=(!!bmask)?'':'none'; 
+  layer_mask.style.display=(!!bmask)?'':'none'; 
 }
+
 function $CreateMaskLayer(wndNode, extra_style) {
   wndNode.layer_mask = document.createElement('DIV');
   wndNode.layer_mask.body_style = document.body.currentStyle.overflow;
@@ -441,10 +442,15 @@ function $DefaultWindowProc(hwnd, msg, data) {
     break;
   case MESSAGE.CLOSE:
     //Q.printf('DefaultWindowProc MESSAGE.CLOSE');
-    if(hwnd.on_close && hwnd.on_close()) 
-      $DestroyWindow(hwnd);
-    else
+    var destroy_window = true;
+    if(hwnd.on_close) 
+      destroy_window = hwnd.on_close();
+    
+    if(destroy_window === false) {
       $ShowWindow(hwnd, false);
+    } else {
+      $DestroyWindow(hwnd);
+    }
     break;  
   
   case MESSAGE.ACTIVATE:
@@ -941,6 +947,9 @@ domodal : function(wndNode) {
   this.show(true);
   $ResizeTo(this.hwnd, this.hwnd.nWidth, this.hwnd.nHeight);
   this.center();
+  if($IsDesktopWindow(wndNode)) {
+    this.set_zindex(100001);
+  }
 },
  
 end_dialog : function(code) {
@@ -981,8 +990,74 @@ __init__: function(config) {
   }
   Q.Dialog.prototype.__init__.call(this, config);
   this.domodal(config.parent);
-  this.adjust();
-  this.center();
+  //this.adjust();
+  //this.center();
 }
 }); // Q.MessageBox
+
+/* wndx template */
+Q.ui = Q.extend({
+ui_iframe: null,
+__init__: function(json) {
+  json = json || {};
+  this.ui_iframe = document.createElement("IFRAME");
+  this.ui_iframe.src=json.src;
+  this.ui_iframe.onload = function() {    
+    json.oncomplete(true);
+  }
+  
+  this.ui_iframe.onerror= function() {
+    json.oncomplete(false);
+    document.body.removeChild(this);
+  }
+  this.ui_iframe.style.display = "none";
+  this.ui_iframe.src=json.src;
+  document.body.appendChild(this.ui_iframe);
+},
+
+template: function(id) {
+  var doc = this.ui_iframe.contentDocument || this.ui_iframe.contentWindow.document;
+  var tpl = doc.getElementById(id);
+  if(tpl)
+    return tpl.cloneNode(true);
+
+  return null;
+},
+
+bind_css : function() {
+  // get ui style
+	var heads = document.getElementsByTagName("head");
+  var doc = this.ui_iframe.contentDocument || this.ui_iframe.contentWindow.document;
+  for(var i=0; i < doc.styleSheets.length; i++) {
+    var sheet =doc.styleSheets[i];
+    if(!sheet) // no <style>
+      return;
+    var style;
+    if(sheet.ownerNode.innerHTML == "" && (!!sheet.href)) {
+      // link
+      style=document.createElement("link");
+	    style.setAttribute("type", "text/css");
+	    style.setAttribute("rel", "stylesheet");
+	    style.setAttribute("href", sheet.href);
+    } else {
+      var cssText = sheet.ownerNode.innerHTML;
+      style=document.createElement("style");
+	    style.setAttribute("type", "text/css");
+	    if(style.styleSheet){// IE
+		    style.styleSheet.cssText = cssText;
+	    } else {// w3c
+		    var textNode = doc.createTextNode(cssText);
+		    style.appendChild(textNode);
+	    }
+    }
+	  if(heads.length)
+		  heads[0].appendChild(style);
+	  else
+		  document.documentElement.appendChild(style);
+  } // for
+
+},
+
+}); // end of Q.ui
+
 

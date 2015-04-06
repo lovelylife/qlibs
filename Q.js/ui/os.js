@@ -5,7 +5,7 @@
  
  $ bugs Fixed:
 --------------------------------------------------------------------------------------*/
-
+/*
 // ui template class 
 Q.ui = Q.extend({
 ui_iframe: null,
@@ -69,18 +69,9 @@ bind_css : function() {
 
 },
 
-/*
-bind_style_sheet : function(style) {
-	var heads = document.getElementsByTagName("head");
-	if(heads.length)
-		heads[0].appendChild(style);
-	else
-		document.documentElement.appendChild(style);
-}
-*/
-
 })
 
+*/
 
 
 var g_simple_os = null;
