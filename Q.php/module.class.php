@@ -98,10 +98,10 @@ class CLASS_MODULE {
   }
 }
 
-class CLASS_RPC 
+class CLASS_QRPCMODULE 
   extends CLASS_MODULE
 {
-  function CLASS_RPC() {
+  function CLASS_QRPCMODULE() {
     parent::__construct(); 
   }
 
@@ -117,10 +117,10 @@ class CLASS_RPC
   }
 }
 
-class CLASS_QMODULE
+class CLASS_QUIMODULE
   extends CLASS_MODULE 
 {
-  function CLASS_QMODULE() { parent::__construct(); }
+  function CLASS_QUIMODULE() { parent::__construct(); }
 
   function doMain($action) {
     $method=$action;
