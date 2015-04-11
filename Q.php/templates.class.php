@@ -169,7 +169,7 @@ class CLASS_TEMPLATES
     $theApp = $this->theApp;
     extract($this->theApp->getRefAPPS(), EXTR_PREFIX_ALL, 'app');
     extract($this->theApp->getRefCONFIG(), EXTR_PREFIX_ALL, 'cfg');
-    extract($this->vars_cache_, EXTR_PREFIX_ALL, 'var');
+    extract($this->vars_cache_, EXTR_PREFIX_ALL, 'vars');
     extract($this->tags, EXTR_PREFIX_ALL, 'html_tags');
     extract($_GET, EXTR_PREFIX_ALL, 'get');
     extract($_POST, EXTR_PREFIX_ALL, 'post');
@@ -204,7 +204,7 @@ class CLASS_TEMPLATES
     );
     //$content = $this->complie_php_vars($content);
     $content = preg_replace_callback(
-      '/\{\$+(var|cfg|get|post|app):(\w+)((\.\w+)*)(\s+\w+="[^"]*")*\s*\/?\}/is', 
+      '/\{\$+(vars|cfg|get|post|app):(\w+)((\.\w+)*)(\s+\w+="[^"]*")*\s*\/?\}/is', 
       array($this, $phplabel?'compile_vars':'compile_values'),
       $content
     );
@@ -214,7 +214,7 @@ class CLASS_TEMPLATES
 
   function complie_php_vars($content) {
     return preg_replace_callback(
-        '/\{\$+(var|cfg|get|post|app):(\w+)((\.\w+)*)(\s+\w+="[^"]*")*\s*\/?\}/is', 
+        '/\{\$+(vars|cfg|get|post|app):(\w+)((\.\w+)*)(\s+\w+="[^"]*")*\s*\/?\}/is', 
         array($this, 'compile_values'),
         $content
     );
@@ -456,7 +456,7 @@ class CLASS_TEMPLATES
   // 获取指定id的标签
   function tag($id)                { return $this->tags[$id]; }
   function app($varname)           { return $this->theApp->getAPPS($varname);   } 
-  function var($varname)           { return $this->query($varname); }  
+  function vars($varname)           { return $this->query($varname); }  
   function cfg($name)              { return $this->theApp->getCONFIG($name);    }    
   function get($name)              { return $_GET[$name]; }    
   function post($name)             { return $_POST[$name];}
