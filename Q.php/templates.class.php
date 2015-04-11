@@ -8,7 +8,7 @@
 
  $ examples
  vars   
-  {$globals:varname}, {$res:resname}, {$fields:fieldname}
+  {$globals:varname}, {$app:resname}, {$var:name}
  command 
   {#template templatename}, {#dict src="ddd.xml"}
  htmltag 
@@ -164,7 +164,7 @@ class CLASS_TEMPLATES
     return $this->compile($template_html, false);
   }
 
-  function _render($php_file  ) {
+  function _render($php_file) {
     // 导入应用程序和全局变量到当前符号表
     $theApp = $this->theApp;
     extract($this->theApp->getRefAPPS(), EXTR_PREFIX_ALL, 'app');
@@ -456,7 +456,7 @@ class CLASS_TEMPLATES
   // 获取指定id的标签
   function tag($id)                { return $this->tags[$id]; }
   function app($varname)           { return $this->theApp->getAPPS($varname);   } 
-  function fields($varname)        { return $this->query($varname); }  
+  function var($varname)           { return $this->query($varname); }  
   function cfg($name)              { return $this->theApp->getCONFIG($name);    }    
   function get($name)              { return $_GET[$name]; }    
   function post($name)             { return $_POST[$name];}
