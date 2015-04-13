@@ -14,10 +14,8 @@
 
 define('MAGIC_QUOTES_GPC', get_magic_quotes_gpc());
 
-// 导入系统配置
-include(_QROOT."/config.php");
 // 导入系统常用函数库
-include(_QROOT."/function.php");
+require(_QROOT."/function.php");
 
 // check session path
 /*
@@ -98,7 +96,7 @@ $S_AJAX_MODE = (isset($_GET['inajax']) && (strtolower($_GET['inajax']) == "true"
 
 // Ajax 处理
 if($S_AJAX_MODE) {
-  include_once(_QROOT.'/ajax.lib.class.php');
+  require(_QROOT.'/ajax.lib.class.php');
   $data = $_POST['postdata'];
   // 去掉单引号转义，否则json_decode无法工作
   if(MAGIC_QUOTES_GPC) 
@@ -115,17 +113,17 @@ if($S_AJAX_MODE) {
 }
 
 // for templates
-require_file(_QROOT."/algory.class.php");
-require_file(_QROOT."/page.class.php");
-require_file(_QROOT."/configfile.class.php");
-require_file(_QROOT.'/dtl.class.php');
-require_file(_QROOT.'/templates.class.php');
+require(_QROOT."/algory.class.php");
+require(_QROOT."/page.class.php");
+require(_QROOT."/configfile.class.php");
+require(_QROOT.'/dtl.class.php');
+require(_QROOT.'/templates.class.php');
 // application frame work
-require_file(_QROOT.'/module.class.php');
-require_file(_QROOT.'/application.class.php');     
-require_file(_QROOT.'/command.class.php');
+require(_QROOT.'/module.class.php');
+require(_QROOT.'/application.class.php');     
+require(_QROOT.'/command.class.php');
 
 // application loadder
-require_file(_QROOT.'/apploader.class.php');
+require(_QROOT.'/apploader.class.php');
 
 ?>

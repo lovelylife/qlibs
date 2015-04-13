@@ -103,7 +103,7 @@ class CLASS_TEMPLATES
 
     // 初始化标签
     //@require
-    $array = require_file($this->tpl_tags_file_);
+    $array = require_once($this->tpl_tags_file_);
     foreach($array as $key => $tag_config) {
       $ui_object = $this->create_object($tag_config['nodeName_']);
       $ui_object->unserialize($tag_config);
@@ -417,7 +417,7 @@ class CLASS_TEMPLATES
       $dict_file = $this->theApp->getDataDir()
                    ."/".$attrs['src'].".php";
       if(file_exists($dict_file)) {
-        $arr = require_file($dict_file);
+        $arr = require_once($dict_file);
         if(is_array($arr) && !empty($arr)) {
           $this->dict = array_merge($this->dict, $arr);
         }

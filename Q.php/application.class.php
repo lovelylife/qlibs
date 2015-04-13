@@ -58,7 +58,7 @@ class CLASS_APPLICATION {
     $this->_refAPPS['module']= $this->_refAPPS['app'] .'?'. 'mod='. $this->module_;
     $this->_refAPPS['host']  = $this->host_;
     // 导入配置数据
-    $this->_refCONFIG = require_file($this->root_.'/config.php');
+    $this->_refCONFIG = require($this->root_.'/config.php');
     // url rewrite
     $url_rewrite = $this->Config("site.url_rewrite");
     //print_r($url_rewrite);
@@ -101,7 +101,7 @@ class CLASS_APPLICATION {
       trigger_error("have no authority", E_USER_ERROR);
     }
     // 模块文件
-    require_file($module_file);
+    require($module_file);
 
     // 加载模块
     $class = 'CLASS_MODULE_'.strtoupper($this->module_);
@@ -211,7 +211,7 @@ class CLASS_APPLICATION {
       }
     }
     
-    $require_files = require_file($cfgfile);
+    $require_files = require($cfgfile);
     if(is_array($require_files)) {
       foreach($require_files as $file) {
         if(file_exists($file)) {

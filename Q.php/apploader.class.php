@@ -35,7 +35,7 @@ class CLASS_APPLOADER {
     }
         
     // 应用程序文件
-    require_file($app_file);
+    require($app_file);
   
     // 检测有效模块，如果不存在使用默认模块处理
     $valid_module = $args['module'];
@@ -66,7 +66,7 @@ class CLASS_APPLOADER {
       trigger_error("fatal error, file \"app.required.php\" is not found.", E_USER_ERROR);
     }
         
-    $paths = require_file($appRequiredFile);
+    $paths = require($appRequiredFile);
     foreach($paths as $key => $value) {
       if(!key_exists($key, $args) && preg_match('/_dir$/i', $key)) {
         $dirName = $appRoot.$value;

@@ -45,14 +45,6 @@ function daddslashes($str, $force = false) {
   return $str;
 }
 
-
-function require_file($f) {
-  if(!file_exists($f)) {
-    trigger_error("require file {$f} is not exists", E_USER_ERROR);
-  }
-  return require($f);
-}
-
 function get_path($dir) {
   return str_ireplace(_QDOCUMENT_ROOT, "", $dir);
 }
