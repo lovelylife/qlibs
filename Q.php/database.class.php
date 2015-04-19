@@ -1,25 +1,13 @@
 <?php
 /*--------------------------------------------------------------------
- $ module: CLASS_DATABASE For CMS@Home System
- $ date:   2010-05-07 21:23:28
- $ author: LovelyLife
- $ last modified: 2010-05-07 23:23:28
- $ copyright www.onlyaa.com
+ $ module: CLASS_DATABASE For Q.php
+ $ date:   2015-04-20 00:23:28
+ $ author: Q
+ $ copyright@wayixia.com
 ----------------------------------------------------------------------*/
 
 (!defined('DB_MYSQL')) && define('DB_MYSQL', 1);
 (!defined('DB_MSSQL')) && define('DB_MSSQL', 2);
-
-
-/*
-// 数据库类必须要实现的接口
-interface db_interfaces {
-  // 链接数据库
-  function connect($host, $user, $pwd, $extra = array());
-  function execute($sql, &$context);
-}
-
-*/
 
 // 数据库基类
 class CLASS_DB_BASE {
@@ -31,10 +19,6 @@ class CLASS_DB_BASE {
    // 构造函数
   function CLASS_DB_BASE(){
     $this->__construct();
-  }
-  
-  function connect3() {
-    print('connect database!');
   }
 }
 
@@ -51,6 +35,7 @@ class CLASS_DB_MYSQL extends CLASS_DB_BASE {
   
   function __construct($host, $user, $pwd, $dbname, $prefix, $lang) {
     parent::__construct();
+    $this->err = "";
     $this->db_host = $host;
     $this->db_user = $user;
     $this->db_pwd  = $pwd;
@@ -104,14 +89,13 @@ class CLASS_DB_MYSQL extends CLASS_DB_BASE {
   }
 
   // 组合update set部分的语句
-  static function updateSQL($table, $fields, $isPrefix = true) {
+  static function updateSQL($table, $fields) {
     if(!is_array($fields)) { return -1;  }
     $setUpdates = array();
     foreach($fields as $name => $value) {
       array_push($setUpdates, "`".$name."` = '".addslashes($value)."'");
     }
-    $prefix = $isPrefix ? "##__" : "";
-    $sql = "UPDATE `{$prefix}".$table."` set " .implode(",", $setUpdates);
+    $sql = "UPDATE `".$table."` set " .implode(",", $setUpdates);
     return $sql;
   }
   
@@ -236,17 +220,6 @@ class CLASS_DB_MYSQL extends CLASS_DB_BASE {
   function free_result($result) {
     mysql_free_result($result);
   }
-
-  
-  function sql_push($cachename, $sql) {
-    global $_mysql_cache;
-    $_mysql_cache[$cachename] = $sql;
-  }
-  
-  function sql_query($cachename) {
-    global $_mysql_cache;
-    return $_mysql_cache[$cachename];  
-  }
   
   function close() {
     if($this->linker) {
@@ -262,7 +235,7 @@ class CLASS_DB_MYSQL extends CLASS_DB_BASE {
   }
 
   function get_error() {
-    return $this->err."\r\n".mysql_error();
+    return $this->err."\r\n".mysql_error($this->linker);
   }
 }
 
