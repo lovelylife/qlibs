@@ -203,26 +203,28 @@
   }
 
   // 获取element的绝对位置
-  Q.absPosition = function(elem) {
-    if ( !elem ) 
-      return { width : elem.offsetWidth, height : elem.offsetHeight,  left : 0,  top : 0  };
-    var top = 0, left = 0;
-    if ( "getBoundingClientRect" in document.documentElement ){var box = elem.getBoundingClientRect(), 
-      doc = elem.ownerDocument, 
-      body = doc.body, 
-      docElem = doc.documentElement,
-      //clientTop = docElem.clientTop || body.clientTop || 0, 
-      //clientLeft = docElem.clientLeft || body.clientLeft || 0,
-      top  = box.top; //  + (self.pageYOffset || docElem && docElem.scrollTop  || body.scrollTop ) - clientTop,
-      left = box.left; // + (self.pageXOffset || docElem && docElem.scrollLeft || body.scrollLeft) - clientLeft;
-    }else{
-      do{
-        top += elem.offsetTop || 0;
-        left += elem.offsetLeft || 0;
-        elem = elem.offsetParent;
-      } while (elem);
-    }
-    return { width : elem.offsetWidth, height : elem.offsetHeight,  left : left,  top : top  };
+  Q.absPosition = function(element) {
+    var left = 0;
+    var top = 0;
+    var width = element.offsetWidth;
+    var height = element.offsetHeight;
+    do{
+      top += element.offsetTop || 0;
+      left += element.offsetLeft || 0;
+      element = element.offsetParent;
+    } while (element);
+    
+    return { width : width, height : height,  left : left,  top : top  };
+  }
+
+  Q.absPositionEx = function(element) {
+    var rect = element.getBoundingClientRect();
+    var l= rect.left+document.documentElement.scrollLeft;
+　　var t =rect.top+document.documentElement.scrollTop;
+    var w =rect.width;
+    var h =rect.height;
+
+    return { width : w, height : h,  left : l,  top : t  };
   }
 
   // get scroll info
