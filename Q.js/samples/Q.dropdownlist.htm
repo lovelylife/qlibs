@@ -88,7 +88,7 @@ Q.Ready(function() {
 
   g_box = new Q.dropdownlist({render: Q.$('dropdownlist'), 
     on_change: function(text,value) {
-      console.log(text + ":::" + value);
+      Q.printf(text + ":::" + value);
     }
   });
   g_box.set_value('category');

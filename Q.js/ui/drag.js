@@ -117,6 +117,7 @@ Q.draging = Q.extend({
   },
 
   _mouseup : function(evt) {
+    
     var _this = this;
     clearTimeout(_this.timer);
     if(_this.is_drag ) {
@@ -126,7 +127,7 @@ Q.draging = Q.extend({
         _this.capture_wnd.q_onmove_end(_this.x, _this.y);
     }
     _this.is_moved=false;
-  },
+  }
 });
 
 Q.Ready(function() {

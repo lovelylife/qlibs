@@ -29,7 +29,7 @@ var CONST = {
 // dialog define
   IDCANCEL :          '0',
   IDOK     :          '1',
-  IDNO     :          '2',
+  IDNO     :          '2'
 }
 
 
@@ -67,7 +67,7 @@ __init__ : function(params) {
 
 end : function() {
   delete __GLOBALS.apps[this.id];
-},
+}
 
 });
 
@@ -140,7 +140,8 @@ function $MaskWindow(wndNode, bmask) {
       document.body.style.overflow = layer_mask.body_style;
     }
   }
-  layer_mask.style.display=(!!bmask)?'':'none'; 
+  if(layer_mask && layer_mask.style)
+    layer_mask.style.display=((!!bmask)?'':'none'); 
 }
 
 function $CreateMaskLayer(wndNode, extra_style) {
@@ -420,7 +421,7 @@ var MESSAGE = {
   MAX   : 2,
   CLOSE : 3,
   ACTIVATE : 4,
-  MOVE : 5,
+  MOVE : 5
 }
 
 function $DefaultWindowProc(hwnd, msg, data) {
@@ -650,12 +651,13 @@ function $CreateWindow(parent_wnd, title, wstyle, pos_left, pos_top, width, heig
         $MoveTo(this, x, y);
     }),
     onmove_end: Q.bind_handler(hwnd, function(x, y) {
-      if($GetWindowStatus(this) != CONST.SIZE_MAX) 
-        if(hwnd.on_move_end)
+      if($GetWindowStatus(this) != CONST.SIZE_MAX) { 
+        if(hwnd.on_move_end){
           hwnd.on_move_end(x, y);
-    }),
+        }
+      }
+    })
   });
-  
   return hwnd;
 }
 
@@ -867,7 +869,7 @@ show : function(isVisible) { $ShowWindow(this.hwnd, isVisible) },
 center : function()        { $CenterWindow(this.hwnd);         },
 activate : function()      { $BindWindowMessage(this.hwnd, MESSAGE.ACTIVATE)(); },
 adjust : function()        { $FitWindow(this.hwnd); },
-item: function(q_id)       { return qid($GetClient(this.hwnd), q_id); },
+item: function(q_id)       { return qid($GetClient(this.hwnd), q_id); }
 });
 
 /*-----------------------------------------------------------------
@@ -958,7 +960,7 @@ end_dialog : function(code) {
     return arguments[1];
   else 
     return CONST.IDCANCEL;
-},
+}
 
 }); // Q.Dialog
 
@@ -1056,7 +1058,7 @@ bind_css : function() {
 		  document.documentElement.appendChild(style);
   } // for
 
-},
+}
 
 }); // end of Q.ui
 

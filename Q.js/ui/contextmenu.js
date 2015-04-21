@@ -96,7 +96,7 @@ __init__ : function(json) {
     })(this, json);
     _this.hwnd.onmouseup = (function(o, c) {
       return function(evt) {
-        console.log('menu onmouseup');
+        Q.printf('menu onmouseup');
         evt = evt || window.event;
         
         if(o.subwnd) { 
@@ -193,7 +193,7 @@ showPopup : function() {
 
 data : function() {
   return this.data;  
-},
+}
 
 });
 
@@ -218,7 +218,7 @@ __init__ : function(json) {
       while(target && (!Q.hasClass(target,"q-contextmenu")) && (target != document.body)) {
         target = target.parentNode;
       }
-      //console.log(target);
+      //Q.printf(target);
       if((!target) || target == document.body)
         h();
       else
@@ -307,7 +307,7 @@ showElement : function(element, isClosed) {
     }
   }
   var workspace = Q.workspace();
-  var pos = Q.absPositionEx(element);
+  var pos = Q.absPosition(element);
   var left =0, top = 0;
   if(pos.top+pos.height+_this.hwnd.offsetHeight > workspace.height ) {
     top = pos.top-_this.hwnd.offsetHeight;
@@ -321,8 +321,8 @@ showElement : function(element, isClosed) {
   }
   
   var si = Q.scrollInfo();
-  _this.hwnd.style.left = si.l + left + 'px';
-  _this.hwnd.style.top = si.t + top + 'px';
+  _this.hwnd.style.left = (si.l + left) + 'px';
+  _this.hwnd.style.top = (si.t + top) + 'px';
 },
 
 hide : function() {
@@ -360,7 +360,7 @@ __init__: function(json) {
   json = json || {};
   this.items = new Q.LIST();
   this._hide = Q.bind_handler(this, function() {
-    console.log('blur');
+    Q.printf('blur');
     Q.removeEvent(document, "mousedown", this._hide);
     Q.removeEvent(window, "blur", this._hide);
     this.focus = false;
@@ -371,7 +371,7 @@ append: function(item, menu) {
   item._menu = menu;
   item.onmousedown = (function(bar, i, m) { 
     return function(evt) {
-      console.log("mousedown item")
+      Q.printf("mousedown item")
       evt = evt || window.event;
       if((bar.focus)) {
         bar._hide();
@@ -392,7 +392,7 @@ append: function(item, menu) {
     } 
   })(this, item, menu);
   item.onmouseover = (function(bar, i, m) { return function(evt) {
-    console.log('item onmouseover');
+    Q.printf('item onmouseover');
     if(bar.focus)
       bar.focus_item(i);
   }})(this, item, menu);
@@ -411,7 +411,7 @@ focus_item : function(item) {
     }
     return true;
   })  
-},
+}
 
 });
 

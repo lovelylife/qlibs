@@ -31,7 +31,19 @@
   String.prototype.trim      = function() { return this.replace(/(^\s*)|(\s*$)/g, ""); }
 　String.prototype.trim_left = function() { return this.replace(/(^\s*)/g,""); }
   String.prototype.trim_right= function() { return this.replace(/(\s*$)/g,""); }
-  
+
+  // fix Object.create not defined error 
+  if (!Object.create) {
+    Object.create = function(proto, props) {
+      if (typeof props !== "undefined") {
+        throw "The multiple-argument version of Object.create is not provided by this browser and cannot be shimmed.";
+    }
+    function ctor() { }
+      ctor.prototype = proto;
+      return new ctor();
+    };
+  }
+ 
   // 基于prototype的继承实现
   // 警告：调用父类的（被重载的）同名函数调用需要借助parent_class.prototype.method.call(this, arguments);
   var CLASS = function() {};
@@ -84,8 +96,8 @@
       Q._DEBUG.stdoutput.innerHTML += '<br/>'+message;
       Q._DEBUG.stdoutput.scrollTop = Q._DEBUG.stdoutput.scrollHeight;
     } else {
-      if(console)
-        console.log(message);
+      //if(console && console.log)
+      //  console.log(message);
     }
   };
 
@@ -191,27 +203,28 @@
   }
 
   // 获取element的绝对位置
-  Q.absPosition = function(element) {
-    var w = element.offsetWidth;
-    var h = element.offsetHeight;
-    var t = element.offsetTop;
-    var l = element.offsetLeft;
-    while( element = element.offsetParent) {
-      t+=element.offsetTop;
-      l+=element.offsetLeft;
+  Q.absPosition = function(elem) {
+    if ( !elem ) 
+      return { width : elem.offsetWidth, height : elem.offsetHeight,  left : 0,  top : 0  };
+    var top = 0, left = 0;
+    if ( "getBoundingClientRect" in document.documentElement ){var box = elem.getBoundingClientRect(), 
+      doc = elem.ownerDocument, 
+      body = doc.body, 
+      docElem = doc.documentElement,
+      //clientTop = docElem.clientTop || body.clientTop || 0, 
+      //clientLeft = docElem.clientLeft || body.clientLeft || 0,
+      top  = box.top; //  + (self.pageYOffset || docElem && docElem.scrollTop  || body.scrollTop ) - clientTop,
+      left = box.left; // + (self.pageXOffset || docElem && docElem.scrollLeft || body.scrollLeft) - clientLeft;
+    }else{
+      do{
+        top += elem.offsetTop || 0;
+        left += elem.offsetLeft || 0;
+        elem = elem.offsetParent;
+      } while (elem);
     }
-    return { width : w, height : h,  left : l,  top : t  };
-  };
-
-  Q.absPositionEx = function(element) {
-    var rect = element.getBoundingClientRect();
-    var l= rect.left+document.documentElement.scrollLeft;
-　　var t =rect.top+document.documentElement.scrollTop;
-    var w =rect.width;
-    var h =rect.height;
-
-    return { width : w, height : h,  left : l,  top : t  };
+    return { width : elem.offsetWidth, height : elem.offsetHeight,  left : left,  top : top  };
   }
+
   // get scroll info
   Q.scrollInfo = function() {
     var t, l, w, h;

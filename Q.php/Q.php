@@ -18,9 +18,9 @@ define('_QDEBUG', true);  // 开发环境， debug开启，将错误抛出
 // 获得脚本执行时间
 $_start = microtime(true);
 
-//if(_QDEBUG) {
-//  error_reporting(E_ALL || ~E_NOTICE || ~E_DEPRECATED);
-//}
+if(_QDEBUG) {
+  error_reporting(E_ALL || ~E_NOTICE || ~E_DEPRECATED);
+}
 
 // bind error handler
 set_error_handler(err_handler, E_ALL);
