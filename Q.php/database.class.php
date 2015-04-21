@@ -1,25 +1,13 @@
 <?php
 /*--------------------------------------------------------------------
- $ module: CLASS_DATABASE For CMS@Home System
- $ date:   2010-05-07 21:23:28
- $ author: LovelyLife
- $ last modified: 2010-05-07 23:23:28
- $ copyright www.onlyaa.com
+ $ module: CLASS_DATABASE For Q.php
+ $ date:   2015-04-20 00:23:28
+ $ author: Q
+ $ copyright@wayixia.com
 ----------------------------------------------------------------------*/
 
 (!defined('DB_MYSQL')) && define('DB_MYSQL', 1);
 (!defined('DB_MSSQL')) && define('DB_MSSQL', 2);
-
-
-/*
-// 数据库类必须要实现的接口
-interface db_interfaces {
-  // 链接数据库
-  function connect($host, $user, $pwd, $extra = array());
-  function execute($sql, &$context);
-}
-
-*/
 
 // 数据库基类
 class CLASS_DB_BASE {
@@ -31,10 +19,6 @@ class CLASS_DB_BASE {
    // 构造函数
   function CLASS_DB_BASE(){
     $this->__construct();
-  }
-  
-  function connect3() {
-    print('connect database!');
   }
 }
 
@@ -51,6 +35,7 @@ class CLASS_DB_MYSQL extends CLASS_DB_BASE {
   
   function __construct($host, $user, $pwd, $dbname, $prefix, $lang) {
     parent::__construct();
+    $this->err = "";
     $this->db_host = $host;
     $this->db_user = $user;
     $this->db_pwd  = $pwd;
@@ -79,9 +64,9 @@ class CLASS_DB_MYSQL extends CLASS_DB_BASE {
       exit();
     }
     // select database
-    @mysql_select_db($this->db_name);
+    @mysql_select_db($this->db_name, $this->linker);
     // set language
-    @mysql_query("SET NAMES '".$this->db_lang."';",$this->linker);
+    @mysql_query("SET NAMES '".$this->db_lang."';", $this->linker);
     // sql mode
     @mysql_query("SET sql_mode='' ;", $this->linker);
   }
@@ -97,22 +82,20 @@ class CLASS_DB_MYSQL extends CLASS_DB_BASE {
     }
     $setFields = "`".implode("`,`", $setFields)."`";
     $setValues = "'".implode("','", $setValues)."'";
-    
     $prefix = $isPrefix ? "##__" : "";
-    
     $sql = "INSERT INTO `{$prefix}".$table."` (".$setFields.") VALUES(".$setValues.")";
+
     return $sql;  
   }
 
   // 组合update set部分的语句
-  static function updateSQL($table, $fields, $isPrefix = true) {
+  static function updateSQL($table, $fields) {
     if(!is_array($fields)) { return -1;  }
     $setUpdates = array();
     foreach($fields as $name => $value) {
       array_push($setUpdates, "`".$name."` = '".addslashes($value)."'");
     }
-    $prefix = $isPrefix ? "##__" : "";
-    $sql = "UPDATE `{$prefix}".$table."` set " .implode(",", $setUpdates);
+    $sql = "UPDATE `".$table."` set " .implode(",", $setUpdates);
     return $sql;
   }
   
@@ -194,11 +177,10 @@ class CLASS_DB_MYSQL extends CLASS_DB_BASE {
   function query_count($sql) {
       $reg = "/^select\s+(.+?)\s+from/i";
       $sql = preg_replace($reg, "select count(*) as qcount from", $sql, 1);
-      // print("sql: ".$sql);
       $rs = $this->get_row($sql);
       if(!empty($rs)) {
         return $rs['qcount'];
-            }
+      }
 
           return 0;
   }
@@ -207,7 +189,7 @@ class CLASS_DB_MYSQL extends CLASS_DB_BASE {
     if(!$this->result) {
       return 0;  
     } else {
-      return mysql_num_rows($this->result);
+      return mysql_num_rows($this->result, $this->linker);
     }
   }
   
@@ -238,17 +220,6 @@ class CLASS_DB_MYSQL extends CLASS_DB_BASE {
   function free_result($result) {
     mysql_free_result($result);
   }
-
-  
-  function sql_push($cachename, $sql) {
-    global $_mysql_cache;
-    $_mysql_cache[$cachename] = $sql;
-  }
-  
-  function sql_query($cachename) {
-    global $_mysql_cache;
-    return $_mysql_cache[$cachename];  
-  }
   
   function close() {
     if($this->linker) {
@@ -264,154 +235,13 @@ class CLASS_DB_MYSQL extends CLASS_DB_BASE {
   }
 
   function get_error() {
-    return $this->err."\r\n".mysql_error();
+    return $this->err."\r\n".mysql_error($this->linker);
   }
 }
-
-/*
-
-// mssql
-class CLASS_DB_MSSQL extends CLASS_DB_BASE implements db_interfaces {
-  
-  var $db_host;  // mysql服务器地址，一般为localhost
-  var $db_user;  // 数据库用户名
-  var $db_pswd;  // 数据库密码
-  var $db_name;  // 连接的数据库
-  
-  function __construct() {
-    parent::__construct();
-    $this->db_host = $GLOBALS['APP_CFG']["DB_HOST"];
-    $this->db_user = $GLOBALS['APP_CFG']["DB_USER"];
-    $this->db_pswd = $GLOBALS['APP_CFG']["DB_PSWD"];
-    $this->db_name = $GLOBALS['APP_CFG']["DB_NAME"];
-    $this->connect($this->db_host,$this->db_user,$this->db_pswd);
-  }
-   
-   // 构造函数
-  function CLASS_DB_MSSQL(){
-    $this->__construct();
-  }
-  
-  function connect($host, $user, $pwd, $extra = array()) {
-
-    $this->linker  = mssql_connect($host, $user, $pwd);
-    
-    //处理错误，成功连接则选择数据库
-    if(!$this->linker){
-      die ("Can\"t use ".$db_name." : " . mysql_error());
-      exit();
-    }
-    // select database
-    @mssql_select_db($this->db_name);
-    // set language
-    @mssql_query("SET NAMES '".$GLOBALS['APP_CFG']["DB_LANGUAGE"]."';",$this->linker);
-    // sql mode
-    @mssql_query("SET sql_mode='' ;", $this->linker);
-  }
-  
-  function setQuery($sql) {
-    global $CH_CFG, $cmspath, $site;
-    $this->sql = ereg_replace("##__", $GLOBALS['APP_CFG']["DB_TAG"], $sql);
-  }
-  
-  function doQuery($sql, $isDoMap = false) {
-    //print($charset);
-    $this->result = $this->Execute($sql);
-    if(!$this->result) {  die("Invalid query: ");  }
-    $records = array();
-    if($isDoMap ) {
-      while($record = $this->fetch_assoc($this->result)) {
-        __mysql_map_handler($record);  // 映射字典表毁掉函数处理
-        array_push($records, $record);  
-      }
-    } else {
-      while($record = $this->fetch_assoc($this->result)) {
-        array_push($records, $record);
-      }
-    }
-    //$this->free_result($this->result);
-    return $records;
-  }
-  
-  // 执行无记录集返回的sql语句
-  function doExecute($sql) {
-    $this->result = $this->Execute($sql);
-    if(!$this->result) {  die("Invalid query: " . mysql_error());  }
-  }
-  
-  function Execute($sql) {
-    $this->setQuery($sql);
-    return mssql_query($this->sql, $this->linker);
-  }
-  
-  function num_rows() {
-    if(!$this->result) {
-      return 0;  
-    } else {
-      return mssql_num_rows($this->result);
-    }
-  }
-  
-  function getRow($sql) {
-    $rs = $this->doQuery($sql);
-    if(count($rs) > 0) {
-      return $rs[0];
-    } else {
-      return null;
-    }
-  }
-  
-  function get_fieldsname($table) {
-    return $this->doQuery("show columns from {$table}");
-  }
-  
-  function fetch_object($result) {
-    return mssql_fetch_object($result);
-  }
-  
-  function fetch_array($result) {
-    return mssql_fetch_array($result);
-  }
-  
-  function fetch_assoc($result) {
-    return mssql_fetch_assoc($result);  
-  }
-  
-  function get_insert_id() {
-    return mssql_insert_id($this->linker);
-  }
-  
-  function free_result($result) {
-    mssql_free_result($result);
-  }
-  
-  static function sql_push($cachename, $sql) {
-    global $_mysql_cache;
-    $_mysql_cache[$cachename] = $sql;
-  }
-  
-  static function sql_query($cachename) {
-    global $_mysql_cache;
-    return $_mysql_cache[$cachename];  
-  }
-  
-  function close() {
-    if($this->linker) {
-      @mysql_close($this->linker);
-    }
-  }
-  
-  function error($errmsg) {
-    $errmsg = "";
-    $errmsg.= "";
-    return $errmsg;
-  }
-}
-*/
 
 // 数据库类工厂, 默认为mysql数据库
 function createdb($dbtype, $dbparams) {
-	switch($dbtype) {
+  switch($dbtype) {
   case 'mssql':
     $classname = 'CLASS_DB_MSSQL';
     break;
@@ -424,13 +254,14 @@ function createdb($dbtype, $dbparams) {
     die('create db['.$classname.'] error!');
     return null;
   }
+  
   return(new $classname($dbparams['host'], 
-        $dbparams['user'], 
-        $dbparams['pwd'], 
-        $dbparams['dbname'], 
-        $dbparams['prefix'],
-        $dbparams['lang']
-    ));
+    $dbparams['user'], 
+    $dbparams['pwd'], 
+    $dbparams['dbname'], 
+    $dbparams['prefix'],
+    $dbparams['lang']
+  ));
 }
 
 ?>

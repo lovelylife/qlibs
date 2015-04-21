@@ -51,8 +51,8 @@ class QPHP_session {
   }
 
   static function read($session_id) {
-    //echo 'QPHP_session -> read '.$session_id;
-    $sql = 'SELECT `data` FROM `##__sessions` WHERE `id`=\''. $session_id . '\' AND `expired`>=' . time();
+    //echo 'QPHP_session -> read '.$session_id."\r\n";
+    $sql = 'SELECT `data` FROM `ch_sessions` WHERE `id`=\''. $session_id . '\' AND `expired_time`>=' . time();
     $row = self::$db->get_row($sql);
     if(empty($row))
       return '';
@@ -61,22 +61,20 @@ class QPHP_session {
   }
 
   static function write($session_id, $data) {
-    //echo 'QPHP_session -> write '.$session_id.', data: '.$data;
+    //echo 'QPHP_session -> write '.$session_id.', data: '.$data."\n\r";
     $fields = array(
       'id' => $session_id,
-      'expired' => (time() + QPHP_SESSION_TTL),
+      'expired_time' => (time() + QPHP_SESSION_TTL),
       'data' => $data
     );
-
-    $sql = self::$db->insertSQL('sessions', $fields)." on duplicate key update data=VALUES(data);";
-    //echo $sql;
+    $sql = self::$db->insertSQL('sessions', $fields)." on duplicate key update data=VALUES(data), expired_time=VALUES(expired_time);";
     if(!self::$db->execute($sql)) {
-      echo self::$db->get_error();
+      trigger_error(self::$db->get_error(), USER_ERROR);
     }
   }
 
   static function destroy($session_id) {
-    $sql = "delete from ##__sessions where id='$session_id'";
+    $sql = "delete from ch_sessions where id='$session_id'";
     if(self::$db->execute($sql)) {      
       return true;
     }

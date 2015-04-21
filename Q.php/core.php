@@ -17,31 +17,6 @@ define('MAGIC_QUOTES_GPC', get_magic_quotes_gpc());
 // 导入系统常用函数库
 require(_QROOT."/function.php");
 
-// check session path
-/*
-{
-  $session_path = session_save_path();
-  $use_own_path = false;
-  if (is_dir($session_path)) {
-    $use_own_path = !is_writable($session_path);
-  } else {
-    $use_own_path = true;
-  }
-
-  if($use_own_path) {
-    //print_r(get_defined_vars());
-    $session_path = _QROOT.'/session';
-    createfolders($session_path);    
-  }
-
-  if(!is_writable($session_path)) {
-    trigger_error("session path is not writable. $session_path", E_USER_ERROR);
-  } else {
-    session_save_path($session_path);
-  }
-}
-*/
-
 // register_global setting
 if(ini_get('register_globals')) {
   foreach($_SESSION as $key=>$value) {
@@ -63,7 +38,6 @@ $variables_whitelist = array (
   'error_handler',
   'variables_whitelist',
   'key',
-/* } */
 );
 
 foreach (get_defined_vars() as $key => $value) {
@@ -73,11 +47,6 @@ foreach (get_defined_vars() as $key => $value) {
 }
 
 unset($key, $value, $variables_whitelist);
-
-//$_GET['test'] = 'dddddddd\'';
-// tainting detect
-
-//echo MAGIC_QUOTES_GPC;
 
 // 如果单引号转义没有开启，则自动加上'\'处理
 if(!MAGIC_QUOTES_GPC) {

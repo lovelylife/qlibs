@@ -105,9 +105,10 @@ __init__ : function(json) {
         var call_back = function(e) {};
         if((typeof c == 'function' ))
           call_back = c;
-        if(call_back(o) == 0)
+        var retval = call_back(o);
+        if(retval !== undefined && retval === false) {
           return false;
-          
+        }
         o.topMenu && o.topMenu.hide();
         return true;
       }
@@ -143,8 +144,16 @@ addSubMenuItem : function(subItem) {
   
   this.subwnd.appendChild(subItem.hwnd);
   subItem.parentMenu = this;
-  subItem.topMenu = this.topMenu;
+  subItem.setTopMenu(this.topMenu);
   this.items.push(subItem);
+},
+
+setTopMenu : function(topMenu) {
+  this.topMenu = topMenu;
+  var len = this.items.length;
+  for(var i=0; i < len; i++) {
+    this.items[i].setTopMenu(topMenu);  
+  }
 },
 
 hidePopup : function() {
@@ -248,7 +257,7 @@ addMenuItem : function(item) {
   var _this = this;
   _this.hwnd.appendChild(item.hwnd);
   item.parentMenu = _this;
-  item.topMenu = _this;
+  item.setTopMenu(_this);
   _this.items.push(item);
 },
 
