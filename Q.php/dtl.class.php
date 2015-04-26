@@ -18,7 +18,8 @@ class CLASS_DTL {
   private $data_value_;
   private $app_;
   private $t_;
-
+  private $db_name_;
+  private $db_;
   // DOM 
   private $node_name_;
   private $attributes_;
@@ -29,6 +30,26 @@ class CLASS_DTL {
 
   // php5 construct
   function CLASS_DTL() { $this->__construct(); }
+
+  // entry
+  function parse($tag_xml) {
+    $this->tag_xml_ = $tag_xml;
+    $ret = preg_match_all(
+      '/<html:(\w+)([^>]*)>(.*?)<\/html:\1>/is', 
+      $tag_xml, 
+      $matches
+    );
+
+    if(!$ret) 
+      return false;
+
+    $this->node_name_ = $matches[1][0];
+    $this->attributes_  = $this->parse_attrs($matches[2][0]);
+    $this->tpl_data_    = $matches[3][0];
+    $this->db_name_ = $this->getAttribute('db');
+
+    return true;
+  }
 
   // construct tag
   function construct_tag($matches) {
@@ -55,10 +76,9 @@ class CLASS_DTL {
   function query_data_tpl($tpl) {
     $out_buffer = '';
     if($this->is_datatype_sql() && (!$this->is_viewtype_tree())) {
-    $db = $this->getApp()->db();
     $sql = $this->getPageSQL($this->data_value_);
-    if(!$db->execute_tpl($sql, $this, $tpl, $out_buffer)) 
-      $this->error($db->get_error());
+    if(!$this->db()->execute_tpl($sql, $this, $tpl, $out_buffer)) 
+      $this->error($this->db()->get_error());
     }
 
     return $out_buffer;
@@ -93,10 +113,9 @@ class CLASS_DTL {
     $theApp = $this->getApp();
     $records = array();
     if($this->is_datatype_sql()) {
-      $db = $theApp->db();
       $sql = $this->getPageSQL($this->data_value_);
-      if(!$db->get_results($sql, $records)) 
-        trigger_error($db->get_error(), E_USER_ERROR);
+      if(!$this->db()->get_results($sql, $records)) 
+        trigger_error($this->db()->get_error(), E_USER_ERROR);
     } else if($this->is_datatype_dict()) {
       $theApp->query_dictionary($this->data_value_, $records);
     } else if($this->is_datatype_data()) {
@@ -226,11 +245,10 @@ class CLASS_DTL {
     $return_code['value'] = $value = $matches[2][0];
     
     if($type == 'sql' || $type=='share') {
-      $db = $this->getApp()->db();
       $sql = $value;
 
       if($data_type == 'share') 
-        $sql = $db->share($data_value);
+        $sql = $this->db()->share($data_value);
 
       $return_code['value'] = $sql;
     }
@@ -246,7 +264,7 @@ class CLASS_DTL {
       $sql = $this->data_value_;
       // query the tag is support tree or not
       if($page_size > 0) {
-        $totalsize = $this->getApp()->db()->query_count($sql);
+        $totalsize = $this->db()->query_count($sql);
         //echo "totalsize:\n".$totalsize;
         $cfg = array("totalsize" => $totalsize,"pagesize" => $page_size);
         if($this->getAttribute("html") == true) {
@@ -281,6 +299,17 @@ class CLASS_DTL {
   }
 
   function getApp() {  return $this->t_->getApp(); }
+
+  function db() {
+    if(!$this->db_) {
+      $this->db_ = $this->getApp()->db($this->db_name_);
+      if(!$this->db_) {
+        $this->db_ = $this->getApp()->db();
+      }
+    }
+
+    return $this->db_;
+  }
 
   // error 
   function error($message) {
@@ -317,26 +346,6 @@ class CLASS_DTL {
     return $this->_t;
   }
 
-  // Parse
-  function parse($tag_xml) {
-    if(empty($tag_xml))
-      return false; 
-
-    $this->tag_xml_ = $tag_xml;
-    $ret = preg_match_all(
-      '/<html:(\w+)([^>]*)>(.*?)<\/html:\1>/is', 
-      $tag_xml, 
-      $matches
-    );
-
-    if(!$ret) return false;
-
-    $this->node_name_ = $matches[1][0];
-    $this->attributes_  = $this->parse_attrs($matches[2][0]);
-    $this->tpl_data_    = $matches[3][0];
-
-    return true;
-  }
 
   // Unserialize
   function unserialize($tag_config) {

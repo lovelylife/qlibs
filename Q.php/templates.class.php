@@ -385,7 +385,7 @@ class CLASS_TEMPLATES
     $tag = $matches[0];
 
     $tag_object =  $this->create_object($tagName);
-    $tag_object->Parse($tag);
+    $tag_object->parse($tag);
 
     // 创建标签对象
     $id = $tag_object->getAttribute('id');
@@ -401,7 +401,7 @@ class CLASS_TEMPLATES
     $tagName = $matches[2];
     $tag = $matches[0];
     $tag_object =  $this->create_object($tagName);
-    $tag_object->Parse($tag);
+    $tag_object->parse($tag);
     
     return $tag_object->__toString();
   }
@@ -491,7 +491,7 @@ class CLASS_TEMPLATES
         $instance = new $className();
         $instance->setTemplate($this);
       } else {
-        trigger_error("class({$className}) is not founded!", E_USER_ERROR);
+        $this->error("class({$className}) is not founded!");
       }    
     } else {
       

@@ -9,22 +9,10 @@
 (!defined('DB_MYSQL')) && define('DB_MYSQL', 1);
 (!defined('DB_MSSQL')) && define('DB_MSSQL', 2);
 
-// 数据库基类
-class CLASS_DB_BASE {
-  var $linker;  // 数据库连接句柄
-  function __construct() {
-    $this->linker = null;
-  }
-   
-   // 构造函数
-  function CLASS_DB_BASE(){
-    $this->__construct();
-  }
-}
-
 // mysql
-class CLASS_DB_MYSQL extends CLASS_DB_BASE {
+class CLASS_DB_MYSQL {
   
+  var $linker;  // 数据库连接句柄
   private $db_host;  // mysql服务器地址，一般为localhost
   private $db_user;  // 数据库用户名
   private $db_pwd;  // 数据库密码
@@ -34,7 +22,6 @@ class CLASS_DB_MYSQL extends CLASS_DB_BASE {
   private $err;
   
   function __construct($host, $user, $pwd, $dbname, $prefix, $lang) {
-    parent::__construct();
     $this->err = "";
     $this->db_host = $host;
     $this->db_user = $user;
@@ -47,24 +34,23 @@ class CLASS_DB_MYSQL extends CLASS_DB_BASE {
    
    // 构造函数
   function CLASS_DB_MYSQL($host, $user, $pwd, $dbname, $prefix, $lang) {
-    $this-> __construct($host, $user, $pwd, $dbname, $prefix, $lang); 
+    $this->__construct($host, $user, $pwd, $dbname, $prefix, $lang); 
   }
   
   function connect($host, $user, $pwd, $extra = array()) {
-    $pconnect = true;
-    if(!$pconnect) {
-      $this->linker  = mysql_connect($host, $user, $pwd);
-    } else { 
-      $this->linker = mysql_connect($host, $user, $pwd); 
-    }
+    $this->linker = mysql_connect($host, $user, $pwd, true);
     
     //处理错误，成功连接则选择数据库
     if(!$this->linker){
-      trigger_error("Can\"t use ".$db_name." : " . mysql_error(), E_USER_ERROR);
+      trigger_error("Can\"t use ".$this->db_name." : " . mysql_error(), E_USER_ERROR);
       exit();
     }
     // select database
-    @mysql_select_db($this->db_name, $this->linker);
+    $select_db_result = mysql_select_db($this->db_name, $this->linker);
+    if(!$select_db_result){
+      trigger_error("Can\"t use ".$this->db_name." : " . mysql_error(), E_USER_ERROR);
+    } else {
+    }
     // set language
     @mysql_query("SET NAMES '".$this->db_lang."';", $this->linker);
     // sql mode

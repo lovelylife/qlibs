@@ -69,7 +69,8 @@ class QPHP_session {
     );
     $sql = self::$db->insertSQL('sessions', $fields)." on duplicate key update data=VALUES(data), expired_time=VALUES(expired_time);";
     if(!self::$db->execute($sql)) {
-      trigger_error(self::$db->get_error(), USER_ERROR);
+      print_r(self::$db);
+      trigger_error(self::$db->get_error(), E_USER_ERROR);
     }
   }
 
