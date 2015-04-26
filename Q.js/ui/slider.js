@@ -94,11 +94,12 @@ Q.slider = Q.extend({
     } else {
       var x = Math.floor(f*(_this.hwnd.offsetWidth-_this.thumb.offsetWidth));
       _this.on_xscroll(_this.value);
+      alert(x)
       _this.thumb.style.left = x + 'px';
     }
   },
 
   on_xscroll : function(value) {}, 
-  on_yscroll : function(value) {},
+  on_yscroll : function(value) {}
 }); 
 

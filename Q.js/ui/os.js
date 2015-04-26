@@ -249,10 +249,10 @@ run_error: function (app, err) {
 },
 
 destroy_instance : function(id) {
-  console.log(this.apps);
-  console.log("appid->"+id+" to delete")
+  Q.printf(this.apps);
+  Q.printf("appid->"+id+" to delete")
   delete this.apps[id];
-  console.log(this.apps);
+  Q.printf(this.apps);
 },
 
 create_instance : function(app) { 
@@ -272,7 +272,7 @@ create_instance : function(app) {
     var _this = this;
     instance = new app.class({ui: app.ui_runtime});
     instance.__exit__ = function() {
-      console.log("app "+ app.name + " is exit.");
+      Q.printf("app "+ app.name + " is exit.");
       _this.destroy_instance(this.id);
       this.end();
     }
@@ -290,7 +290,7 @@ run :function (app) {
     // app class have loaded
     try {
       _this.create_instance(app);
-      console.log("create app ok");
+      Q.printf("create app ok");
     } catch(e) {
       _this.run_error(app, err + "<br>" + e.description);
     }
@@ -303,12 +303,12 @@ run :function (app) {
         return;
       }
       
-      console.log("load from file and create app ok");
+      Q.printf("load from file and create app ok");
       app.class = app_class;
       // load ui
       app.ui_runtime = new Q.ui({src: app.ui, oncomplete: function(ok) {
         // init app instance
-        console.log("load ui -> " + (ok?"ok":"failed"));
+        Q.printf("load ui -> " + (ok?"ok":"failed"));
         try {
           _this.create_instance(app); 
         } catch(e) {
