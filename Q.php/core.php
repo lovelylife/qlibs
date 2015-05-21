@@ -71,13 +71,12 @@ if($S_AJAX_MODE) {
   if(MAGIC_QUOTES_GPC) 
     $data = stripcslashes($data);
   $data = urldecode($data);
-  if(empty($data)) {
-    $_POST = new CLASS_AJAX_PACKAGE();
-  } else {
+  if(!empty($data)) {
     $_POST = json_decode($data, true);
-    if(empty($_POST)) {
+    if(is_null($_POST)) {
+      $_POST = array();
       trigger_error('Invalid ajax package!\ndata:\n\n'.$data, E_USER_ERROR);
-    }  
+    }
   }
 }
 

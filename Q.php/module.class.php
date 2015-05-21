@@ -107,11 +107,8 @@ class CLASS_QRPCMODULE
 
   function doAjax($action) {
     $method=$action;
-    $args = $_POST["data"];
-    if(!is_array($args))
-      $args = array();
     if(is_callable(array($this, $method))) {
-      return call_user_func_array(array($this, $method), $args);
+      return call_user_func_array(array($this, $method), $_POST);
     } else {
       return parent::doAjax($action);
     } 

@@ -18,9 +18,9 @@ define('_QDEBUG', true);  // 开发环境， debug开启，将错误抛出
 // 获得脚本执行时间
 $_start = microtime(true);
 
-if(!_QDEBUG) {
-  error_reporting(E_ALL || ~E_NOTICE || ~E_DEPRECATED);
-}
+//if(!_QDEBUG) {
+//  error_reporting(E_ALL || ~E_NOTICE || ~E_DEPRECATED);
+//}
 
 // 处理某些的虚拟主机script_filename 和 __FILE__所在根目录不是同一个目录
 if(!defined('_QDOCUMENT_ROOT')) {
