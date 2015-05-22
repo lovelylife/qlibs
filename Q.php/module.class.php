@@ -107,6 +107,30 @@ class CLASS_QRPCMODULE
 
   function doAjax($action) {
     $method=$action;
+    $args = $_POST["data"];
+    if(!is_array($args)) {
+      $args = array();
+    }
+    if(is_callable(array($this, $method))) {
+      return call_user_func_array(array($this, $method), $args);
+    } else {
+      return parent::doAjax($action);
+    } 
+  }
+}
+
+/**
+  * 优化客户端请求包，去除了{header: "", data: "", extra:""}包结构
+  */
+class CLASS_QRPCMODULE2 
+  extends CLASS_MODULE
+{
+  function CLASS_QRPCMODULE() {
+    parent::__construct(); 
+  }
+
+  function doAjax($action) {
+    $method=$action;
     if(is_callable(array($this, $method))) {
       return call_user_func_array(array($this, $method), $_POST);
     } else {
@@ -114,6 +138,8 @@ class CLASS_QRPCMODULE
     } 
   }
 }
+
+
 
 class CLASS_QUIMODULE
   extends CLASS_MODULE 
