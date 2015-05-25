@@ -52,7 +52,7 @@ class CLASS_DB_MYSQL {
     } else {
     }
     // set language
-    @mysql_query("SET NAMES '".$this->db_lang."';", $this->linker);
+    mysql_query("SET NAMES '".$this->db_lang."';", $this->linker);
     // sql mode
     @mysql_query("SET sql_mode='' ;", $this->linker);
   }
