@@ -266,13 +266,14 @@ class CLASS_DTL {
       if($page_size > 0) {
         $totalsize = $this->db()->query_count($sql);
         //echo "totalsize:\n".$totalsize;
-        $cfg = array("totalsize" => $totalsize,"pagesize" => $page_size);
+        $cfg = array("totalsize" => $totalsize,"pagesize" => $page_size, 'pagekey' => 'p' );
         if($this->getAttribute("html") == true) {
           $cfg["html"] = true;
           $cfg["tpl"] = $this->getAttribute("tpl");
           $cfg["first"] = $this->getAttribute("first");
-          $cfg["page"] = $this->getAttribute("page");
         }
+        
+        $cfg["page"] = $this->getAttribute("page");
 
         // 实例化分页类,初始化构造函数中的总条目数和每页显示条目数
         $this->pager_ = new CLASS_PAGE($cfg);
