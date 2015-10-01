@@ -309,4 +309,9 @@ function q_decrypt($sStr, $sKey) {
   return $decrypted;
 }	
 
+function q_inject_check($sql_str) { 
+    return eregi('select|insert|and|or|update|delete|\'|\/\*|\*|\.\.\/|\.\/|union|into|load_file|outfile', $sql_str);
+}
+
+
 ?>
