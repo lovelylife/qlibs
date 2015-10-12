@@ -24,7 +24,7 @@ class CLASS_DTL {
   private $node_name_;
   private $attributes_;
   private $tpl_data_;
-
+  private $page_is_overflow;
   // constuct
   function __construct() {  $this->t_ = null;  }
 
@@ -76,9 +76,9 @@ class CLASS_DTL {
   function query_data_tpl($tpl) {
     $out_buffer = '';
     if($this->is_datatype_sql() && (!$this->is_viewtype_tree())) {
-    $sql = $this->getPageSQL($this->data_value_);
-    if(!$this->db()->execute_tpl($sql, $this, $tpl, $out_buffer)) 
-      $this->error($this->db()->get_error());
+      $sql = $this->getPageSQL( $this->data_value_ );
+      if(!$this->db()->execute_tpl($sql, $this, $tpl, $out_buffer)) 
+        $this->error($this->db()->get_error());
     }
 
     return $out_buffer;
@@ -173,8 +173,8 @@ class CLASS_DTL {
       if($this->getApp()->query_dictionary($attrs["dict"], $dict)) {
         foreach($dict as $item) {
           if($item['value'] == $value) {
-	    $value = $item['text'];
-	  }
+            $value = $item['text'];
+          }
         }
       }
     }
@@ -256,16 +256,15 @@ class CLASS_DTL {
     return $return_code;
   }
 
-  function getPager() {
-    if(!$this->pager_) {
-       
-      // page
-      $page_size = intval($this->getAttribute("pagesize"));
+  function getPager() 
+  {
+    if( !$this->pager_ ) {
+      $page_size = intval( $this->getAttribute( "pagesize" ), 10 );
       $sql = $this->data_value_;
-      // query the tag is support tree or not
       if($page_size > 0) {
         $totalsize = $this->db()->query_count($sql);
-        //echo "totalsize:\n".$totalsize;
+        //echo "totalsize:\n".$totalsize."  ". ( $page_size * (intval( $_GET['p'], 10 ) - 1)  );
+        $this->page_is_overflow = ( $totalsize < ( $page_size * (intval( $_GET['p'], 10 ) - 1) ) );
         $cfg = array("totalsize" => $totalsize,"pagesize" => $page_size, 'pagekey' => 'p' );
         if($this->getAttribute("html") == true) {
           $cfg["html"] = true;
@@ -285,11 +284,15 @@ class CLASS_DTL {
 
   function getPageSQL($sql) 
   {
-    if($this->getPager()) {
+    if( $this->getPager() ) {
       $page_size = $this->getPager()->getPageSize();
       $sql .= " limit ";
-      $sql .= ($this->getPager()->GetCurrentPage()-1)*$page_size;
-      $sql .= ",{$page_size};";      
+      if( !$this->page_is_overflow ) {
+        $sql .= ($this->getPager()->GetCurrentPage()-1)*$page_size;
+      } else {
+        $sql .=  ( intval( $_GET['p'], 10 )-1 )*$page_size;
+      }
+      $sql .= ",{$page_size};";
     } else {      
       $size = intval($this->getAttribute('size'), 10);
       if($size > 0) {
