@@ -80,6 +80,7 @@ if($S_AJAX_MODE) {
   }
 }
 
+
 // for templates
 require(_QROOT."/algory.class.php");
 require(_QROOT."/page.class.php");

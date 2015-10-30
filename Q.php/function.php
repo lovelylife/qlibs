@@ -17,7 +17,9 @@ function qinfo() {
   echo $dumpstr;
 }
 
-
+function qruntime( ) {
+  echo microtime()-$GLOBALS['_start']."ms\n";
+}
 
 /*----------------------------------------------------
  $ 名称: daddslashes

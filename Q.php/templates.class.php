@@ -25,6 +25,7 @@
     render是将模板标签解析成php的标签输出，如果要截获输出使用ob_start;
     parse是将模板标签替换成相应的值，返回解析之后的html输出流。使用echo
     直接打印。
+ 7.增加模板参数 tvars, 对应于{#template}标签属性名称
 ----------------------------------------------------------------------*/
 
 class CLASS_TEMPLATES
@@ -48,13 +49,14 @@ class CLASS_TEMPLATES
   private $tpl_tags_file_;
   // 标签管理器[id] => node
   private $tags;
-
+  private $tvars_;
   // 构造函数
   function __construct($theApp) {    
     $this->vars_cache_ = array();
     $this->data_cache_ = array();
     $this->tpl_file_ = null;
     $this->tags = array();
+    $this->tvars_ = array();
     $this->theApp = $theApp;
     $this->tpl_dir_  = $theApp->getTemplatesDir();  
     $this->tpl_cache_dir_ = $theApp->getCacheDir();
@@ -179,7 +181,7 @@ class CLASS_TEMPLATES
   function load_template($view) {
     $this->tpl_file_ = $this->tpl_dir_.'/'.$view.'.htm';
     // 输出html流
-    return $this->readtemplate($view);
+    return $this->readtemplate( $view );
   }
 
   // 编译模板，根据$phplable参数生成两种类型的缓存文件
@@ -324,37 +326,69 @@ class CLASS_TEMPLATES
   }    
 
     // 导入模板
-  function readtemplate($tplname) {
+  function readtemplate( $tplname ) 
+  {
     $tplDir = $this->tpl_dir_;                              
-    // 解析模板文件名, 暂时不支持模板传参数 {t:参数名称}
+    
+    /** 解析模板文件名, 暂时不支持模板传参数 {t:参数名称} */
     $params = parse_url($tplname);
-    $tplname = $params['path'];                      
-    //! 模板文件全路径         
+    $tplname = $params["path"];                      
+    
+    /** 模板文件全路径 */
     $tplFile = $tplDir.'/'.$tplname;
-    //如果文件不存在则搜索带.htm后缀的
+
+    /** 如果文件不存在则搜索带.htm后缀的 */
     if(!file_exists($tplFile)) {
       $tplFile = $tplFile.'.htm';
       if(!file_exists($tplFile)) {
-        trigger_error("template ({$tplname}) is not exists.", E_USER_ERROR);
+        trigger_error("template ({$tplFile}) is not exists.", E_USER_ERROR);
       }
     }
-        
+      
     // 获取文件内容
     $tpldata = file_get_contents($tplFile);
+    /** 预处理模板标签变量传递 {$tvars:name} 
+     *
+     */
+    $tpldata = preg_replace_callback(
+       '/\{\$tvars:(\w+)\s*\/?\s*\}/is',
+       array($this, 'tvars'), 
+       $tpldata
+    );
+
     // 预编译处理 - 解析资源路径变量和全局变量（固定不变的）
     // 暂不解析
-    // 解析{#template name="tplname"/} 子模板
+    // 解析{#template|include src="tplname"/} 子模板
     $tpldata = preg_replace_callback(
        '/\{#template\s+([^\}]+?)\s*\/?\}/is',
        array($this, 'readtemplate2'), 
        $tpldata
     );
-        
+    
+    $tpldata = preg_replace_callback(
+       '/<\!--include\s+([^>]+?)\s*-->/is',
+       array($this, 'readtemplate2'), 
+       $tpldata
+    );
+    
     return $tpldata;
   }
 
   function readtemplate2($matches) {
-    return $this->readtemplate($matches[1]);
+    $attrs = CLASS_DTL::parse_attrs($matches[0]);
+    //print_r( $matches );
+    if( !empty( $attrs ) ) {
+      $this->tvars_ = array_merge( $this->tvars_, $attrs );
+    }
+    if( isset( $attrs["src"] ) ) {
+      return $this->readtemplate( $attrs["src"] );
+    } else {
+      return $this->readtemplate( $matches[1] );
+    }
+  }
+
+  function tvars($matches) {
+    return $this->tvars_[$matches[1]]; 
   }
       
   public function setDir($newdir) {
