@@ -10,6 +10,8 @@ class QPHP_session {
 
   static function initialize($db) {
     self::$db = $db;
+    /** clear current session */
+    session_destroy();
     //不使用 GET/POST 变量方式
     ini_set('session.use_trans_sid',0);
     //设置垃圾回收最大生存时间
@@ -21,15 +23,19 @@ class QPHP_session {
     ini_set('session.cookie_domain', '.wayixia.com');
     //将 session.save_handler 设置为 user，而不是默认的 files
     session_module_name('user');
+
     //定义 SESSION 各项操作所对应的方法名
-    session_set_save_handler(
+    if( !session_set_save_handler(
       array('QPHP_session','open'),
       array('QPHP_session','close'),
       array('QPHP_session','read'),
       array('QPHP_session','write'),
       array('QPHP_session','destroy'),
       array('QPHP_session','gc')
-    );
+    ) ) 
+    {
+      print("set save handler failed");
+    }
 
     session_name('_wa_sid');
     session_start();

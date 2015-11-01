@@ -118,7 +118,7 @@ function createIndex($dir) {
     fwrite($indexfile, '403 access denied.');
     fclose($indexfile);
     } else {
-    trigger_error('create dir('.$dir.') index file failed.', E_USER_ERROR);
+      //trigger_error('create dir('.$dir.') index file failed.', E_USER_ERROR);
     }
   }
 }
