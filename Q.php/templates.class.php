@@ -417,9 +417,12 @@ class CLASS_TEMPLATES
     // $namespace = $matches[1];
     $tagName = $matches[2];
     $tag = $matches[0];
-
     $tag_object =  $this->create_object($tagName);
-    $tag_object->parse($tag);
+    if( !$tag_object ) {
+      $this->error("create tag failed. ".$tag );
+    }
+    if( $tag_object )
+      $tag_object->parse($tag);
 
     // 创建标签对象
     $id = $tag_object->getAttribute('id');
@@ -496,9 +499,8 @@ class CLASS_TEMPLATES
   function post($name)             { return $_POST[$name];}
 
   function getApp()                { return $this->theApp; }
-  function push_data($name, $data) { $this->data_cache_[$name] = $data; }
-  function get_data($name)         { return $this->data_cache_[$name]; }
   function push($key, $value) { $this->vars_cache_[$key] = $value; }
+  function push_tvars($key, $value) { $this->tvars_[$key] = $value; }
   function query($key) { return $this->vars_cache_[$key]; }
 
   function dump2template($record) { foreach($record as $key => $value) { $this->push($key, $value); } }
