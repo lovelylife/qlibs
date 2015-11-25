@@ -15,6 +15,8 @@ define('_Q', 1);
 define('_QSESSION', 'q.php.session');
 define('_QDEBUG', true);  // 开发环境， debug开启，将错误抛出
 
+// 设置默认时区 PRC
+date_default_timezone_set('PRC');
 // 获得脚本执行时间
 $_start = microtime(true);
 

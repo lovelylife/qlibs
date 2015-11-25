@@ -36,6 +36,7 @@ $variables_whitelist = array (
   '_COOKIE',
   '_SESSION',
   'error_handler',
+  '_start',
   'variables_whitelist',
   'key',
 );
@@ -50,15 +51,19 @@ unset($key, $value, $variables_whitelist);
 
 // 如果单引号转义没有开启，则自动加上'\'处理
 if(!MAGIC_QUOTES_GPC) {
-  foreach($_GET as $_key => $_value) 
-    $_GET[$_key] = daddslashes($_value);
+  //foreach($_GET as $_key => $_value) 
+  //  $_GET[$_key] = daddslashes($_value);
   
-  foreach($_POST as $_key => $_value) 
-    $_POST[$_key] = daddslashes($_value);
+  $_GET = daddslashes( $_GET );
+  //foreach($_POST as $_key => $_value) 
+  //  $_POST[$_key] = daddslashes($_value);
+  $_POST = daddslashes( $_POST );
   
-  foreach($_COOKIE as $_key => $_value) 
-    $_COOKIE[$_key] = daddslashes($_value);
+  //foreach($_COOKIE as $_key => $_value) 
+  //  $_COOKIE[$_key] = daddslashes($_value);
+  $_COOKIE[ $_key ] = daddslashes( $_COOKIE );
 }
+
 
 // Ajax 模式
 $S_AJAX_MODE = (isset($_GET['inajax']) && (strtolower($_GET['inajax']) == "true"));
@@ -68,8 +73,7 @@ if($S_AJAX_MODE) {
   require(_QROOT.'/ajax.lib.class.php');
   $data = $_POST['postdata'];
   // 去掉单引号转义，否则json_decode无法工作
-  if(MAGIC_QUOTES_GPC) 
-    $data = stripcslashes($data);
+  $data = stripcslashes($data);
   $data = urldecode($data);
   if(!empty($data)) {
     $_POST = json_decode($data, true);
@@ -79,7 +83,6 @@ if($S_AJAX_MODE) {
     }
   }
 }
-
 
 // for templates
 require(_QROOT."/algory.class.php");
@@ -94,5 +97,4 @@ require(_QROOT.'/command.class.php');
 
 // application loadder
 require(_QROOT.'/apploader.class.php');
-
 ?>

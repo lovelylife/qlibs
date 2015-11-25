@@ -101,8 +101,8 @@ class CLASS_APPLICATION {
       trigger_error("have no authority", E_USER_ERROR);
     }
     // 模块文件
-    require($module_file);
-
+    include($module_file);
+    
     // 加载模块
     $class = 'CLASS_MODULE_'.strtoupper($this->module_);
     if(class_exists($class)) {
