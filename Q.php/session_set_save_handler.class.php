@@ -21,6 +21,7 @@ class QPHP_session {
     ini_set('session.cookie_path','/');
     //多主机共享保存 SESSION ID 的 COOKIE,因为我是本地服务器测试所以设置$domain=''
     ini_set('session.cookie_domain', '.wayixia.com');
+    ini_set('session.cookie_lifetime', 3600*24*15 );
     //将 session.save_handler 设置为 user，而不是默认的 files
     session_module_name('user');
 
@@ -36,7 +37,6 @@ class QPHP_session {
     {
       print("set save handler failed");
     }
-
     session_name('_wa_sid');
     session_start();
   }

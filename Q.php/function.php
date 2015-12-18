@@ -281,18 +281,29 @@ function fmtdatetime2cn($timestamp) {
     return strftime("%Y年%m月%d日 %H:%M:%S", $timestamp);
 }
 
-function get_default_value($new_value, $default_value) { return empty($new_value) ? $default_value : $new_value; }
+function get_default_value($new_value, $default_value) 
+{ 
+  return empty($new_value) ? $default_value : $new_value; 
+}
 
-function q_encrypt($input, $key) {
+/** \brief Encrypt input data with key(32bit)
+ *
+ * \param input - Input data to be encrypted
+ * \param key - Private key
+ * \return iv+encrypted data with base64 encoded
+ */
+function q_encrypt($input, $key) 
+{
+  // Padding
   $size = mcrypt_get_block_size(MCRYPT_RIJNDAEL_128, MCRYPT_MODE_ECB);
   $input = q_pkcs5_pad($input, $size);
-  $td = mcrypt_module_open(MCRYPT_RIJNDAEL_128, "", MCRYPT_MODE_ECB, "");
-  $iv = mcrypt_create_iv(mcrypt_enc_get_iv_size($td), MCRYPT_RAND);
-  mcrypt_generic_init($td, $key, $iv);
-  $data = mcrypt_generic($td, $input);
-  mcrypt_generic_deinit($td);
-  mcrypt_module_close($td);
-  $data = base64_encode($data);
+  // Create IV
+  $iv_size = mcrypt_get_iv_size( MCRYPT_RIJNDAEL_128, MCRYPT_MODE_ECB );
+  $iv = mcrypt_create_iv( $iv_size, MCRYPT_RAND );
+  // Encrypt data 
+  $data = mcrypt_encrypt( MCRYPT_RIJNDAEL_128, $key, $input, MCRYPT_MODE_ECB, $iv); 
+  // Base64 encode
+  $data = base64_encode($iv.$data);
 
   return $data;
 }
@@ -301,17 +312,39 @@ function q_pkcs5_pad($text, $blocksize) {
   $pad = $blocksize - (strlen($text) % $blocksize);
   return $text . str_repeat(chr($pad), $pad);
 }
+
+
+/** \brief Decode the input with $key(32 chars)
+ *
+ * \param input - Encoded data
+ * \param key - Private key(32 chars) to decode input
+ * \return Decode data
+ */
+function q_decrypt($input, $key) 
+{
+  // Base64 decode
+  $input = base64_decode( $input );
+
+  // Get iv from input
+  $iv_size = mcrypt_get_iv_size( MCRYPT_RIJNDAEL_128, MCRYPT_MODE_ECB );
+  $iv = substr( $input, 0, $iv_size );
+  
+  // Get Encode data from input
+  $text = substr( $input, $iv_size );
  
-function q_decrypt($sStr, $sKey) {
-  $decrypted= mcrypt_decrypt(MCRYPT_RIJNDAEL_128, $sKey, base64_decode($sStr), MCRYPT_MODE_ECB);
-	$dec_s = strlen($decrypted);
+  // Decode text
+  $decrypted= mcrypt_decrypt(MCRYPT_RIJNDAEL_128, $key, $text, MCRYPT_MODE_ECB, $iv);
+	
+  // Trim 
+  $dec_s = strlen($decrypted);
 	$padding = ord($decrypted[$dec_s-1]);
 	$decrypted = substr($decrypted, 0, -$padding);
 
   return $decrypted;
 }	
 
-function q_inject_check($sql_str) { 
+function q_inject_check($sql_str) 
+{ 
     return eregi('select|insert|and|or|update|delete|\'|\/\*|\*|\.\.\/|\.\/|union|into|load_file|outfile', $sql_str);
 }
 
