@@ -1,6 +1,6 @@
 <?php
 
-define('QPHP_SESSION_TTL', 3600); //SESSION 生存时长
+define('QPHP_SESSION_TTL', 24*30*3600); //SESSION 生存时长
 
 class QPHP_session {
   static $db;
