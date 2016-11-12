@@ -26,7 +26,6 @@ if(!_QDEBUG) {
 
 // 处理某些的虚拟主机script_filename 和 __FILE__所在根目录不是同一个目录
 if(!defined('_QDOCUMENT_ROOT')) {
-
   $bind_root = str_replace('\\', '/', 
     substr($_SERVER["SCRIPT_FILENAME"], 0, 0-strlen($_SERVER['PHP_SELF'])));
   define('_QDOCUMENT_ROOT', $bind_root);

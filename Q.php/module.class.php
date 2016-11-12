@@ -16,7 +16,7 @@ class CLASS_MODULE {
 
   // 构造函数
   function __construct() {
-    $this->request = &$_POST; 
+    $this->request = $_POST; 
     $this->response = null;    
     $this->errmsgs = array();
   }
@@ -25,7 +25,7 @@ class CLASS_MODULE {
   function CLASS_MODULE() { $this->__construct(); }
   
   // Ajax模式入口
-  function __doajax(&$app, $action) {
+  function __doajax($app, $action) {
     $this->app_ = $app;	  
     header('Content-Type: text/html; charset=utf-8'); 
     // 应答包
@@ -37,7 +37,7 @@ class CLASS_MODULE {
   }
     
   // 非Ajax模式入口
-  function __domain(&$app, $action) {
+  function __domain($app, $action) {
     $this->app_ = $app;
     $this->doMain($action);
   }
@@ -85,7 +85,7 @@ class CLASS_MODULE {
     }
   }
 
-  function& App() {
+  function App() {
     return $this->app_;
   }
 

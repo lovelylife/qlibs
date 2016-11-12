@@ -139,7 +139,7 @@ class CLASS_PAGE {
     $cur = $this->current;
     $pcount = $this->page_count;
     if($cur > 1) {
-      $this->html = " <a href=\"".$this->_goto($this->_prev())."\"><font size=2> << </font></a> ";
+      $this->html = "<a href=\"".$this->_goto($this->_prev())."\" class=\"first\"><font size=2> << </font></a>";
     }
     
     $buf = "";  // 分页缓冲区

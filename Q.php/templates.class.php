@@ -491,7 +491,9 @@ class CLASS_TEMPLATES
   }
 
   // 获取指定id的标签
-  function tag($id)                { return $this->tags[$id]; }
+  function tag($id) { 
+    return $this->tags[$id]; 
+  }
   function app($varname)           { return $this->theApp->getAPPS($varname);   } 
   function vars($varname)           { return $this->query($varname); }  
   function cfg($name)              { return $this->theApp->getCONFIG($name);    }    
