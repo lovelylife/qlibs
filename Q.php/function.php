@@ -348,5 +348,15 @@ function q_inject_check($sql_str)
     return eregi('select|insert|and|or|update|delete|\'|\/\*|\*|\.\.\/|\.\/|union|into|load_file|outfile', $sql_str);
 }
 
+function qsubstr( $str, $start, $len, $ellipse ) {
+  $substr = mb_substr( $str, 0, $len, "UTF-8");
+  if( $ellipse ) {
+    if( mb_strlen( $str ) > $len ) {
+       return $substr."...";
+    }
+  } 
+   
+  return $substr;
+}
 
 ?>

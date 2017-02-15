@@ -7,8 +7,8 @@
    $config_object->save();
 */
 class CLASS_CONFIG_FILE {
-	private $config_file;  // 配置文件
-	private $config_data;  // 写入的数据
+	var $config_file;  // 配置文件
+	var $config_data;  // 写入的数据
 
 	function __construct($f) {
 		$this->config_file = $f;

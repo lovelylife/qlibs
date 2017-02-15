@@ -505,6 +505,27 @@ class CLASS_TEMPLATES
   function push_tvars($key, $value) { $this->tvars_[$key] = $value; }
   function query($key) { return $this->vars_cache_[$key]; }
 
+  function push_data($name, $data) {
+    if(empty($name)) {
+      trigger_error("name is empty", E_USER_ERROR);
+    }
+    if(isset($this->cache_data_[$name])) {
+      trigger_error("name:{$name} is exists.", E_USER_ERROR);
+    }
+    $this->cache_data_[$name] = $data;
+  }
+  function get_data($name) {
+    if(empty($name)) {
+       trigger_error("name is empty", E_USER_ERROR);
+    } 
+    
+    if(array_key_exists($name, $this->cache_data_)) { 
+      return $this->cache_data_[$name]; 
+    }
+    
+    return array();
+  }
+
   function dump2template($record) { foreach($record as $key => $value) { $this->push($key, $value); } }
     
   // 创建标签缓冲
