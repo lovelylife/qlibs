@@ -330,7 +330,7 @@ class CLASS_TEMPLATES
   {
     $tplDir = $this->tpl_dir_;                              
     
-    /** 解析模板文件名, 暂时不支持模板传参数 {t:参数名称} */
+    /** 解析模板文件名, 暂时不支持模板传参数 {vars:参数名称} */
     $params = parse_url($tplname);
     $tplname = $params["path"];                      
     
@@ -494,14 +494,16 @@ class CLASS_TEMPLATES
   function tag($id) { 
     return $this->tags[$id]; 
   }
-  function app($varname)           { return $this->theApp->getAPPS($varname);   } 
+  function app($varname)            { return $this->theApp->getAPPS( $varname );   }
+  function user($varname)           { return $this->theApp->get_user_info( $varname ); }
   function vars($varname)           { return $this->query($varname); }  
-  function cfg($name)              { return $this->theApp->getCONFIG($name);    }    
-  function get($name)              { return $_GET[$name]; }    
-  function post($name)             { return $_POST[$name];}
+  function cfg($name)               { return $this->theApp->getCONFIG($name);    } 
+  function get($name)               { return $_GET[$name]; }    
+  function post($name)              { return $_POST[$name];}
 
-  function getApp()                { return $this->theApp; }
-  function push($key, $value) { $this->vars_cache_[$key] = $value; }
+
+  function getApp()                 { return $this->theApp; }
+  function push($key, $value)       { $this->vars_cache_[$key] = $value; }
   function push_tvars($key, $value) { $this->tvars_[$key] = $value; }
   function query($key) { return $this->vars_cache_[$key]; }
 

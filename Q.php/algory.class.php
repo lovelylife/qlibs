@@ -31,7 +31,7 @@ class CLASS_ALGORY {
     $this->arrData = $config["arrData"];
 
     $rootItems = $this->getItems($this->rootValue);  // 获得所有根节点记录
-    $this->doTraverse($rootItems, 0, $caller_context, $this->out);
+    $this->doTraverse($rootItems, 0, $caller_context );
   }
   
   function CLASS_ALGORY($data, &$caller_context) { 
@@ -39,7 +39,7 @@ class CLASS_ALGORY {
   }
   
   // 递归处理分类节点(遍历算法)
-  function doTraverse($items, $depth, $caller_context, &$out) {
+  function doTraverse($items, $depth, $caller_context ) {
     //print("\ndoTraverse was called.\n");
     $len = count($items);
     if($len == 0) {  return; }
@@ -65,11 +65,11 @@ class CLASS_ALGORY {
       
       
       // $callback
-      if(!$caller_context->tree_item_process($item, $this->context, $out)) 
+      if(!$caller_context->tree_item_process($item, $this->context, $this->out)) 
         return false;
     
       // traverse sub items
-      $this->doTraverse($childNodes, ($depth+1), $caller_context, $out);
+      $this->doTraverse($childNodes, ($depth+1), $caller_context );
     }
     return true;
   }

@@ -157,9 +157,9 @@ class CLASS_DTL {
     $tpl);       
   }
 
-  function tree_item_process($item, $context, &$out) {
+  function tree_item_process($item, $context, &$out ) {
     echo "dtl::tree_item_process is not called.";
-    return true;
+    return '';
   }
   
   function parse_item($value, $attrs_str) {
@@ -182,7 +182,7 @@ class CLASS_DTL {
     // 处理函数
     if(isset($attrs["func"])) {
       // get func name
-      $func = str_ireplace("@this", "'".$value."'", stripcslashes( $attrs["func"]));
+      $func = str_ireplace("@this", "\"".$value."\"", stripcslashes( $attrs["func"]));
       $nPos = strpos($func, '(', 0);
       if($nPos >= 0) {
         $funcname = trim(substr($func, 0, $nPos));

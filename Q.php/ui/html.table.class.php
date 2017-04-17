@@ -19,15 +19,17 @@ class CLASS_DTL_TABLE extends CLASS_DTL {
   }
 
   function ondata($item_tpl) {
+    //echo $item_tpl;
     if($this->is_viewtype_tree()) {
       $records = $this->query_data();
+      //print_r( $records );
       return $this->query_tree_data_tpl($records, $item_tpl);
     } else {
       if($this->is_datatype_sql()) {
         return $this->query_data_tpl($item_tpl);
       } else if($this->is_datatype_data()) {
         $records = $this->query_data();
-	$buffer = '';
+      	$buffer = '';
         foreach($records as $i => $item) {
           $buffer .= $this->item_process($item, $item_tpl);
         }
@@ -45,10 +47,11 @@ class CLASS_DTL_TABLE extends CLASS_DTL {
   }
 
   
-  function tree_item_process($item, $context, &$out) {
+  function tree_item_process( $item, $context, &$out ) {
+    //print_r( $item );
     // get sub items
     $subitems = $context["subitems"];
-    $tableid = $_this->id;
+    $tableid = $this->id;
     $item["rowid"] = $tableid."_row_";
     $expandid = $tableid."_expand_".$context["itemid"];
   
@@ -69,7 +72,8 @@ class CLASS_DTL_TABLE extends CLASS_DTL {
     //$display = "display:".((count($subitems) > 0 ) "" : "none");
     $rowhtml = preg_replace("/\[expand\/?\]/i", "<DIV id='{$expandid}' class=\"table_expand\" subitems='".implode(",", $subitems)."' style='background-position: right -31px; width: {$expandwidth}px; {$display}; height:11px; float: left;  padding: 0px; margin: 3px;' onclick='{$rowclick};'></DIV>&nbsp;", $rowhtml);
 
-    $out .= $this->item_process($item, $rowhtml, $context);
+    $out .= CLASS_DTL::item_process($item, $rowhtml, $context);
+    
     return true;
   }
 

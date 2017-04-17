@@ -99,19 +99,16 @@ class CLASS_DTL_SELECT extends CLASS_DTL {
       //$item['selected'] = $this->mask_selected;
       $selinfo = $this->mask_selected;
     }
-    
-    //print_r($item); 
     #$tplData1 = preg_replace(
     #  "/\[property:selected\s?\/?\]/i", $selinfo, $tplData);
-    
     if($context["tpl"] == "") {
       $out .= "<option value=\"".$item[$valuefield]."\" ".$selinfo.">".cpx("--", $context["depth"])."".$item[$textfield]."</option>";  
     } else {
-      $delivertpldata = preg_replace("/\[field:deliver\s?\/?\]/i", cpx("--", $context["depth"]), $context["tpldata"]); 
+      $delivertpldata = preg_replace("/\[field:deliver\s?\/?\]/i", cpx("--", $context["depth"]), $context["tpl"]); 
       $delivertpldata = preg_replace("/\[property:selected\s?\/?\]/i", $selinfo, $delivertpldata);
-      $out .= $this->item_process($item, $delivertpldata, $context);
+      $out .= $this->item_process($item, $delivertpldata );
     }
-
+    
     return true;
   }
 }

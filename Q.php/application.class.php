@@ -44,7 +44,7 @@ class CLASS_APPLICATION {
 
   function CLASS_APPLICATION($args = array()) { $this->__construct($args); }
  
-  function initialize($args) {    
+  function initialize( $args ) {
     $this->root_ = $args['root'];
     $this->path_ = $args['path'];
     $this->host_ = $args['host'];
@@ -53,19 +53,21 @@ class CLASS_APPLICATION {
     $this->inajax_ = $args['inajax'];
 
     // 注册模板变量 
-    $this->_refAPPS['path']  = $this->path_;
-    $this->_refAPPS['app']   = $this->host_.$this->path_;
-    $this->_refAPPS['module']= $this->_refAPPS['app'] .'?'. 'mod='. $this->module_;
-    $this->_refAPPS['host']  = $this->host_;
+    $this->register( 'path', $this->path_ );
+    $this->register( 'app', $this->host_.$this->path_ );
+    $this->register( 'module', $this->_refAPPS['app'] .'?'. 'mod='. $this->module_ );
+    $this->register( 'host', $this->host_ );
+
     // 导入配置数据
     $this->_refCONFIG = require($this->root_.'/config.php');
+    
     // url rewrite
     $url_rewrite = $this->Config("site.url_rewrite");
+    
     //print_r($url_rewrite);
     if(is_array($url_rewrite)) {
       if(isset($url_rewrite[$this->module_])) {
-        $this->_refAPPS['module']= $this->_refAPPS['app'].$url_rewrite[$this->module_];
-      
+        $this->register( 'module', $this->_refAPPS['app'].$url_rewrite[$this->module_] );
       }
     }
 
@@ -79,7 +81,7 @@ class CLASS_APPLICATION {
     $this->template_dir_ = $this->root_.get_default_value($paths['templates'], '/templates').$this->theme_;
 
     // 注册app模板变量
-    $this->_refAPPS['theme']  = $this->theme_path_;
+    $this->register( 'theme', $this->theme_path_ );
 
     // 导入包含文件
     $this->requireFiles($this->root_.'/includes.required.php');
@@ -223,11 +225,23 @@ class CLASS_APPLICATION {
     }
   }
     
+  function register( $name, $value ) {
+    if( !empty( $name ) ) {
+      $this->_refAPPS[ $name ] = $value;
+    }
+  }
+
+  function unregister( $name ) {
+    if( !empty( $name ) ) {
+      unset( $this->_refAPPS[ $name ] );
+    }
+  }
+
   function getAPPS($name)   { return $this->_refAPPS[$name]; }
   function getTHEMES($name) { return $this->_refTHEMES[$name]; }
-  function getRefAPPS()    { return $this->_refAPPS; }
-  function getRefTHEMES()  { return $this->_refTHEMES; }
-  function getRefCONFIG()  { return $this->_refCONFIG; }
+  function getRefAPPS()     { return $this->_refAPPS; }
+  function getRefTHEMES()   { return $this->_refTHEMES; }
+  function getRefCONFIG()   { return $this->_refCONFIG; }
 }
 
 ?>
