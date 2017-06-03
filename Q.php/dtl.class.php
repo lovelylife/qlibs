@@ -182,7 +182,8 @@ class CLASS_DTL {
     // 处理函数
     if(isset($attrs["func"])) {
       // get func name
-      $func = str_ireplace("@this", "\"".$value."\"", stripcslashes( $attrs["func"]));
+      $func = str_ireplace("@this", addslashes( $value ), stripcslashes( $attrs["func"]));
+      //$func = str_ireplace("@this", $value, $attrs["func"] );
       $nPos = strpos($func, '(', 0);
       if($nPos >= 0) {
         $funcname = trim(substr($func, 0, $nPos));

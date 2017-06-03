@@ -70,7 +70,7 @@ class CLASS_DTL_TABLE extends CLASS_DTL {
   
     // print(getLines("--", $context["depth"]).$item["category_name"]."[".$str."]<br>");
     //$display = "display:".((count($subitems) > 0 ) "" : "none");
-    $rowhtml = preg_replace("/\[expand\/?\]/i", "<DIV id='{$expandid}' class=\"table_expand\" subitems='".implode(",", $subitems)."' style='background-position: right -31px; width: {$expandwidth}px; {$display}; height:11px; float: left;  padding: 0px; margin: 3px;' onclick='{$rowclick};'></DIV>&nbsp;", $rowhtml);
+    $rowhtml = preg_replace("/\[expand\/?\]/i", "<DIV id='{$expandid}' class=\"table_expand\" subitems='".implode(",", $subitems)."' style='width: {$expandwidth}px; {$display};' onclick='{$rowclick};'></DIV>&nbsp;", $rowhtml);
 
     $out .= CLASS_DTL::item_process($item, $rowhtml, $context);
     

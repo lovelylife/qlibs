@@ -309,12 +309,13 @@ class CLASS_TEMPLATES
     }    
     
     // 调用函数    
-    if(isset($attrs["func"])) {    
-      $func = str_ireplace('@this', '\''.$value.'\'', $attrs['func']);    
+    if(isset($attrs["func"])) { 
+      //$func = str_ireplace("@this", "'$value'", $attrs['func']);
+      $func = str_ireplace("@this", addslashes( $value ), stripcslashes( $attrs["func"]));
       if(isdebug()) {    
-        eval('$value = '.stripslashes($func).';');    
+        eval("\$value = $func;");    
       } else {    
-        @eval('$value = '.stripslashes($func).';');    
+        @eval("\$value = $func;");    
       }    
     }    
     
