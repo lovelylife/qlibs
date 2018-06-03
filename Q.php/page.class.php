@@ -185,10 +185,10 @@ class CLASS_PAGE {
     }
     
     // 存在其他参数
-    $params = split("&", $_SERVER["QUERY_STRING"]);
+    $params = str_split("&", $_SERVER["QUERY_STRING"]);
     $params2 = array();
     foreach($params as $value) {
-      $l = split("=", $value);
+      $l = str_split("=", $value);
       if($l[0] != $this->page_key) {
         array_push($params2, $value);
       }

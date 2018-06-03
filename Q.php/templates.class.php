@@ -242,7 +242,7 @@ class CLASS_TEMPLATES
     $attrs = CLASS_DTL::parse_attrs($matches[0]);
     if($subvars != '') {
       $sTemp = '';
-      $arr = split('\.', $subvars);
+      $arr = str_split('\.', $subvars);
       $len = count($arr);
       for($i=1; $i<$len; $i++) {
         $sTemp .= '[\''.$arr[$i].'\']';
@@ -281,7 +281,7 @@ class CLASS_TEMPLATES
     $subvars = $matches[3];    
     $value = $this->$vartype($varname);    
     if($subvars != '') {    
-      $subvars = split('\.', $subvars);    
+      $subvars = str_split('\.', $subvars);    
       $len = count($subvars);    
       //print_r($subvars);    
       for($i=1; $i<$len; $i++) {    

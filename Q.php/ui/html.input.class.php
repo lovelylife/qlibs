@@ -32,7 +32,7 @@ class CLASS_DTL_INPUT extends CLASS_DTL {
   function getitems($type) {
     $valueSelected = $this->getAttribute('valueSelected');
     $valueSelected = preg_replace('/(\s*,\s*)/i', ',', $valueSelected);
-    $valueSelected = split(',', $valueSelected);
+    $valueSelected = str_split(',', $valueSelected);
     
     $records = $this->query_data();    
     $len = count($records);

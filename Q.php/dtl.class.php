@@ -80,7 +80,6 @@ class CLASS_DTL {
       if(!$this->db()->execute_tpl($sql, $this, $tpl, $out_buffer)) 
         $this->error($this->db()->get_error());
     }
-
     return $out_buffer;
   }
 
@@ -151,10 +150,17 @@ class CLASS_DTL {
   // record 处理
   function item_process($item, $tpl) {
   // 解析变量标签[field:varname[attrs='']/]
-  return preg_replace(
-    '/\[field:(\w+)([^\/\]]*)\s*\/?\]/ie', 
-    '$this->parse_item($item["\\1"],"\\2")',
-    $tpl);       
+    $t = $this; 
+    return preg_replace_callback(
+      '/\[field:(\w+)([^\/\]]*)\s*\/?\]/is', 
+      function($matches) use( $t, $item ) {
+        return $t->parse_item( $item[$matches[1]], $matches[2] );
+      },
+      $tpl );
+  //return preg_replace(
+  //  '/\[field:(\w+)([^\/\]]*)\s*\/?\]/ie', 
+  //  '$this->parse_item($item["\\1"],"\\2")',
+  //  $tpl);       
   }
 
   function tree_item_process($item, $context, &$out ) {
